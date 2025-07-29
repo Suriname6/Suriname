@@ -1,1 +1,1 @@
-# Suriname
+# 6조 수리남 (Suriname)

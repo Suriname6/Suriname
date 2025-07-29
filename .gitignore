@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# IDE 설정
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# 로그
+*.log
+
+# 환경 변수
+.env
