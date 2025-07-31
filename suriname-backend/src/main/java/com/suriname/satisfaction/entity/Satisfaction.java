@@ -20,7 +20,7 @@ public class Satisfaction {
     private Long satisfactionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "request_id", nullable = false)
+    @JoinColumn(name = "request_id", unique = true, nullable = false)
     private Request request;
 
     @ManyToOne(fetch = FetchType.LAZY)

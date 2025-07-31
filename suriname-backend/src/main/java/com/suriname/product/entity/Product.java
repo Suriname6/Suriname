@@ -31,7 +31,7 @@ public class Product {
     @Column(nullable = false, length = 50)
     private String modelCode;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, unique = true, length = 100)
     private String serialNumber;
 
     @Column(nullable = false)
