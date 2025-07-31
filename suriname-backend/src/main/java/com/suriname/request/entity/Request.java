@@ -1,4 +1,110 @@
 package com.suriname.request.entity;
 
+import com.suriname.customer.entity.Customer;
+import com.suriname.customerproduct.entity.CustomerProduct;
+import com.suriname.employee.entity.Employee;
+import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "request")
+@NoArgsConstructor
+@Getter
 public class Request {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long requestId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_product_id", nullable = false)
+    private CustomerProduct customerProduct;
+
+    @Column(name = "request_no", nullable = false, length = 30, unique = true)
+    private String requestNo;
+
+    @Column(name = "input_product_name", length = 100)
+    private String inputProductName;
+
+    @Column(name = "input_brand", length = 100)
+    private String inputBrand;
+
+    @Column(name = "input_model", length = 100)
+    private String inputModel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Status status;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String content;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    public enum Status {
+        RECEIVED,
+        IN_PROGRESS,
+        AWAITING_PAYMENT,
+        READY_FOR_DELIVERY,
+        COMPLETED
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @Builder
+    private Request(Employee employee,
+                    Customer customer,
+                    CustomerProduct customerProduct,
+                    String requestNo,
+                    String inputProductName,
+                    String inputBrand,
+                    String inputModel,
+                    String content) {
+
+        this.employee = employee;
+        this.customer = customer;
+        this.customerProduct = customerProduct;
+        this.requestNo = requestNo;
+        this.inputProductName = inputProductName;
+        this.inputBrand = inputBrand;
+        this.inputModel = inputModel;
+        this.content = content;
+        this.status = Status.RECEIVED;
+    }
+
+    public static Request create(Employee employee,
+                                 Customer customer,
+                                 CustomerProduct customerProduct,
+                                 String requestNo,
+                                 String inputProductName,
+                                 String inputBrand,
+                                 String inputModel,
+                                 String content) {
+        return Request.builder()
+                .employee(employee)
+                .customer(customer)
+                .customerProduct(customerProduct)
+                .requestNo(requestNo)
+                .inputProductName(inputProductName)
+                .inputBrand(inputBrand)
+                .inputModel(inputModel)
+                .content(content)
+                .build();
+    }
 }
