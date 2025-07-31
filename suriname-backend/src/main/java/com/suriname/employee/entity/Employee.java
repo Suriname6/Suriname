@@ -92,4 +92,9 @@ public class Employee {
                 .role(role)
                 .build();
     }
+
+    public void markAsInactive() {
+        this.status = Status.INACTIVE;
+    }
+
 }

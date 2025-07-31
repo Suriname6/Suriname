@@ -107,4 +107,8 @@ public class Request {
                 .content(content)
                 .build();
     }
+
+    public void changeStatus(Status newStatus) {
+        this.status = newStatus;
+    }
 }

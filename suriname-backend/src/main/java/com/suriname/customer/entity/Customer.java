@@ -77,4 +77,8 @@ public class Customer {
                 .birth(birth)
                 .build();
     }
+
+    public void markAsInactive() {
+        this.status = Status.INACTIVE;
+    }
 }
