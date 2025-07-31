@@ -1,6 +1,7 @@
 package com.suriname.repairpreset.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "repair_preset")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class RepairPreset {
 
@@ -33,24 +34,16 @@ public class RepairPreset {
     private LocalDateTime createdAt;
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
     @Builder
-    private RepairPreset(Long categoryId, String name, Integer cost) {
+    public RepairPreset(Long categoryId, String name, Integer cost) {
         this.categoryId = categoryId;
         this.name = name;
         this.cost = cost;
         this.isActive = true;
-    }
-
-    public static RepairPreset create(Long categoryId, String name, Integer cost) {
-        return RepairPreset.builder()
-                .categoryId(categoryId)
-                .name(name)
-                .cost(cost)
-                .build();
     }
 
     public void inactive() {

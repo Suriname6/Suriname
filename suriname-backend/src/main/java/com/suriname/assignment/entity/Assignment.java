@@ -3,6 +3,7 @@ package com.suriname.assignment.entity;
 import com.suriname.employee.entity.Employee;
 import com.suriname.request.entity.Request;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "assignment")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Assignment {
 
@@ -57,18 +58,19 @@ public class Assignment {
     }
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
     @Builder
-    private Assignment(Employee employee,
+    public Assignment(Employee employee,
                        Request request,
                        Employee assignedBy,
                        AssignmentType assignmentType,
                        ResponseStatus responseStatus,
                        LocalDateTime respondedAt,
-                       String memo) {
+                       String memo)
+    {
         this.employee = employee;
         this.request = request;
         this.assignedBy = assignedBy;
@@ -78,33 +80,9 @@ public class Assignment {
         this.memo = memo;
     }
 
-    public static Assignment create(Employee employee,
-                                    Request request,
-                                    Employee assignedBy,
-                                    AssignmentType assignmentType,
-                                    String memo) {
-        return Assignment.builder()
-                .employee(employee)
-                .request(request)
-                .assignedBy(assignedBy)
-                .assignmentType(assignmentType)
-                .responseStatus(ResponseStatus.PENDING)
-                .memo(memo)
-                .build();
-    }
-
-    //기사가 수락, 거절했을 때 상태를 바꾸는 메서드
+    //응답 상태, 시점 기록
     public void respond(ResponseStatus status) {
         this.responseStatus = status;
         this.respondedAt = LocalDateTime.now();
-    }
-
-    //자동, 수동 배정
-    public static Assignment createAuto(Employee engineer, Request request, String memo) {
-        return create(engineer, request, null, AssignmentType.AUTO, memo);
-    }
-
-    public static Assignment createManual(Employee engineer, Request request, Employee admin, String memo) {
-        return create(engineer, request, admin, AssignmentType.MANUAL, memo);
     }
 }

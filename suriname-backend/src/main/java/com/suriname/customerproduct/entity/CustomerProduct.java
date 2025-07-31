@@ -3,6 +3,7 @@ package com.suriname.customerproduct.entity;
 import com.suriname.customer.entity.Customer;
 import com.suriname.product.entity.Product;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customer_product")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class CustomerProduct {
 
@@ -34,26 +35,19 @@ public class CustomerProduct {
     private LocalDateTime updatedAt;
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    protected void onUpdate() {
+    public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 
     @Builder
-    private CustomerProduct(Customer customer, Product product) {
+    public CustomerProduct(Customer customer, Product product) {
         this.customer = customer;
         this.product = product;
-    }
-
-    public static CustomerProduct create(Customer customer, Product product) {
-        return CustomerProduct.builder()
-                .customer(customer)
-                .product(product)
-                .build();
     }
 }

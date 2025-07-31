@@ -4,6 +4,7 @@ import com.suriname.customer.entity.Customer;
 import com.suriname.customerproduct.entity.CustomerProduct;
 import com.suriname.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "request")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Request {
 
@@ -63,12 +64,12 @@ public class Request {
     }
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
     @Builder
-    private Request(Employee employee,
+    public Request(Employee employee,
                     Customer customer,
                     CustomerProduct customerProduct,
                     String requestNo,
@@ -86,26 +87,6 @@ public class Request {
         this.inputModel = inputModel;
         this.content = content;
         this.status = Status.RECEIVED;
-    }
-
-    public static Request create(Employee employee,
-                                 Customer customer,
-                                 CustomerProduct customerProduct,
-                                 String requestNo,
-                                 String inputProductName,
-                                 String inputBrand,
-                                 String inputModel,
-                                 String content) {
-        return Request.builder()
-                .employee(employee)
-                .customer(customer)
-                .customerProduct(customerProduct)
-                .requestNo(requestNo)
-                .inputProductName(inputProductName)
-                .inputBrand(inputBrand)
-                .inputModel(inputModel)
-                .content(content)
-                .build();
     }
 
     public void changeStatus(Status newStatus) {

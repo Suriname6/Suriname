@@ -1,13 +1,14 @@
 package com.suriname.category.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "category")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Category {
 
@@ -26,17 +27,9 @@ public class Category {
     private Boolean isVisible;
 
     @Builder
-    private Category(Category parent, String name, Boolean isVisible) {
+    public Category(Category parent, String name, Boolean isVisible) {
         this.parent = parent;
         this.name = name;
         this.isVisible = isVisible;
-    }
-
-    public static Category create(Category parent, String name, Boolean isVisible) {
-        return Category.builder()
-                .parent(parent)
-                .name(name)
-                .isVisible(isVisible)
-                .build();
     }
 }

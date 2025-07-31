@@ -1,6 +1,7 @@
 package com.suriname.customer.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customer")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Customer {
 
@@ -48,34 +49,24 @@ public class Customer {
     }
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    protected void onUpdate() {
+    public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 
     @Builder
-    private Customer(String name, String email, String phone, String address, LocalDate birth) {
+    public Customer(String name, String email, String phone, String address, LocalDate birth) {
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.address = address;
         this.birth = birth;
         this.status = Status.ACTIVE;
-    }
-
-    public static Customer create(String name, String email, String phone, String address, LocalDate birth) {
-        return Customer.builder()
-                .name(name)
-                .email(email)
-                .phone(phone)
-                .address(address)
-                .birth(birth)
-                .build();
     }
 
     public void markAsInactive() {

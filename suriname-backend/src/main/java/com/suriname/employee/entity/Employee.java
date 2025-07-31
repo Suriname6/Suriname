@@ -1,6 +1,7 @@
 package com.suriname.employee.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,11 +9,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-
 @Entity
 @Table(name = "employee")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Employee {
 
     @Id
@@ -60,18 +60,18 @@ public class Employee {
     }
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    protected void onUpdate() {
+    public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 
     @Builder
-    private Employee(String loginId, String password, String name, String email, String phone, LocalDate birth, Role role) {
+    public Employee(String loginId, String password, String name, String email, String phone, LocalDate birth, Role role) {
         this.loginId = loginId;
         this.password = password;
         this.name = name;
@@ -82,19 +82,7 @@ public class Employee {
         this.status = Status.ACTIVE;
     }
 
-    public static Employee create(String loginId, String password, String name, String email, String phone, LocalDate birth, Role role) {
-        return Employee.builder()
-                .loginId(loginId)
-                .password(password)
-                .name(name)
-                .email(email)
-                .phone(phone)
-                .birth(birth)
-                .role(role)
-                .build();
-    }
-
-    public void markAsInactive() {
+    public void inactive() {
         this.status = Status.INACTIVE;
     }
 

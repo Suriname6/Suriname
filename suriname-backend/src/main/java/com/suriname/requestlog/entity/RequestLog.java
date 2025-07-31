@@ -3,6 +3,7 @@ package com.suriname.requestlog.entity;
 import com.suriname.employee.entity.Employee;
 import com.suriname.request.entity.Request;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "request_log")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class RequestLog {
 
@@ -57,12 +58,12 @@ public class RequestLog {
     }
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.changeAt = LocalDateTime.now();
     }
 
     @Builder
-    private RequestLog(Request request,
+    public RequestLog(Request request,
                        Employee employee,
                        PreStatus preStatus,
                        NewStatus newStatus,
@@ -74,23 +75,8 @@ public class RequestLog {
         this.memo = memo;
     }
 
-    public static RequestLog create(Request request,
-                                    Employee employee,
-                                    PreStatus preStatus,
-                                    NewStatus newStatus,
-                                    String memo) {
-        return RequestLog.builder()
-                .request(request)
-                .employee(employee)
-                .preStatus(preStatus)
-                .newStatus(newStatus)
-                .memo(memo)
-                .build();
-    }
-
     public void advanceStatus(NewStatus newStatus) {
         this.preStatus = PreStatus.valueOf(this.newStatus.name());
         this.newStatus = newStatus;
     }
-
 }

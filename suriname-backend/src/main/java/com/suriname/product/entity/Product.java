@@ -2,6 +2,7 @@ package com.suriname.product.entity;
 
 import com.suriname.category.entity.Category;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "product")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Product {
 
@@ -44,19 +45,19 @@ public class Product {
     private Boolean isVisible;
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.isVisible = true;
     }
 
     @PreUpdate
-    protected void onUpdate() {
+    public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 
     @Builder
-    private Product(Category category, String productName, String productBrand,
+    public Product(Category category, String productName, String productBrand,
                     String modelCode, String serialNumber) {
         this.category = category;
         this.productName = productName;
@@ -64,16 +65,5 @@ public class Product {
         this.modelCode = modelCode;
         this.serialNumber = serialNumber;
         this.isVisible = true;
-    }
-
-    public static Product create(Category category, String productName, String productBrand,
-                                 String modelCode, String serialNumber) {
-        return Product.builder()
-                .category(category)
-                .productName(productName)
-                .productBrand(productBrand)
-                .modelCode(modelCode)
-                .serialNumber(serialNumber)
-                .build();
     }
 }

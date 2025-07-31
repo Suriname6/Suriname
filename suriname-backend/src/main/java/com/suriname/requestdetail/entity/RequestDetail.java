@@ -4,6 +4,7 @@ import com.suriname.employee.entity.Employee;
 import com.suriname.repairpreset.entity.RepairPreset;
 import com.suriname.request.entity.Request;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "request_detail")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class RequestDetail {
 
@@ -42,12 +43,12 @@ public class RequestDetail {
     private LocalDateTime createdAt;
 
     @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
     @Builder
-    private RequestDetail(Request request,
+    public RequestDetail(Request request,
                           Employee employee,
                           RepairPreset repairPreset,
                           String content,
@@ -57,19 +58,5 @@ public class RequestDetail {
         this.repairPreset = repairPreset;
         this.content = content;
         this.cost = cost;
-    }
-
-    public static RequestDetail create(Request request,
-                                       Employee employee,
-                                       RepairPreset repairPreset,
-                                       String content,
-                                       Integer cost) {
-        return RequestDetail.builder()
-                .request(request)
-                .employee(employee)
-                .repairPreset(repairPreset)
-                .content(content)
-                .cost(cost)
-                .build();
     }
 }
