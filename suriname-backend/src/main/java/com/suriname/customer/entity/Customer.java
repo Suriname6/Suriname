@@ -59,14 +59,22 @@ public class Customer {
     }
 
     @Builder
+    private Customer(String name, String email, String phone, String address, LocalDate birth) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.birth = birth;
+        this.status = Status.ACTIVE;
+    }
+
     public static Customer create(String name, String email, String phone, String address, LocalDate birth) {
-        Customer customer = new Customer();
-        customer.name = name;
-        customer.email = email;
-        customer.phone = phone;
-        customer.address = address;
-        customer.birth = birth;
-        customer.status = Status.ACTIVE;
-        return customer;
+        return Customer.builder()
+                .name(name)
+                .email(email)
+                .phone(phone)
+                .address(address)
+                .birth(birth)
+                .build();
     }
 }

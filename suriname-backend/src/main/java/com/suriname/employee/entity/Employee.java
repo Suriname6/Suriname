@@ -70,16 +70,26 @@ public class Employee {
     }
 
     @Builder
+    private Employee(String loginId, String password, String name, String email, String phone, LocalDate birth, Role role) {
+        this.loginId = loginId;
+        this.password = password;
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.birth = birth;
+        this.role = role;
+        this.status = Status.ACTIVE;
+    }
+
     public static Employee create(String loginId, String password, String name, String email, String phone, LocalDate birth, Role role) {
-        Employee employee = new Employee();
-        employee.loginId = loginId;
-        employee.password = password;
-        employee.name = name;
-        employee.email = email;
-        employee.phone = phone;
-        employee.birth = birth;
-        employee.role = role;
-        employee.status = Status.ACTIVE;
-        return employee;
+        return Employee.builder()
+                .loginId(loginId)
+                .password(password)
+                .name(name)
+                .email(email)
+                .phone(phone)
+                .birth(birth)
+                .role(role)
+                .build();
     }
 }

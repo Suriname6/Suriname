@@ -2,6 +2,7 @@ package com.suriname.product.entity;
 
 import com.suriname.category.entity.Category;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -54,14 +55,25 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
     }
 
+    @Builder
+    private Product(Category category, String productName, String productBrand,
+                    String modelCode, String serialNumber) {
+        this.category = category;
+        this.productName = productName;
+        this.productBrand = productBrand;
+        this.modelCode = modelCode;
+        this.serialNumber = serialNumber;
+        this.isVisible = true;
+    }
+
     public static Product create(Category category, String productName, String productBrand,
                                  String modelCode, String serialNumber) {
-        Product product = new Product();
-        product.category = category;
-        product.productName = productName;
-        product.productBrand = productBrand;
-        product.modelCode = modelCode;
-        product.serialNumber = serialNumber;
-        return product;
+        return Product.builder()
+                .category(category)
+                .productName(productName)
+                .productBrand(productBrand)
+                .modelCode(modelCode)
+                .serialNumber(serialNumber)
+                .build();
     }
 }
