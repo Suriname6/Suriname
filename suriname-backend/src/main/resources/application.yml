@@ -5,11 +5,7 @@ spring:
   application:
     name: Suriname
   config:
-<<<<<<< HEAD
-    import: optional:file:env
-=======
     import: optional:file:.env
->>>>>>> 39fc6ca96f59fb8a06f70353a01cd05c9c3681ad
 
   datasource:
     url: ${DB_URL}
