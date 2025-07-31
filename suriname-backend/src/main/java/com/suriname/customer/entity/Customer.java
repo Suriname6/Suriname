@@ -1,4 +1,4 @@
-package com.suriname.employee.entity;
+package com.suriname.customer.entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -9,20 +9,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "employee")
-@Getter
+@Table(name = "customer")
 @NoArgsConstructor
-public class Employee {
+@Getter
+public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long employeeId;
-
-    @Column(nullable = false, unique = true, length = 50)
-    private String loginId;
-
-    @Column(nullable = false, length = 255)
-    private String password;
+    private Long customerId;
 
     @Column(nullable = false, length = 10)
     private String name;
@@ -32,6 +26,9 @@ public class Employee {
 
     @Column(nullable = false, length = 20)
     private String phone;
+
+    @Column(nullable = false, length = 255)
+    private String address;
 
     @Column(nullable = false)
     private LocalDate birth;
@@ -45,14 +42,6 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private Status status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
-    private Role role;
-
-    public enum Role {
-        ADMIN, STAFF, ENGINEER
-    }
 
     public enum Status {
         ACTIVE, INACTIVE
@@ -70,16 +59,14 @@ public class Employee {
     }
 
     @Builder
-    public static Employee create(String loginId, String password, String name, String email, String phone, LocalDate birth, Role role) {
-        Employee employee = new Employee();
-        employee.loginId = loginId;
-        employee.password = password;
-        employee.name = name;
-        employee.email = email;
-        employee.phone = phone;
-        employee.birth = birth;
-        employee.role = role;
-        employee.status = Status.ACTIVE;
-        return employee;
+    public static Customer create(String name, String email, String phone, String address, LocalDate birth) {
+        Customer customer = new Customer();
+        customer.name = name;
+        customer.email = email;
+        customer.phone = phone;
+        customer.address = address;
+        customer.birth = birth;
+        customer.status = Status.ACTIVE;
+        return customer;
     }
 }
