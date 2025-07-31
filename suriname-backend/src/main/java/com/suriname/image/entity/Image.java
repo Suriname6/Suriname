@@ -23,7 +23,7 @@ public class Image {
     @JoinColumn(name = "request_id", nullable = false)
     private Request request;
 
-    @Column(name = "file_name", length = 255)
+    @Column(name = "file_name", nullable = false, length = 255)
     private String fileName;
 
     @Column(name = "file_url", nullable = false, length = 255)
