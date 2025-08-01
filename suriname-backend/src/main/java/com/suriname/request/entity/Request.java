@@ -56,11 +56,11 @@ public class Request {
     private LocalDateTime createdAt;
 
     public enum Status {
-        RECEIVED,
-        IN_PROGRESS,
-        AWAITING_PAYMENT,
-        READY_FOR_DELIVERY,
-        COMPLETED
+        RECEIVED,    // 접수
+        REPAIRING,  // 수리중
+        WAITING_FOR_PAYMENT, // 입금대기
+        WAITING_FOR_DELIVERY, // 배송대기
+        COMPLETED   // 완료
     }
 
     @PrePersist
