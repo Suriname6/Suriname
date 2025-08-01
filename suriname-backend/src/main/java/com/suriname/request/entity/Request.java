@@ -4,10 +4,7 @@ import com.suriname.customer.Customer;
 import com.suriname.customerproduct.entity.CustomerProduct;
 import com.suriname.employee.entity.Employee;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +12,7 @@ import java.time.LocalDateTime;
 @Table(name = "request")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Setter
 public class Request {
 
     @Id
@@ -91,5 +89,11 @@ public class Request {
 
     public void changeStatus(Status newStatus) {
         this.status = newStatus;
+    }
+
+    public static Request of(Long requestId) {
+        Request r = new Request();
+        r.setRequestId(requestId);
+        return r;
     }
 }

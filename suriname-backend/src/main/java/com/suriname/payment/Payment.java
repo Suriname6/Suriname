@@ -1,4 +1,4 @@
-package com.suriname.payment.entity;
+package com.suriname.payment;
 
 import com.suriname.request.entity.Request;
 import jakarta.persistence.*;
@@ -23,6 +23,9 @@ public class Payment {
     @JoinColumn(name = "request_id", nullable = false, unique = true)
     private Request request;
 
+    @Column(name = "merchant_uid", nullable = false, length = 64, unique = true)
+    private String merchantUid;
+
     @Column(nullable = false, length = 50)
     private String account;
 
@@ -43,21 +46,22 @@ public class Payment {
     private String memo;
 
     public enum Status {
-        FAILED, PENDING, SUCCESS
-    }
-
-    @PrePersist
-    public void onCreate() {
-        this.confirmedAt = LocalDateTime.now();
+        FAILED, PENDING, COMPLETED
     }
 
     @Builder
-    public Payment(Request request, String account, String bank, Integer cost, Status status, String memo) {
+    public Payment(Request request, String merchantUid, String account, String bank, Integer cost, Status status, String memo) {
         this.request = request;
+        this.merchantUid = merchantUid;
         this.account = account;
         this.bank = bank;
         this.cost = cost;
         this.status = status;
         this.memo = memo;
+    }
+
+    public void markCompleted() {
+        this.status = Status.COMPLETED;
+        this.confirmedAt = LocalDateTime.now();
     }
 }

@@ -20,3 +20,7 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+portone:
+  secret-key: "${PORTONE_SECRET_KEY}"
+  client-key: "${PORTONE_CLIENT_KEY}"

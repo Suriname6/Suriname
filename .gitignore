@@ -12,5 +12,5 @@
 *.log
 
 # 환경 변수
-.env
+suriname-backend/.env.properties
 /.metadata/
