@@ -68,6 +68,15 @@ public class Customer {
         this.birth = birth;
         this.status = Status.ACTIVE;
     }
+    
+    public void update(String name, String email, String phone, String address, LocalDate birth) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.birth = birth;
+    }
+
 
     public void markAsInactive() {
         this.status = Status.INACTIVE;

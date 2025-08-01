@@ -1,8 +1,9 @@
 package com.suriname.customer;
-
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +25,7 @@ public class CustomerService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final CustomerProductRepository customerProductRepository;
-
+     
     @Transactional
     public Map<String, Long> registerCustomer(CustomerRegisterDto dto) {
 
@@ -36,16 +37,14 @@ public class CustomerService {
                 .address(dto.getAddress())
                 .birth(dto.getBirth())
                 .build();
-
         customerRepository.save(customer);
 
-        // 제품 저장 또는 조회
+        // 제품 저장/조회
         Product product;
         if (dto.getProduct().getProductId() != null) {
             product = productRepository.findById(dto.getProduct().getProductId())
                     .orElseThrow(() -> new RuntimeException("제품 없음"));
         } else {
-            // 새 제품 등록
             Category category = categoryRepository.findByName(dto.getProduct().getCategoryName())
                     .orElseThrow(() -> new RuntimeException("카테고리 없음"));
 
@@ -54,19 +53,17 @@ public class CustomerService {
                     .productBrand(dto.getProduct().getProductBrand())
                     .modelCode(dto.getProduct().getModelCode())
                     .serialNumber(dto.getProduct().getSerialNumber())
-                    .isVisible(true)
                     .category(category)
                     .build();
 
             productRepository.save(product);
         }
 
-        // 고객-제품 연결 
+        // 고객 보유 제품 연결
         CustomerProduct cp = CustomerProduct.builder()
                 .customer(customer)
                 .product(product)
                 .build();
-
         customerProductRepository.save(cp);
 
         return Map.of(
@@ -75,9 +72,32 @@ public class CustomerService {
         );
     }
 
-    public Page<Customer> getAll(Pageable pageable) {
-        return customerRepository.findAllByStatus(Customer.Status.ACTIVE, pageable);
+    public Page<CustomerListDto> getAll(Pageable pageable) {
+        Page<Customer> customers = customerRepository.findAllByStatus(Customer.Status.ACTIVE, pageable);
+
+        return customers.map(customer -> {
+            CustomerProduct cp = customerProductRepository
+                    .findTopByCustomerOrderByCreatedAtDesc(customer)
+                    .orElse(null);
+            Product product = (cp != null) ? cp.getProduct() : null;
+
+            return new CustomerListDto(
+                customer.getCustomerId(),
+                customer.getName(),
+                customer.getPhone(),
+                customer.getEmail(),
+                customer.getBirth().toString(),
+                customer.getAddress(),
+
+                (product != null) ? product.getProductName() : null,
+                (product != null && product.getCategory() != null) ? product.getCategory().getName() : null,
+                (product != null) ? product.getProductBrand() : null,
+                (product != null) ? product.getModelCode() : null,
+                (product != null) ? product.getSerialNumber() : null
+            );
+        });
     }
+
 
     public Customer getDetail(Long id) {
         return customerRepository.findById(id)
@@ -85,12 +105,17 @@ public class CustomerService {
                 .orElseThrow(() -> new RuntimeException("고객 없음"));
     }
 
+    @Transactional
+    public void update(Long id, CustomerRegisterDto dto) {
+        Customer customer = getDetail(id);
+        customer.update(dto.getName(), dto.getEmail(), dto.getPhone(), dto.getAddress(), dto.getBirth());
+        customerRepository.save(customer);
+    }
 
-    // 삭제
     @Transactional
     public void softDelete(Long id) {
         Customer customer = getDetail(id);
         customer.markAsInactive();
         customerRepository.save(customer);
     }
-}
+} 

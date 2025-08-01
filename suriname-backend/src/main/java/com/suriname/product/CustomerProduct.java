@@ -50,4 +50,12 @@ public class CustomerProduct {
         this.customer = customer;
         this.product = product;
     }
+    
+    public void updateCustomerAndProduct(Customer customer, Product product) {
+        this.customer = customer;
+        this.product = product;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+
 }

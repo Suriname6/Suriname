@@ -6,6 +6,28 @@ import './SidebarNavigation.css';
 export default function SidebarNavigation() {
   const navigate = useNavigate();
 
+const routeMap = {
+  "고객 목록": "/customer/list",
+  "고객 등록": "/customer/register",
+ /* "제품 목록": "/product/list",
+  "제품 등록": "/product/register",
+  "접수 목록": "/request/list",
+  "접수 등록": "/request/register",
+  "수리 내역": "/repair/list",
+  "수리 내역 작성": "/repair/write",
+  "프리셋 등록": "/repair/preset",
+  "입금 상태 목록": "/payment/status",
+  "가상 계좌 발급 요청": "/payment/virtual",
+  "배송 목록": "/delivery/list",
+  "배송 등록": "/delivery/register",
+  "직원 목록": "/staff/list",
+  "직원 가입 요청 목록": "/staff/requests",
+  "통계": "/dashboard/statistics",
+  "담당자별 성과": "/dashboard/performance",
+  "리포트": "/dashboard/report",*/
+};
+
+
   const [hoveredSection, setHoveredSection] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
   const [selectedSubItem, setSelectedSubItem] = useState(null);
@@ -22,10 +44,18 @@ export default function SidebarNavigation() {
     "대시 보드":["통계","담당자별 성과","리포트"]
   };
 
-  const handleSubItemClick = (subItem, parentMenu) => {
-    setSelectedSubItem(subItem);
-    setActiveSection(parentMenu);
-  };
+  
+
+const handleSubItemClick = (subItem, parentMenu) => {
+  setSelectedSubItem(subItem);
+  setActiveSection(parentMenu);
+
+  const route = routeMap[subItem];
+  if (route) {
+    navigate(route);
+  }
+};
+
 
   const handleMenuGroupEnter = (mainMenu) => {
     setHoveredSection(mainMenu);

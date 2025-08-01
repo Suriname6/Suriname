@@ -35,10 +35,11 @@ public class CustomerController {
 
     // 목록 조회 
     @GetMapping
-    public ResponseEntity<?> list(@RequestParam int page, @RequestParam int size) {
-        Page<Customer> customers = customerService.getAll(PageRequest.of(page, size));
+    public ResponseEntity<?> list(@RequestParam("page") int page, @RequestParam("size") int size) {
+        Page<CustomerListDto> customers = customerService.getAll(PageRequest.of(page, size)); // ✅ DTO로 받기
         return ResponseEntity.ok(Map.of("status", 200, "data", customers));
     }
+
     
     // 상세 조회
     @GetMapping("/{id}")

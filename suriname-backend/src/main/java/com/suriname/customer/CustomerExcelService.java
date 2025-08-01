@@ -14,7 +14,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.suriname.category.CategoryRepository;
 import com.suriname.product.ProductDto;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 public class CustomerExcelService {
 
     private final CustomerService customerService; 
-    private final CategoryRepository categoryRepository;
 
     public void importFromExcel(MultipartFile file) throws IOException {
         try (InputStream is = file.getInputStream();
@@ -37,7 +35,10 @@ public class CustomerExcelService {
                 if (row == null || isRowEmpty(row)) continue;
 
                 CustomerRegisterDto dto = parseRow(row);
-                customerService.registerCustomer(dto); 
+                if (dto != null) {
+                    customerService.registerCustomer(dto);
+                }
+
             }
         }
     }
@@ -48,7 +49,14 @@ public class CustomerExcelService {
         dto.setPhone(getCellValue(row, 1));
         dto.setEmail(getCellValue(row, 2));
         dto.setAddress(getCellValue(row, 3));
-        dto.setBirth(LocalDate.parse(getCellValue(row, 4)));
+        try {
+            String birthStr = getCellValue(row, 4);
+            if (!birthStr.isEmpty()) {
+                dto.setBirth(LocalDate.parse(birthStr));
+            }
+        } catch (Exception e) {
+            dto.setBirth(null); 
+        }
 
         ProductDto product = new ProductDto();
         product.setProductName(getCellValue(row, 5));
@@ -58,13 +66,18 @@ public class CustomerExcelService {
         product.setCategoryName(getCellValue(row, 9));
 
         dto.setProduct(product);
+        if (product.getProductName() == null || product.getProductName().isEmpty()) {
+            return null;
+        }
         return dto;
     }
 
     private String getCellValue(Row row, int idx) {
+        if (idx >= row.getLastCellNum()) return "";
         Cell cell = row.getCell(idx);
         return (cell != null) ? cell.toString().trim() : "";
     }
+
     
     private boolean isRowEmpty(Row row) {
         if (row == null) return true;
