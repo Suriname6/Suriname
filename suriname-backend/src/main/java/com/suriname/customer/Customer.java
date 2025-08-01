@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.suriname.product.CustomerProduct;
 
 @Entity
 @Table(name = "customer")
@@ -68,6 +72,10 @@ public class Customer {
         this.birth = birth;
         this.status = Status.ACTIVE;
     }
+
+    public void markAsInactive() {
+        this.status = Status.INACTIVE;
+    }
     
     public void update(String name, String email, String phone, String address, LocalDate birth) {
         this.name = name;
@@ -76,9 +84,9 @@ public class Customer {
         this.address = address;
         this.birth = birth;
     }
+    
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CustomerProduct> customerProducts = new ArrayList<>();
 
 
-    public void markAsInactive() {
-        this.status = Status.INACTIVE;
-    }
 }

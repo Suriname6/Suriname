@@ -1,9 +1,7 @@
 package com.suriname.customer;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,6 +103,7 @@ public class CustomerService {
                 .orElseThrow(() -> new RuntimeException("고객 없음"));
     }
 
+    // 수정
     @Transactional
     public void update(Long id, CustomerRegisterDto dto) {
         Customer customer = getDetail(id);
@@ -112,10 +111,39 @@ public class CustomerService {
         customerRepository.save(customer);
     }
 
+    // 삭제
     @Transactional
     public void softDelete(Long id) {
         Customer customer = getDetail(id);
         customer.markAsInactive();
         customerRepository.save(customer);
     }
+    
+    // 검색
+    public Page<CustomerListDto> searchCustomerDtos(CustomerSearchDto dto, Pageable pageable) {
+        Page<Customer> result = customerRepository.findAll(CustomerSpecification.searchWith(dto), pageable);
+
+        return result.map(customer -> {
+            CustomerProduct cp = customerProductRepository
+                    .findTopByCustomerOrderByCreatedAtDesc(customer)
+                    .orElse(null);
+            Product product = (cp != null) ? cp.getProduct() : null;
+
+            return new CustomerListDto(
+                    customer.getCustomerId(),
+                    customer.getName(),
+                    customer.getPhone(),
+                    customer.getEmail(),
+                    customer.getBirth().toString(),
+                    customer.getAddress(),
+
+                    (product != null) ? product.getProductName() : null,
+                    (product != null && product.getCategory() != null) ? product.getCategory().getName() : null,
+                    (product != null) ? product.getProductBrand() : null,
+                    (product != null) ? product.getModelCode() : null,
+                    (product != null) ? product.getSerialNumber() : null
+            );
+        });
+    }
+
 } 
