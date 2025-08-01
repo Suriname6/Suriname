@@ -1,8 +1,9 @@
 package com.suriname.request.entity;
 
-import com.suriname.customer.entity.Customer;
-import com.suriname.customerproduct.entity.CustomerProduct;
+import com.suriname.customer.Customer;
 import com.suriname.employee.entity.Employee;
+import com.suriname.product.CustomerProduct;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
