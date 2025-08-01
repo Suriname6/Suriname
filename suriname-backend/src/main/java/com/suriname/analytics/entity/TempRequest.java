@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "request")
 public class TempRequest {
     @Id
     private Long requestId;

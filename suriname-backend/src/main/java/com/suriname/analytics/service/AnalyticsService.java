@@ -6,6 +6,7 @@ import com.suriname.analytics.dto.RequestTrendDTO;
 import com.suriname.analytics.dto.SummaryResponseDTO;
 import com.suriname.analytics.entity.RequestStatus;
 import com.suriname.analytics.repository.CustomAnalyticsRepository;
+import com.suriname.request.entity.Request;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,8 +28,8 @@ public class AnalyticsService {
         };
 
         int newRequestCount = customAnalyticsRepository.countByCreatedAtAfter(startDate);
-        int inProgressCount = customAnalyticsRepository.countByStatusIn(List.of(RequestStatus.REPAIRING, RequestStatus.WAITING_FOR_PAYMENT));
-        int completedCount = customAnalyticsRepository.countByStatus(RequestStatus.COMPLETED);
+        int inProgressCount = customAnalyticsRepository.countByStatusIn(List.of(Request.Status.REPAIRING, Request.Status.WAITING_FOR_PAYMENT));
+        int completedCount = customAnalyticsRepository.countByStatus(Request.Status.COMPLETED);
         int totalRequestCount = customAnalyticsRepository.countAll();
 
 

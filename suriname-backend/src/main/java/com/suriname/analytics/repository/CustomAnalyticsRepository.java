@@ -1,7 +1,7 @@
 package com.suriname.analytics.repository;
 
 import com.suriname.analytics.entity.RequestStatus;
-import com.suriname.analytics.entity.TempRequest;
+import com.suriname.request.entity.Request;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface CustomAnalyticsRepository extends JpaRepository<TempRequest, Long> {
+public interface CustomAnalyticsRepository extends JpaRepository<Request, Long> {
 
     int countByCreatedAtAfter(LocalDateTime start);
 
-    int countByStatus(RequestStatus status);
+    int countByStatus(Request.Status status);
 
-    int countByStatusIn(List<RequestStatus> statuses);
+    int countByStatusIn(List<Request.Status> statuses);
 
     @Query("SELECT COUNT(r) FROM TempRequest r")
     int countAll();
