@@ -1,4 +1,4 @@
-package com.suriname.employee.entity;
+package com.suriname.customer;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -10,19 +10,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "employee")
-@Getter
+@Table(name = "customer")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Employee {
+@Getter
+public class Customer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long employeeId;
-
-    @Column(nullable = false, unique = true, length = 50)
-    private String loginId;
-
-    @Column(nullable = false, length = 255)
-    private String password;
+    private Long customerId;
 
     @Column(nullable = false, length = 10)
     private String name;
@@ -32,6 +27,9 @@ public class Employee {
 
     @Column(nullable = false, length = 20)
     private String phone;
+
+    @Column(nullable = false, length = 255)
+    private String address;
 
     @Column(nullable = false)
     private LocalDate birth;
@@ -45,14 +43,6 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private Status status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
-    private Role role;
-
-    public enum Role {
-        ADMIN, STAFF, ENGINEER
-    }
 
     public enum Status {
         ACTIVE, INACTIVE
@@ -70,19 +60,24 @@ public class Employee {
     }
 
     @Builder
-    public Employee(String loginId, String password, String name, String email, String phone, LocalDate birth, Role role) {
-        this.loginId = loginId;
-        this.password = password;
+    public Customer(String name, String email, String phone, String address, LocalDate birth) {
         this.name = name;
         this.email = email;
         this.phone = phone;
+        this.address = address;
         this.birth = birth;
-        this.role = role;
         this.status = Status.ACTIVE;
     }
 
-    public void inactive() {
+    public void markAsInactive() {
         this.status = Status.INACTIVE;
     }
-
+    
+    public void update(String name, String email, String phone, String address, LocalDate birth) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.birth = birth;
+    }
 }
