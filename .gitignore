@@ -13,4 +13,6 @@
 
 # 환경 변수
 suriname-backend/.env.properties
+.env.properties
 /.metadata/
+.gradle/
