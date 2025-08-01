@@ -1,5 +1,8 @@
 package com.suriname.analytics.service;
 
+import com.suriname.analytics.dto.CategoryCountDTO;
+import com.suriname.analytics.dto.EmployeeStatsDTO;
+import com.suriname.analytics.dto.RequestTrendDTO;
 import com.suriname.analytics.dto.SummaryResponseDTO;
 import com.suriname.analytics.entity.RequestStatus;
 import com.suriname.analytics.repository.CustomAnalyticsRepository;
@@ -32,5 +35,40 @@ public class AnalyticsService {
         return new SummaryResponseDTO(
                 newRequestCount, inProgressCount, completedCount, totalRequestCount
         );
+    }
+
+    public List<RequestTrendDTO> getRequestTrend(String groupBy) {
+        String format = switch (groupBy) {
+            case "daily" -> "%Y-%m-%d";
+            case "weekly" -> "%Y-%u";
+            case "monthly" -> "%Y-%m";
+            case "yearly" -> "%Y";
+            default -> throw new IllegalArgumentException("Invalid groupBy: " + groupBy);
+        };
+
+        List<Object[]> result = customAnalyticsRepository.findRequestTrend(format);
+        return result.stream()
+                .map(row -> new RequestTrendDTO((String) row[0], ((Number) row[1]).longValue()))
+                .toList();
+    }
+
+    public List<CategoryCountDTO> getAsCountByCategory() {
+        List<Object[]> results = customAnalyticsRepository.countRequestsByCategory();
+        return results.stream()
+                .map(row -> new CategoryCountDTO((String) row[0], (String) row[1], ((Number) row[2]).longValue()))
+                .toList();
+    }
+
+    public List<EmployeeStatsDTO> getEmployeeStats() {
+        List<Object[]> rawData = customAnalyticsRepository.getEmployeeStatsRaw();
+
+        return rawData.stream().map(row -> new EmployeeStatsDTO(
+                ((Number) row[0]).longValue(),      // employeeId
+                (String) row[1],                    // employeeName
+                ((Number) row[2]).longValue(),      // assignedCount
+                ((Number) row[3]).longValue(),      // completedCount
+                ((Number) row[4]).doubleValue(),    // completionRate
+                row[5] != null ? ((Number) row[5]).doubleValue() : null // averageRating
+        )).toList();
     }
 }
