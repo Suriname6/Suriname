@@ -1,4 +1,4 @@
-package com.suriname.global.security.model;
+package com.suriname.global.security.auth;
 
 import com.suriname.employee.entity.Employee;
 import lombok.Getter;
