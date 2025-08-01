@@ -1,34 +1,83 @@
 package com.suriname.customer;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.suriname.product.CustomerProduct;
-
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customer")
-@Getter @Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class Customer {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long customerId;
 
+    @Column(nullable = false, length = 10)
     private String name;
+
+    @Column(nullable = false, length = 100)
     private String email;
+
+    @Column(nullable = false, length = 20)
     private String phone;
+
+    @Column(nullable = false, length = 255)
     private String address;
+
+    @Column(nullable = false)
     private LocalDate birth;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
-    private CustomerStatus status; 
+    @Column(nullable = false, length = 10)
+    private Status status;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    private List<CustomerProduct> ownedProducts = new ArrayList<>();
+    public enum Status {
+        ACTIVE, INACTIVE
+    }
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @Builder
+    public Customer(String name, String email, String phone, String address, LocalDate birth) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.birth = birth;
+        this.status = Status.ACTIVE;
+    }
+
+    public void markAsInactive() {
+        this.status = Status.INACTIVE;
+    }
+    
+    public void update(String name, String email, String phone, String address, LocalDate birth) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.birth = birth;
+    }
 }

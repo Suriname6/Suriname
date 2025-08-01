@@ -1,6 +1,6 @@
 package com.suriname.request.entity;
 
-import com.suriname.customer.entity.Customer;
+import com.suriname.customer.Customer;
 import com.suriname.customerproduct.entity.CustomerProduct;
 import com.suriname.employee.entity.Employee;
 import jakarta.persistence.*;

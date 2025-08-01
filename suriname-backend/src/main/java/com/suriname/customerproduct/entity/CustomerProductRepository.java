@@ -1,4 +1,4 @@
-package com.suriname.product;
+package com.suriname.customerproduct.entity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

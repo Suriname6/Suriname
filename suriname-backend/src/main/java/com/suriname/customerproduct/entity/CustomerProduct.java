@@ -1,7 +1,8 @@
 package com.suriname.customerproduct.entity;
 
-import com.suriname.customer.entity.Customer;
-import com.suriname.product.entity.Product;
+import com.suriname.customer.Customer;
+import com.suriname.product.Product;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -50,4 +51,10 @@ public class CustomerProduct {
         this.customer = customer;
         this.product = product;
     }
+    
+    public void changeProduct(Product newProduct) {
+        this.product = newProduct;
+    }
+    
+
 }
