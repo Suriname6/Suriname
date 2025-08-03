@@ -56,6 +56,21 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String createRefreshToken(String loginId) {
+        Claims claims = Jwts.claims().setSubject(loginId);
+        claims.put("type", "refresh");
+
+        Date now = new Date();
+        long refreshValidity = validityInMilliseconds * 3;
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + refreshValidity))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public Authentication getAuthentication(String token) {
         String loginId = getLoginId(token);
         Employee employee = employeeRepository.findByLoginId(loginId)
