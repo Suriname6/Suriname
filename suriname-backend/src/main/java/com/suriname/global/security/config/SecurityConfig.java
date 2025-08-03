@@ -1,7 +1,7 @@
 package com.suriname.global.security.config;
 
 import com.suriname.global.security.filter.JwtAuthenticationFilter;
-import com.suriname.global.security.jwt.JwtTokenProvider;
+import com.suriname.global.security.provider.JwtTokenProvider;
 import com.suriname.global.security.service.EmployeeDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

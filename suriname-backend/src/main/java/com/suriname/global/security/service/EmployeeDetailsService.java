@@ -2,7 +2,7 @@ package com.suriname.global.security.service;
 
 import com.suriname.employee.entity.Employee;
 import com.suriname.employee.repository.EmployeeRepository;
-import com.suriname.global.security.auth.EmployeeDetails;
+import com.suriname.global.security.principal.EmployeeDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
