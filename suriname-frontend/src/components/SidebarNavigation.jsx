@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/suriname.png"; 
-import './SidebarNavigation.css';
+import '../css/SidebarNavigation.css';
+import { getUserRole } from "../utils/auth"
 
 export default function SidebarNavigation() {
   const navigate = useNavigate();
@@ -11,16 +12,21 @@ export default function SidebarNavigation() {
   const [selectedSubItem, setSelectedSubItem] = useState(null);
   const [hoveredSubItem, setHoveredSubItem] = useState(null);
 
-  const menuData = {
+  const role = getUserRole();
+
+  let filteredMenu = {
     "고객 관리": ["고객 목록", "고객 등록"],
     "제품 관리": ["제품 목록", "제품 등록"],
     "A/S 접수": ["접수 목록", "접수 등록"],
     "수리 처리": ["수리 내역", "수리 내역 작성", "프리셋 등록"],
     "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
     "배송 관리": ["배송 목록", "배송 등록"],
-    "직원 관리":["직원 목록","직원 가입 요청 목록"],
-    "대시 보드":["통계","담당자별 성과","리포트"]
   };
+
+  if (role === "ADMIN") {
+    filteredMenu["직원 관리"] = ["직원 목록", "직원 가입 요청 목록"];
+    filteredMenu["대시 보드"] = ["통계", "담당자별 성과", "리포트"];
+  }
 
   const handleSubItemClick = (subItem, parentMenu) => {
     setSelectedSubItem(subItem);
@@ -43,7 +49,7 @@ export default function SidebarNavigation() {
       </div>
 
       <div className="sidebar-main">
-        {Object.keys(menuData).map((mainMenu) => (
+        {Object.keys(filteredMenu).map((mainMenu) => (
           <div
             key={mainMenu}
             onMouseEnter={() => handleMenuGroupEnter(mainMenu)}
@@ -62,7 +68,7 @@ export default function SidebarNavigation() {
             </div>
 
             {(hoveredSection === mainMenu || activeSection === mainMenu) &&
-              menuData[mainMenu].map((subMenu) => (
+              filteredMenu[mainMenu].map((subMenu) => (
                 <div
                   key={subMenu}
                   className={`sub-menu-item ${

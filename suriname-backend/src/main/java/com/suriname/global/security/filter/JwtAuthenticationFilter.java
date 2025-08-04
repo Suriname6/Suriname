@@ -1,6 +1,6 @@
 package com.suriname.global.security.filter;
 
-import com.suriname.global.security.jwt.JwtTokenProvider;
+import com.suriname.global.security.provider.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
