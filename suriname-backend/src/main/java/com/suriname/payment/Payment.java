@@ -64,4 +64,9 @@ public class Payment {
         this.status = Status.COMPLETED;
         this.confirmedAt = LocalDateTime.now();
     }
+
+    public void setAccountAndBank(String account, String bank) {
+        this.account = account;
+        this.bank = bank;
+    }
 }
