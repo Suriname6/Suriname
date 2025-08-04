@@ -12,5 +12,7 @@
 *.log
 
 # 환경 변수
-.env
+suriname-backend/.env.properties
+.env.properties
 /.metadata/
+.gradle/
