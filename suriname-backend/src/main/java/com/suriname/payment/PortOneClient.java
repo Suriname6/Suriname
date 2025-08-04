@@ -1,47 +1,62 @@
 package com.suriname.payment;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PortOneClient {
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final PortOneConfig config;
 
-    public PortOneVbankRes issueVirtualAccountV2(String merchantUid, int amount) {
+    private final RestTemplate rest = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${portone.secret-key}")
+    private String apiSecret;
+
+    @Value("${portone.hostname}")
+    private String hostname;
+
+    public JsonNode issueVirtualAccount(String merchantUid, VirtualAccountRequestDto dto) {
+        String url = hostname + "/payments/" + merchantUid + "/virtual-account";
+
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "PortOne " + config.getSecretKey());
+        headers.set("Authorization", "PortOne " + apiSecret);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("merchant_uid", merchantUid);
-        body.put("pay_method", "vbank");
-        body.put("amount", amount);
+        // 포트원 V2 API에 맞는 요청 본문 구성
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("channelKey", "channel-key-" + System.currentTimeMillis());
+        requestBody.put("orderName", "수리 서비스 결제");
+        requestBody.put("totalAmount", dto.getAmount());
+        requestBody.put("currency", "KRW");
+        
+        Map<String, Object> customer = new HashMap<>();
+        customer.put("fullName", dto.getVbankHolder());
+        requestBody.put("customer", customer);
+        
+        Map<String, Object> virtualAccount = new HashMap<>();
+        virtualAccount.put("expiry", Map.of("validHours", 48)); // 48시간 후 만료
+        requestBody.put("virtualAccount", virtualAccount);
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-        ResponseEntity<Map> res = restTemplate.postForEntity(
-                "https://api.portone.io/v2/payments/prepare",
-                entity,
-                Map.class
-        );
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+        ResponseEntity<String> response = rest.postForEntity(url, entity, String.class);
 
-        Map<String, Object> data = (Map<String, Object>) res.getBody().get("response");
-        return new PortOneVbankRes(
-                String.valueOf(data.get("vbank_code")),
-                String.valueOf(data.get("vbank_num"))
-        );
+        try {
+            JsonNode responseNode = objectMapper.readTree(response.getBody());
+            if (responseNode.has("virtualAccount")) {
+                return responseNode.get("virtualAccount");
+            }
+            throw new RuntimeException("가상계좌 정보가 응답에 없습니다");
+        } catch (Exception e) {
+            throw new RuntimeException("가상계좌 발급 응답 파싱 실패: " + e.getMessage(), e);
+        }
     }
-
-    public record PortOneVbankRes(String bankCode, String accountNumber) {}
 }
