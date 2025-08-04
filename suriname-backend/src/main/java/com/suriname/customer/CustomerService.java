@@ -1,5 +1,7 @@
 package com.suriname.customer;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,8 +13,10 @@ import com.suriname.category.CategoryRepository;
 import com.suriname.product.CustomerProduct;
 import com.suriname.product.CustomerProductRepository;
 import com.suriname.product.Product;
+import com.suriname.product.ProductDto;
 import com.suriname.product.ProductRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -84,7 +88,7 @@ public class CustomerService {
                 customer.getName(),
                 customer.getPhone(),
                 customer.getEmail(),
-                customer.getBirth().toString(),
+                customer.getBirth() != null ? customer.getBirth().toString() : null,
                 customer.getAddress(),
 
                 (product != null) ? product.getProductName() : null,
@@ -97,27 +101,63 @@ public class CustomerService {
     }
 
 
-    public Customer getDetail(Long id) {
-        return customerRepository.findById(id)
-                .filter(c -> c.getStatus() == Customer.Status.ACTIVE)
-                .orElseThrow(() -> new RuntimeException("고객 없음"));
+    public CustomerDetailDto getDetailDto(Long id) {
+        Customer customer = customerRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("고객을 찾을 수 없습니다."));
+
+        List<ProductDto> products = customer.getCustomerProducts().stream()
+            .map(cp -> {
+                Product p = cp.getProduct();
+                return new ProductDto(
+                    p.getProductId(),
+                    p.getProductName(),
+                    p.getCategory().getName(),
+                    p.getProductBrand(),
+                    p.getModelCode(),
+                    p.getSerialNumber()
+                );
+            }).toList();
+
+        CustomerDetailDto dto = new CustomerDetailDto();
+        dto.setCustomerId(customer.getCustomerId());
+        dto.setName(customer.getName());
+        dto.setEmail(customer.getEmail());
+        dto.setPhone(customer.getPhone());
+        dto.setAddress(customer.getAddress());
+        dto.setBirth(customer.getBirth().toString());
+        dto.setStatus(customer.getStatus().name());
+        dto.setProducts(products);
+
+        return dto;
     }
+
+
 
     // 수정
     @Transactional
     public void update(Long id, CustomerRegisterDto dto) {
-        Customer customer = getDetail(id);
-        customer.update(dto.getName(), dto.getEmail(), dto.getPhone(), dto.getAddress(), dto.getBirth());
-        customerRepository.save(customer);
+        Customer customer = customerRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("해당 고객을 찾을 수 없습니다."));
+
+        customer.update(
+            dto.getName(),
+            dto.getEmail(),
+            dto.getPhone(),
+            dto.getAddress(),
+            dto.getBirth()
+        );
+
     }
 
     // 삭제
     @Transactional
-    public void softDelete(Long id) {
-        Customer customer = getDetail(id);
-        customer.markAsInactive();
+    public void softDelete(Long customerId) {
+        Customer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다."));
+        customer.markAsDeleted();
         customerRepository.save(customer);
     }
+
     
     // 검색
     public Page<CustomerListDto> searchCustomerDtos(CustomerSearchDto dto, Pageable pageable) {
@@ -134,7 +174,7 @@ public class CustomerService {
                     customer.getName(),
                     customer.getPhone(),
                     customer.getEmail(),
-                    customer.getBirth().toString(),
+                    customer.getBirth() != null ? customer.getBirth().toString() : null,
                     customer.getAddress(),
 
                     (product != null) ? product.getProductName() : null,

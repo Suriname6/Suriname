@@ -13,8 +13,8 @@ public class CustomerRegisterDto {
     private String name;
     private String phone;
     private String email;
-    private String address;
     private LocalDate birth;
+    private String address;
 
     private ProductDto product;
 

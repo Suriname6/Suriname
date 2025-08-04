@@ -6,6 +6,8 @@ import java.time.LocalDate;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -46,24 +48,31 @@ public class CustomerExcelService {
     private CustomerRegisterDto parseRow(Row row) {
         CustomerRegisterDto dto = new CustomerRegisterDto();
         dto.setName(getCellValue(row, 0));
-        dto.setPhone(getCellValue(row, 1));
-        dto.setEmail(getCellValue(row, 2));
-        dto.setAddress(getCellValue(row, 3));
         try {
-            String birthStr = getCellValue(row, 4);
-            if (!birthStr.isEmpty()) {
-                dto.setBirth(LocalDate.parse(birthStr));
+            Cell birthCell = row.getCell(1);
+            if (birthCell != null) {
+                if (birthCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(birthCell)) {
+                    dto.setBirth(birthCell.getLocalDateTimeCellValue().toLocalDate());
+                } else {
+                    String birthStr = getCellValue(row, 1);
+                    if (birthStr != null && !birthStr.isEmpty()) {
+                        dto.setBirth(LocalDate.parse(birthStr));  // yyyy-MM-dd
+                    }
+                }
             }
         } catch (Exception e) {
-            dto.setBirth(null); 
+            dto.setBirth(null);
         }
-
+        dto.setPhone(getCellValue(row, 2));
+        dto.setEmail(getCellValue(row, 3));
+        dto.setAddress(getCellValue(row, 4));
+       
         ProductDto product = new ProductDto();
-        product.setProductName(getCellValue(row, 5));
-        product.setProductBrand(getCellValue(row, 6));
-        product.setModelCode(getCellValue(row, 7));
-        product.setSerialNumber(getCellValue(row, 8));
-        product.setCategoryName(getCellValue(row, 9));
+        product.setCategoryName(getCellValue(row, 5));  
+        product.setProductName(getCellValue(row, 6));         
+        product.setProductBrand(getCellValue(row, 7));        
+        product.setModelCode(getCellValue(row, 8));          
+        product.setSerialNumber(getCellValue(row, 9));   
 
         dto.setProduct(product);
         if (product.getProductName() == null || product.getProductName().isEmpty()) {

@@ -8,7 +8,7 @@ export default function SidebarNavigation() {
 
 const routeMap = {
   "고객 목록": "/customer/list",
-  "고객 등록": "/customer/register",
+  "고객 등록": "/customer/upload",
  /* "제품 목록": "/product/list",
   "제품 등록": "/product/register",
   "접수 목록": "/request/list",

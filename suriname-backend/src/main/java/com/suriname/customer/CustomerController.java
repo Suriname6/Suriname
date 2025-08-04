@@ -1,5 +1,6 @@
 package com.suriname.customer;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
@@ -32,7 +33,6 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final CustomerExcelService customerExcelService;
-    private final CustomerProductRepository customerProductRepository;
     
     // 등록
     @PostMapping
@@ -51,18 +51,26 @@ public class CustomerController {
     
     // 상세 조회
     @GetMapping("/{id}")
-    public ResponseEntity<?> detail(@PathVariable Long id) {
-        Customer customer = customerService.getDetail(id);
-        return ResponseEntity.ok(Map.of("status", 200, "data", customer));
+    public ResponseEntity<?> detail(@PathVariable("id") Long id) {
+        CustomerDetailDto dto = customerService.getDetailDto(id); 
+        return ResponseEntity.ok(Map.of("status", 200, "data", dto));
     }
-    
-    
-    // 삭제
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+
+
+    // 단건 삭제
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
         customerService.softDelete(id);
         return ResponseEntity.ok(Map.of("status", 200, "message", "삭제 완료"));
     }
+    
+    //다건 삭제
+    @PostMapping("/delete")
+    public ResponseEntity<?> deleteMultiple(@RequestBody List<Long> customerIds) {
+        customerIds.forEach(customerService::softDelete);
+        return ResponseEntity.ok(Map.of("status", 200, "message", customerIds.size() + "개 항목 삭제 완료"));
+    }
+
     
     // 검색
     @PostMapping("/search")
@@ -78,17 +86,15 @@ public class CustomerController {
 
 
     // 액셀 일괄 등록
-    @PostMapping("/upload")
+    @PostMapping("/upload/excel")
     public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
         try {
-            customerExcelService.importFromExcel(file);
-            return ResponseEntity.ok(Map.of("status", 200, "message", "업로드 성공"));
+            customerExcelService.importFromExcel(file); 
+            return ResponseEntity.ok(Map.of("message", "업로드 완료"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("status", 400, "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
     }
-
-
 
 
 }

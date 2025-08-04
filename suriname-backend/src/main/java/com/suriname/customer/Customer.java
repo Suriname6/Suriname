@@ -51,6 +51,13 @@ public class Customer {
     public enum Status {
         ACTIVE, INACTIVE
     }
+    
+    @Column(nullable = false)
+    private boolean isDeleted = false; 
+
+    public void markAsDeleted() {
+        this.isDeleted = true;
+    }
 
     @PrePersist
     public void onCreate() {

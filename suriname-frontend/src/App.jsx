@@ -1,20 +1,23 @@
-import React from 'react';
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useLocation,
   Outlet,
-} from 'react-router-dom';
-import SidebarNavigation from './components/SidebarNavigation';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import CustomerList from './pages/Customer/CustomerList';
+} from "react-router-dom";
+import SidebarNavigation from "./components/SidebarNavigation";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import CustomerList from "./pages/Customer/CustomerList";
+import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
+import CustomerAdd from "./pages/Customer/CustomerAdd";
+import CustomerDetail from "./pages/Customer/CustomerDetail";
 
 function LayoutWithSidebar() {
   const location = useLocation();
-  const hideSidebarPaths = ['/login', '/signup'];
+  const hideSidebarPaths = ["/login", "/signup"];
   const shouldHideSidebar = hideSidebarPaths.includes(location.pathname);
 
   return (
@@ -37,6 +40,9 @@ function App() {
         <Route element={<LayoutWithSidebar />}>
           <Route path="/" element={<Home />} />
           <Route path="/customer/list" element={<CustomerList />} />
+          <Route path="/customer/upload/excel" element={<CustomerExcelAdd />} />
+          <Route path="/customer/upload" element={<CustomerAdd />} />
+          <Route path="/customer/detail/:id" element={<CustomerDetail />} />
         </Route>
       </Routes>
     </Router>

@@ -13,6 +13,7 @@ public class CustomerSpecification {
             query.distinct(true); 
 
             Predicate predicate = cb.conjunction();
+            predicate = cb.and(predicate, cb.isFalse(root.get("isDeleted")));
 
             // 고객 이름
             if (dto.getCustomerName() != null && !dto.getCustomerName().isBlank()) {
@@ -28,20 +29,31 @@ public class CustomerSpecification {
             Join<Customer, CustomerProduct> cpJoin = root.join("customerProducts", jakarta.persistence.criteria.JoinType.LEFT);
             Join<CustomerProduct, Product> productJoin = cpJoin.join("product", jakarta.persistence.criteria.JoinType.LEFT);
 
-            // 제품명
-            if (dto.getProductName() != null && !dto.getProductName().isBlank()) {
-                predicate = cb.and(predicate, cb.like(productJoin.get("productName"), "%" + dto.getProductName() + "%"));
-            }
+            // 제품관리
+            if (
+                    (dto.getProductName() != null && !dto.getProductName().isBlank()) ||
+                    (dto.getModelCode() != null && !dto.getModelCode().isBlank()) ||
+                    (dto.getManufacturer() != null && !dto.getManufacturer().isBlank())
+                ) {
+                    cpJoin = root.join("customerProducts", jakarta.persistence.criteria.JoinType.LEFT);
+                    productJoin = cpJoin.join("product", jakarta.persistence.criteria.JoinType.LEFT);
 
-            // 모델코드
-            if (dto.getModelCode() != null && !dto.getModelCode().isBlank()) {
-                predicate = cb.and(predicate, cb.like(productJoin.get("modelCode"), "%" + dto.getModelCode() + "%"));
-            }
+                    if (dto.getProductName() != null && !dto.getProductName().isBlank()) {
+                        predicate = cb.and(predicate,
+                            cb.like(productJoin.get("productName"), "%" + dto.getProductName() + "%"));
+                    }
 
-            // 제조사 (== productBrand)
-            if (dto.getManufacturer() != null && !dto.getManufacturer().isBlank()) {
-                predicate = cb.and(predicate, cb.like(productJoin.get("productBrand"), "%" + dto.getManufacturer() + "%"));
-            }
+                    if (dto.getModelCode() != null && !dto.getModelCode().isBlank()) {
+                        predicate = cb.and(predicate,
+                            cb.like(productJoin.get("modelCode"), "%" + dto.getModelCode() + "%"));
+                    }
+
+                    if (dto.getManufacturer() != null && !dto.getManufacturer().isBlank()) {
+                        predicate = cb.and(predicate,
+                            cb.like(productJoin.get("productBrand"), "%" + dto.getManufacturer() + "%"));
+                    }
+                }
+
 
             return predicate;
         };
