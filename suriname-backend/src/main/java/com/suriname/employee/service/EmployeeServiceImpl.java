@@ -9,6 +9,7 @@ import com.suriname.employee.service.mapper.EmployeeMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeMapper employeeMapper;
 
     @Override
+    @Transactional
     public EmployeeResponseDto createEmployee(EmployeeRequestDto requestDto) {
         validateDuplicateLoginId(requestDto.getLoginId());
 
@@ -31,12 +33,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EmployeeResponseDto getEmployeeById(Long employeeId) {
         Employee employee = findEmployee(employeeId);
         return employeeMapper.toDto(employee);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmployeeResponseDto> getAllEmployees() {
         return employeeRepository.findAll().stream()
                 .map(employeeMapper::toDto)
@@ -44,6 +48,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public EmployeeResponseDto updateEmployee(Long employeeId, EmployeeUpdateRequestDto requestDto) {
         Employee employee = findEmployee(employeeId);
 
@@ -55,6 +60,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public void deactivateEmployee(Long employeeId) {
         Employee employee = findEmployee(employeeId);
         employee.inactive();
