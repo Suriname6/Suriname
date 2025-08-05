@@ -16,4 +16,5 @@ public class EmployeeRequestDto {
     private String phone;
     private LocalDate birth;
     private Role role;
+    private String address;
 }

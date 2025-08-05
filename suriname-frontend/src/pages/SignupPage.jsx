@@ -14,6 +14,7 @@ function SignupPage() {
     password: "",
     passwordConfirm: "",
     phone: "",
+    address: "",
   });
 
   const [error, setError] = useState("");
@@ -46,6 +47,7 @@ function SignupPage() {
         password: "",
         passwordConfirm: "",
         phone: "",
+        address: "",
       });
     } catch (err) {
       setError("회원가입에 실패했습니다. 다시 시도해주세요.");
@@ -91,6 +93,19 @@ function SignupPage() {
             value={formData.email}
             onChange={handleChange}
             required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="address">주소</label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            required
+            placeholder="예: 서울특별시 강남구 테헤란로 123 4층 (역삼동)"
           />
         </div>
 
