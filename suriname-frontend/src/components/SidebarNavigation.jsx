@@ -23,10 +23,10 @@ export default function SidebarNavigation() {
     /* "배송 목록": "/delivery/list",
   "배송 등록": "/delivery/register",
   "직원 목록": "/staff/list",
-  "직원 가입 요청 목록": "/staff/requests",
+  "직원 가입 요청 목록": "/staff/requests",*/
   "통계": "/dashboard/statistics",
   "담당자별 성과": "/dashboard/performance",
-  "리포트": "/dashboard/report",*/
+  "리포트": "/dashboard/report",
   };
 
   const [hoveredSection, setHoveredSection] = useState(null);

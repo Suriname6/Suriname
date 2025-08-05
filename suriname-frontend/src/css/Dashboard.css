@@ -4,6 +4,7 @@
 }
 
 .dashboard-main {
+  margin-left: 18vw;
   flex: 1;
   padding: 24px;
 }
