@@ -1,6 +1,5 @@
 package com.suriname.employee.dto;
 
-import com.suriname.employee.entity.Employee.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +22,7 @@ public class SignupRequestDto {
     @NotBlank
     private String name;
 
+    @NotBlank
     @Email
     private String email;
 
@@ -31,7 +31,4 @@ public class SignupRequestDto {
 
     @NotNull
     private LocalDate birth;
-
-    @NotNull
-    private Role role;
 }
