@@ -1,7 +1,4 @@
-package com.suriname.customerproduct.entity;
-
-import com.suriname.customer.Customer;
-import com.suriname.product.Product;
+package com.suriname.product.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -10,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+
+import com.suriname.customer.entity.Customer;
 
 @Entity
 @Table(name = "customer_product")
@@ -52,9 +51,11 @@ public class CustomerProduct {
         this.product = product;
     }
     
-    public void changeProduct(Product newProduct) {
-        this.product = newProduct;
+    public void updateCustomerAndProduct(Customer customer, Product product) {
+        this.customer = customer;
+        this.product = product;
+        this.updatedAt = LocalDateTime.now();
     }
-    
+
 
 }

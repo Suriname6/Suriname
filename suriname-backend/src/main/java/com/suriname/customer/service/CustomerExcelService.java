@@ -1,4 +1,4 @@
-package com.suriname.customer;
+package com.suriname.customer.service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,6 +6,8 @@ import java.time.LocalDate;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -14,8 +16,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.suriname.category.CategoryRepository;
-import com.suriname.product.ProductDto;
+import com.suriname.customer.dto.CustomerRegisterDto;
+import com.suriname.product.dto.ProductDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class CustomerExcelService {
 
     private final CustomerService customerService; 
-    private final CategoryRepository categoryRepository;
 
     public void importFromExcel(MultipartFile file) throws IOException {
         try (InputStream is = file.getInputStream();
@@ -37,7 +38,10 @@ public class CustomerExcelService {
                 if (row == null || isRowEmpty(row)) continue;
 
                 CustomerRegisterDto dto = parseRow(row);
-                customerService.registerCustomer(dto); 
+                if (dto != null) {
+                    customerService.registerCustomer(dto);
+                }
+
             }
         }
     }
@@ -45,26 +49,45 @@ public class CustomerExcelService {
     private CustomerRegisterDto parseRow(Row row) {
         CustomerRegisterDto dto = new CustomerRegisterDto();
         dto.setName(getCellValue(row, 0));
-        dto.setPhone(getCellValue(row, 1));
-        dto.setEmail(getCellValue(row, 2));
-        dto.setAddress(getCellValue(row, 3));
-        dto.setBirth(LocalDate.parse(getCellValue(row, 4)));
-
+        try {
+            Cell birthCell = row.getCell(1);
+            if (birthCell != null) {
+                if (birthCell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(birthCell)) {
+                    dto.setBirth(birthCell.getLocalDateTimeCellValue().toLocalDate());
+                } else {
+                    String birthStr = getCellValue(row, 1);
+                    if (birthStr != null && !birthStr.isEmpty()) {
+                        dto.setBirth(LocalDate.parse(birthStr));  // yyyy-MM-dd
+                    }
+                }
+            }
+        } catch (Exception e) {
+            dto.setBirth(null);
+        }
+        dto.setPhone(getCellValue(row, 2));
+        dto.setEmail(getCellValue(row, 3));
+        dto.setAddress(getCellValue(row, 4));
+       
         ProductDto product = new ProductDto();
-        product.setProductName(getCellValue(row, 5));
-        product.setProductBrand(getCellValue(row, 6));
-        product.setModelCode(getCellValue(row, 7));
-        product.setSerialNumber(getCellValue(row, 8));
-        product.setCategoryName(getCellValue(row, 9));
+        product.setCategoryName(getCellValue(row, 5));  
+        product.setProductName(getCellValue(row, 6));         
+        product.setProductBrand(getCellValue(row, 7));        
+        product.setModelCode(getCellValue(row, 8));          
+        product.setSerialNumber(getCellValue(row, 9));   
 
         dto.setProduct(product);
+        if (product.getProductName() == null || product.getProductName().isEmpty()) {
+            return null;
+        }
         return dto;
     }
 
     private String getCellValue(Row row, int idx) {
+        if (idx >= row.getLastCellNum()) return "";
         Cell cell = row.getCell(idx);
         return (cell != null) ? cell.toString().trim() : "";
     }
+
     
     private boolean isRowEmpty(Row row) {
         if (row == null) return true;

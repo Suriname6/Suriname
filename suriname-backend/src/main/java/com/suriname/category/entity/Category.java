@@ -1,4 +1,4 @@
-package com.suriname.category;
+package com.suriname.category.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
