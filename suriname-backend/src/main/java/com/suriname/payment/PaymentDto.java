@@ -50,7 +50,7 @@ public class PaymentDto {
     
     private String getStatusInKorean(Payment.Status status) {
         switch (status) {
-            case COMPLETED:
+            case SUCCESS:
                 return "입금완료";
             case PENDING:
                 return "입금대기";

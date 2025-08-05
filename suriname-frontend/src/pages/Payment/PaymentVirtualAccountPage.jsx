@@ -1,0 +1,191 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createVirtualAccount } from '../../api/payment';
+import styles from '../../css/Payment/PaymentVirtualAccount.module.css';
+
+const PaymentVirtualAccountPage = () => {
+  const [selectedTab, setSelectedTab] = useState("virtual");
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    customerName: '',
+    receptionNumber: '',
+    paymentAmount: ''
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState(''); // 'success', 'error'
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleTabClick = (tab) => {
+    if (tab === "list") {
+      navigate("/payment/list");
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      customerName: '',
+      receptionNumber: '',
+      paymentAmount: ''
+    });
+  };
+
+  const handleRequest = async () => {
+    // 폼 검증
+    if (!formData.customerName || !formData.receptionNumber || !formData.paymentAmount) {
+      setMessage('모든 필드를 입력해주세요.');
+      setMessageType('error');
+      return;
+    }
+
+    // 결제 금액 숫자 검증
+    const amount = parseInt(formData.paymentAmount.replace(/[,\s]/g, ''));
+    if (isNaN(amount) || amount <= 0) {
+      setMessage('올바른 결제 금액을 입력해주세요.');
+      setMessageType('error');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      // 요청 데이터 준비
+      const requestData = {
+        requestNo: formData.receptionNumber, // 접수번호로 요청 찾기
+        merchantUid: `VIR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        amount: amount,
+        vbankHolder: formData.customerName,
+        vbankDue: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7일 후
+      };
+
+      console.log('가상계좌 발급 요청:', requestData);
+
+      const response = await createVirtualAccount(requestData);
+      
+      setMessage(`가상계좌가 발급되었습니다.\n은행: ${response.bankName}\n계좌번호: ${response.accountNumber}\n마감일: ${response.dueDate}`);
+      setMessageType('success');
+
+      // 폼 초기화
+      setFormData({
+        customerName: '',
+        receptionNumber: '',
+        paymentAmount: ''
+      });
+
+    } catch (error) {
+      console.error('가상계좌 발급 실패:', error);
+      setMessage(error.response?.data?.message || '가상계좌 발급에 실패했습니다.');
+      setMessageType('error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={styles.customerContainer}>
+      <div className={styles.tabNavigation}>
+        <div className={styles.tabContainer}>
+          <button
+            className={`${styles.tabButton} ${
+              selectedTab === "virtual" ? styles.active : styles.inactive
+            }`}
+            onClick={() => {
+              setSelectedTab("virtual");
+              handleTabClick("virtual");
+            }}
+          >
+            가상계좌 발급 요청
+          </button>
+
+        </div>
+      </div>
+
+      <div className={styles.sectionContainer}>
+        <div className={styles.sectionContent}>
+          <h2 className={styles.sectionTitle}>가상계좌 정보</h2>
+          {message && (
+            <div className={`${styles.message} ${styles[messageType]}`}>
+              {message.split('\n').map((line, index) => (
+                <div key={index}>{line}</div>
+              ))}
+            </div>
+          )}
+
+          <div className={styles.inputGroup}>
+            <div className={styles.inputField} style={{ flex: 1 }}>
+              <label className={styles.inputLabel}>
+                고객명
+              </label>
+              <input
+                type="text"
+                name="customerName"
+                className={styles.inputControl}
+                placeholder="박길동"
+                value={formData.customerName}
+                onChange={handleInputChange}
+                disabled={loading}
+              />
+            </div>
+            <div className={styles.inputField} style={{ flex: 1 }}>
+              <label className={styles.inputLabel}>
+                접수번호
+              </label>
+              <input
+                type="text"
+                name="receptionNumber"
+                className={styles.inputControl}
+                placeholder="AS-250723-001"
+                value={formData.receptionNumber}
+                onChange={handleInputChange}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <div className={styles.inputField} style={{ width: "100%" }}>
+              <label className={styles.inputLabel}>결제 금액</label>
+              <input
+                type="text"
+                name="paymentAmount"
+                className={styles.inputControl}
+                placeholder="999,999,999"
+                value={formData.paymentAmount}
+                onChange={handleInputChange}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className={styles.buttonGroup}>
+            <button 
+              className={styles.cancelButton} 
+              onClick={handleCancel}
+              disabled={loading}
+            >
+              취소
+            </button>
+            <button 
+              className={styles.submitButton} 
+              onClick={handleRequest}
+              disabled={loading}
+            >
+              {loading ? '처리중...' : '요청'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PaymentVirtualAccountPage;

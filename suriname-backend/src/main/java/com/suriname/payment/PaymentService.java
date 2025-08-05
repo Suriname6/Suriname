@@ -138,12 +138,24 @@ public class PaymentService {
 
     @Transactional
     public VirtualAccountResponseDto issueVirtualAccount(VirtualAccountRequestDto dto) {
-        Request request = requestRepository.findById(dto.getRequestId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 수리 요청이 없습니다."));
+        Request request;
+        
+        // requestId가 있으면 ID로 조회, 없으면 requestNo로 조회
+        if (dto.getRequestId() != null) {
+            request = requestRepository.findById(dto.getRequestId())
+                    .orElseThrow(() -> new IllegalArgumentException("해당 수리 요청이 없습니다."));
+        } else if (dto.getRequestNo() != null && !dto.getRequestNo().trim().isEmpty()) {
+            request = requestRepository.findByRequestNo(dto.getRequestNo())
+                    .orElseThrow(() -> new IllegalArgumentException("해당 접수번호의 수리 요청이 없습니다: " + dto.getRequestNo()));
+        } else {
+            throw new IllegalArgumentException("요청 ID 또는 접수번호가 필요합니다.");
+        }
 
         Payment payment = Payment.builder()
                 .request(request)
                 .merchantUid(dto.getMerchantUid())
+                .account("") // 빈 문자열로 초기화
+                .bank("") // 빈 문자열로 초기화
                 .cost(dto.getAmount())
                 .status(Payment.Status.PENDING)
                 .build();
@@ -154,9 +166,11 @@ public class PaymentService {
             JsonNode response = portOneClient.issueVirtualAccount(dto.getMerchantUid(), dto);
 
             // 포트원 V2 응답 구조에 맞게 수정
-            String bank = response.get("bankCode").asText();
+            String bank = response.has("bank") ? response.get("bank").get("name").asText() : 
+                         response.has("bankCode") ? response.get("bankCode").asText() : "미지정";
             String account = response.get("accountNumber").asText();
-            String dueDate = response.get("expiry").get("dueDate").asText();
+            String dueDate = response.has("expiry") ? response.get("expiry").get("dueDate").asText() : 
+                            dto.getVbankDue();
 
             payment.setAccountAndBank(account, bank);
             paymentRepository.save(payment);

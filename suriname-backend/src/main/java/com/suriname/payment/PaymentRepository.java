@@ -20,7 +20,7 @@ public interface PaymentRepository extends JpaRepository<Payment,Long> {
            "AND (:bankName IS NULL OR p.bank LIKE %:bankName%) " +
            "AND (:paymentAmount IS NULL OR p.cost = :paymentAmount) " +
            "AND (:status IS NULL OR " +
-           "     (:status = '입금완료' AND p.status = 'COMPLETED') OR " +
+           "     (:status = '입금완료' AND p.status = 'SUCCESS') OR " +
            "     (:status = '입금대기' AND p.status = 'PENDING') OR " +
            "     (:status = '입금실패' AND p.status = 'FAILED')) " +
            "AND (:startDate IS NULL OR p.confirmedAt >= :startDate) " +
