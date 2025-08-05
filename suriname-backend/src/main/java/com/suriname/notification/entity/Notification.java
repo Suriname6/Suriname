@@ -1,6 +1,6 @@
 package com.suriname.notification.entity;
 
-import com.suriname.customer.Customer;
+import com.suriname.customer.entity.Customer;
 import com.suriname.employee.entity.Employee;
 import com.suriname.request.entity.Request;
 import jakarta.persistence.*;

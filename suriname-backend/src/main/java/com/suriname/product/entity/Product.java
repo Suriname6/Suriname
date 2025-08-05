@@ -1,4 +1,4 @@
-package com.suriname.product;
+package com.suriname.product.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-import com.suriname.category.Category;
+import com.suriname.category.entity.Category;
 
 @Entity
 @Table(name = "product")
@@ -59,7 +59,7 @@ public class Product {
 
     @Builder
     public Product(Category category, String productName, String productBrand,
-                    String modelCode, String serialNumber) {
+                    String modelCode, String serialNumber, Boolean isVisible) {
         this.category = category;
         this.productName = productName;
         this.productBrand = productBrand;
@@ -68,12 +68,13 @@ public class Product {
         this.isVisible = true;
     }
     
-    public void update(String productName, String productBrand, String modelCode, String serialNumber, Category category) {
-        this.productName = productName;
-        this.productBrand = productBrand;
-        this.modelCode = modelCode;
-        this.serialNumber = serialNumber;
-        this.category = category;
-        this.updatedAt = LocalDateTime.now();
-    }
+    public void updateProduct(String productName, String productBrand, String modelCode,
+            String serialNumber, Category category) {
+this.productName = productName;
+this.productBrand = productBrand;
+this.modelCode = modelCode;
+this.serialNumber = serialNumber;
+this.category = category;
+}
+
 }

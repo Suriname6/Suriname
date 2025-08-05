@@ -1,23 +1,61 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  Outlet,
+} from "react-router-dom";
+import SidebarNavigation from "./components/SidebarNavigation";
+
+import Home from "./pages/Home";
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage';
-import DashboardPage from './pages/DashboardPage';
-import PaymentListPage from './pages/PaymentListPage';
-import PaymentVirtualAccountPage from './pages/PaymentVirtualAccountPage';
+import CustomerList from "./pages/Customer/CustomerList";
+import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
+import CustomerAdd from "./pages/Customer/CustomerAdd";
+import CustomerDetail from "./pages/Customer/CustomerDetail";
+import DashboardPage from "./pages/DashboardPage";
+import PaymentListPage from "./pages/PaymentListPage";
+import PaymentVirtualAccountPage from "./pages/PaymentVirtualAccountPage";
+
+function LayoutWithSidebar() {
+  const location = useLocation();
+  const hideSidebarPaths = ["/login", "/signup"];
+  const shouldHideSidebar = hideSidebarPaths.includes(location.pathname);
+
+  return (
+    <div className="flex">
+      {!shouldHideSidebar && <SidebarNavigation />}
+      <div className="flex-1 p-6 bg-gray-100 min-h-screen">
+        <Outlet />
+      </div>
+    </div>
+  );
+}
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* 사이드바 숨김 페이지 */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/payment/list" element={<PaymentListPage />} />
-        <Route path="/payment/virtualaccount" element={<PaymentVirtualAccountPage />} />
-        
+
+        {/* 사이드바 포함 페이지 */}
+        <Route element={<LayoutWithSidebar />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/customer/list" element={<CustomerList />} />
+          <Route path="/customer/upload/excel" element={<CustomerExcelAdd />} />
+          <Route path="/customer/upload" element={<CustomerAdd />} />
+          <Route path="/customer/detail/:id" element={<CustomerDetail />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/payment/list" element={<PaymentListPage />} />
+          <Route
+            path="/payment/virtualaccount"
+            element={<PaymentVirtualAccountPage />}
+          />
+        </Route>
       </Routes>
     </Router>
   );
