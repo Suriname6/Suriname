@@ -13,7 +13,6 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor
 public class SignupRequestDto {
-
     @NotBlank
     private String loginId;
 

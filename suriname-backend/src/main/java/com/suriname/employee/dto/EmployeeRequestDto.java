@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Getter
 @AllArgsConstructor
 public class EmployeeRequestDto {
-
     private String loginId;
     private String password;
     private String name;
