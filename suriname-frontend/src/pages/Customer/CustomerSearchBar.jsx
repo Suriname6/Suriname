@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import SearchBarLayout from "../../components/SearchLayout";
-import styles from "./CustomerSearchBar.module.css";
+import styles from "../../css/Customer/CustomerSearchBar.module.css";
 
 const CustomerSearchBar = ({ onSearch }) => {
   const [form, setForm] = useState({

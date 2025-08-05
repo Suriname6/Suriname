@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import styles from "../../css/Customer/CustomerDetail.module.css";
 
 const CustomerDetail = () => {
   const { id } = useParams();
@@ -85,278 +86,108 @@ const CustomerDetail = () => {
     }
   };
 
-  if (!formData) return <div style={{ padding: "24px" }}>Loading...</div>;
+  if (!formData) return <div className={styles.loading}>Loading...</div>;
 
   return (
-    <div
-      style={{
-        marginLeft: "200px",
-        padding: "32px 24px",
-        minHeight: "100vh",
-        backgroundColor: "#ffffff",
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          width: "100%",
-        }}
-      >
+    <div className={styles.customerContainer}>
+      <div className={styles.sectionContainer}>
         {/* 고객 정보 섹션 */}
-        <div style={{ width: "100%", maxWidth: "600px", marginBottom: "48px" }}>
-          <h2
-            style={{
-              fontSize: "24px",
-              fontWeight: "600",
-              color: "#181d27",
-              marginBottom: "24px",
-              paddingBottom: "12px",
-              borderBottom: "2px solid #f1f5f9",
-            }}
-          >
-            고객 정보
-          </h2>
+        <div className={styles.sectionContent}>
+          <h2 className={styles.sectionTitle}>고객 정보</h2>
 
-          <div style={{ display: "flex", gap: "24px", marginBottom: "24px" }}>
-            <div
-              style={{ flex: 0.7, display: "flex", flexDirection: "column" }}
-            >
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                고객명
-              </label>
+          <div className={styles.inputGroup}>
+            <div className={`${styles.inputField} ${styles.inputFieldSmall}`}>
+              <label className={styles.inputLabel}>고객명</label>
               <input
                 type="text"
+                className={styles.inputControl}
                 value={formData.name || ""}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                }}
               />
             </div>
-            <div
-              style={{ flex: 1.3, display: "flex", flexDirection: "column" }}
-            >
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                연락처
-              </label>
+            <div className={`${styles.inputField} ${styles.inputFieldLarge}`}>
+              <label className={styles.inputLabel}>연락처</label>
               <input
                 type="text"
+                className={styles.inputControl}
                 value={formData.phone || ""}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                }}
               />
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "24px", marginBottom: "24px" }}>
-            <div
-              style={{ flex: 0.7, display: "flex", flexDirection: "column" }}
-            >
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                생년월일
-              </label>
+          <div className={styles.inputGroup}>
+            <div className={`${styles.inputField} ${styles.inputFieldSmall}`}>
+              <label className={styles.inputLabel}>생년월일</label>
               <input
                 type="date"
+                className={styles.inputControl}
                 value={formData.birth || ""}
                 onChange={(e) => handleInputChange("birth", e.target.value)}
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                  color: "#374151",
-                }}
               />
             </div>
-
-            <div
-              style={{ flex: 1.3, display: "flex", flexDirection: "column" }}
-            >
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                이메일
-              </label>
+            <div className={`${styles.inputField} ${styles.inputFieldLarge}`}>
+              <label className={styles.inputLabel}>이메일</label>
               <input
                 type="email"
+                className={styles.inputControl}
                 value={formData.email || ""}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                }}
               />
             </div>
           </div>
 
-          <div style={{ marginBottom: "24px" }}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                주소
-              </label>
+          <div className={styles.inputGroup}>
+            <div className={`${styles.inputField} ${styles.inputFieldFull}`}>
+              <label className={styles.inputLabel}>주소</label>
               <input
                 type="text"
+                className={styles.inputControl}
                 value={formData.address || ""}
                 onChange={(e) => handleInputChange("address", e.target.value)}
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                  width: "100%",
-                }}
               />
             </div>
           </div>
         </div>
 
         {/* 제품 정보 섹션 */}
-        <div style={{ width: "100%", maxWidth: "600px", marginBottom: "48px" }}>
-          <h2
-            style={{
-              fontSize: "24px",
-              fontWeight: "600",
-              color: "#181d27",
-              marginBottom: "24px",
-              paddingBottom: "12px",
-              borderBottom: "2px solid #f1f5f9",
-            }}
-          >
-            제품 정보
-          </h2>
+        <div className={styles.sectionContent}>
+          <h2 className={styles.sectionTitle}>제품 정보</h2>
 
-          <div style={{ display: "flex", gap: "24px", marginBottom: "24px" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                제품분류
-              </label>
+          <div className={styles.inputGroup}>
+            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
+              <label className={styles.inputLabel}>제품분류</label>
               <input
                 type="text"
+                className={styles.inputControl}
                 value={product?.categoryName || ""}
                 onChange={(e) =>
                   handleProductChange("categoryName", e.target.value)
                 }
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                }}
               />
             </div>
-
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                제품명
-              </label>
+            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
+              <label className={styles.inputLabel}>제품명</label>
               <input
                 type="text"
+                className={styles.inputControl}
                 value={product?.productName || ""}
                 onChange={(e) =>
                   handleProductChange("productName", e.target.value)
                 }
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                }}
               />
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "24px", marginBottom: "24px" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                제조사
-              </label>
+          <div className={styles.inputGroup}>
+            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
+              <label className={styles.inputLabel}>제조사</label>
               <select
+                className={styles.inputControl}
                 value={product?.productBrand || ""}
                 onChange={(e) =>
                   handleProductChange("productBrand", e.target.value)
                 }
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                }}
               >
                 <option value="">선택</option>
                 <option value="삼성전자">삼성전자</option>
@@ -365,121 +196,47 @@ const CustomerDetail = () => {
                 <option value="기타">기타</option>
               </select>
             </div>
-
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                모델코드
-              </label>
+            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
+              <label className={styles.inputLabel}>모델코드</label>
               <input
                 type="text"
+                className={styles.inputControl}
                 value={product?.modelCode || ""}
                 onChange={(e) =>
                   handleProductChange("modelCode", e.target.value)
                 }
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                }}
               />
             </div>
           </div>
 
-          <div style={{ marginBottom: "24px" }}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "#374151",
-                  marginBottom: "8px",
-                }}
-              >
-                제품고유번호
-              </label>
+          <div className={styles.inputGroup}>
+            <div className={`${styles.inputField} ${styles.inputFieldFull}`}>
+              <label className={styles.inputLabel}>제품고유번호</label>
               <input
                 type="text"
+                className={styles.inputControl}
                 value={product?.serialNumber || ""}
                 onChange={(e) =>
                   handleProductChange("serialNumber", e.target.value)
                 }
-                style={{
-                  padding: "12px 16px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  backgroundColor: "#f9fafb",
-                  width: "100%",
-                }}
               />
             </div>
           </div>
         </div>
 
         {/* 액션 버튼 */}
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "600px",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "16px",
-          }}
-        >
+        <div className={styles.buttonGroup}>
           <button
+            className={`${styles.button} ${styles.cancelButton}`}
             onClick={handleCancel}
             disabled={!isDirty}
-            style={{
-              padding: "12px 32px",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: "500",
-              cursor: isDirty ? "pointer" : "not-allowed",
-              transition: "all 0.2s",
-              background: "transparent",
-              border: "1px solid #d1d5db",
-              color: "#374151",
-              opacity: isDirty ? 1 : 0.5,
-            }}
-            onMouseOver={(e) =>
-              isDirty && (e.target.style.backgroundColor = "#f9fafb")
-            }
-            onMouseOut={(e) =>
-              isDirty && (e.target.style.backgroundColor = "transparent")
-            }
           >
             취소
           </button>
           <button
+            className={`${styles.button} ${styles.submitButton}`}
             onClick={handleSave}
             disabled={!isDirty}
-            style={{
-              padding: "12px 32px",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: "500",
-              cursor: isDirty ? "pointer" : "not-allowed",
-              transition: "all 0.2s",
-              backgroundColor: "#2563eb",
-              border: "1px solid #2563eb",
-              color: "white",
-              opacity: isDirty ? 1 : 0.5,
-            }}
-            onMouseOver={(e) =>
-              isDirty && (e.target.style.backgroundColor = "#1d4ed8")
-            }
-            onMouseOut={(e) =>
-              isDirty && (e.target.style.backgroundColor = "#2563eb")
-            }
           >
             저장
           </button>

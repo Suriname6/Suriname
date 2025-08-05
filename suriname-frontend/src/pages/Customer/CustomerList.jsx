@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import styles from "./CustomerList.module.css";
+import styles from "../../css/Customer/CustomerList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import CustomerSearchBar from "./CustomerSearchBar";
 import { useNavigate } from "react-router-dom";
@@ -96,6 +96,14 @@ const CustomerList = () => {
     }
   };
 
+  const handleRowClick = (customerId, event) => {
+    // 체크박스 클릭 시에는 네비게이션 방지
+    if (event.target.type === "checkbox") {
+      return;
+    }
+    navigate(`/customer/detail/${customerId}`);
+  };
+
   return (
     <div className={styles.container}>
       <CustomerSearchBar onSearch={handleSearch} />
@@ -136,33 +144,42 @@ const CustomerList = () => {
             </tr>
           </thead>
           <tbody>
-            {data.map((item) => (
-              <tr
-                key={item.customerId}
-                onClick={() => navigate(`/customer/detail/${item.customerId}`)}
-                style={{ cursor: "pointer" }}
-              >
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedItems.has(item.customerId)}
-                    onChange={(e) =>
-                      handleSelectItem(item.customerId, e.target.checked)
-                    }
-                  />
+            {data.length > 0 ? (
+              data.map((item) => (
+                <tr
+                  key={item.customerId}
+                  className={styles.clickableRow}
+                  onClick={(e) => handleRowClick(item.customerId, e)}
+                >
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.has(item.customerId)}
+                      onChange={(e) =>
+                        handleSelectItem(item.customerId, e.target.checked)
+                      }
+                    />
+                  </td>
+                  <td>{item.customerName}</td>
+                  <td>{item.birth}</td>
+                  <td>{item.phone}</td>
+                  <td>{item.email}</td>
+                  <td>{item.address}</td>
+                  <td>{item.categoryName}</td>
+                  <td>{item.productName}</td>
+                  <td>{item.productBrand}</td>
+                  <td>{item.modelCode}</td>
+                  <td>{item.serialNumber}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="11" className={styles.emptyState}>
+                  <h3>데이터가 없습니다</h3>
+                  <p>검색 조건을 변경하거나 새로운 고객을 등록해보세요.</p>
                 </td>
-                <td>{item.customerName}</td>
-                <td>{item.birth}</td>
-                <td>{item.phone}</td>
-                <td>{item.email}</td>
-                <td>{item.address}</td>
-                <td>{item.categoryName}</td>
-                <td>{item.productName}</td>
-                <td>{item.productBrand}</td>
-                <td>{item.modelCode}</td>
-                <td>{item.serialNumber}</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
