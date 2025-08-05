@@ -49,7 +49,7 @@ function App() {
           <Route path="/customer/upload/excel" element={<CustomerExcelAdd />} />
           <Route path="/customer/upload" element={<CustomerAdd />} />
           <Route path="/customer/detail/:id" element={<CustomerDetail />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/statistics" element={<DashboardPage />} />
           <Route path="/payment/list" element={<PaymentListPage />} />
           <Route
             path="/payment/virtualaccount"
