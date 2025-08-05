@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -81,6 +82,16 @@ public class CustomerController {
     ) {
         Page<CustomerListDto> result = customerService.searchCustomerDtos(requestDto, PageRequest.of(page, size));
         return ResponseEntity.ok(Map.of("status", 200, "data", result));
+    }
+
+    // 수정
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCustomer(
+            @PathVariable("id") Long id,
+            @RequestBody CustomerRegisterDto dto
+    ) {
+        customerService.updateCustomer(id, dto);
+        return ResponseEntity.ok(Map.of("status", 200, "message", "고객 정보가 수정되었습니다."));
     }
 
 

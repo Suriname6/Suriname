@@ -18,7 +18,9 @@ import com.suriname.product.ProductRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
@@ -135,19 +137,64 @@ public class CustomerService {
 
     // 수정
     @Transactional
-    public void update(Long id, CustomerRegisterDto dto) {
-        Customer customer = customerRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("해당 고객을 찾을 수 없습니다."));
-
+    public void updateCustomer(Long customerId, CustomerRegisterDto dto) {
+    	log.info("🔧 [고객 수정 시작] customerId: {}, dto: {}", customerId, dto);
+    	// 1. 기존 고객 찾기
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다."));
+        log.info("✅ 고객 조회 성공: {}", customer.getName());
+        
+        // 2. 고객 기본 정보 수정
         customer.update(
-            dto.getName(),
-            dto.getEmail(),
-            dto.getPhone(),
-            dto.getAddress(),
-            dto.getBirth()
+                dto.getName(),
+                dto.getEmail(),
+                dto.getPhone(),
+                dto.getAddress(),
+                dto.getBirth()
         );
+        log.info("📝 고객 기본 정보 수정 완료");
 
+        // 3. 제품 정보가 있을 경우에만 수정
+        ProductDto productDto = dto.getProduct();
+        log.info("📦 받은 제품 정보: {}", productDto);
+
+        if (productDto != null) {
+            boolean isValidProduct =
+                    (productDto.getProductName() != null && !productDto.getProductName().isBlank()) ||
+                    (productDto.getModelCode() != null && !productDto.getModelCode().isBlank());
+            log.info("✅ 제품 유효성: {}", isValidProduct);
+            if (isValidProduct) {
+                CustomerProduct customerProduct = customerProductRepository
+                        .findTopByCustomerOrderByCreatedAtDesc(customer)
+                        .orElseThrow(() -> new RuntimeException("고객의 제품 정보가 없습니다."));
+                log.info("🔄 고객 최신 제품 정보 가져오기 완료");
+                Product product = customerProduct.getProduct();
+
+                Category category = product.getCategory(); // 기본 유지
+                if (productDto.getCategoryName() != null && !productDto.getCategoryName().isBlank()) {
+                    category = categoryRepository.findByName(productDto.getCategoryName())
+                            .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
+                    log.info("📂 카테고리 조회 완료: {}", category.getName());
+                }
+
+                product.updateProduct(
+                        productDto.getProductName(),
+                        productDto.getProductBrand(),
+                        productDto.getModelCode(),
+                        productDto.getSerialNumber(),
+                        category 
+                        );
+                log.info("🛠️ 제품 정보 수정 완료: {}", product.getProductName());
+                productRepository.save(product);
+                log.info("💾 제품 저장 완료");
+            }
+        }
+        customerRepository.save(customer);
+        log.info("💾 고객 저장 완료");
     }
+
+
+
 
     // 삭제
     @Transactional

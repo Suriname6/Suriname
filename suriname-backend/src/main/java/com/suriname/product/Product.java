@@ -67,4 +67,14 @@ public class Product {
         this.serialNumber = serialNumber;
         this.isVisible = true;
     }
+    
+    public void updateProduct(String productName, String productBrand, String modelCode,
+            String serialNumber, Category category) {
+this.productName = productName;
+this.productBrand = productBrand;
+this.modelCode = modelCode;
+this.serialNumber = serialNumber;
+this.category = category;
+}
+
 }
