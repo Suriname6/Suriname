@@ -16,8 +16,8 @@ import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
 import CustomerAdd from "./pages/Customer/CustomerAdd";
 import CustomerDetail from "./pages/Customer/CustomerDetail";
 import DashboardPage from "./pages/DashboardPage";
-import PaymentListPage from "./pages/PaymentListPage";
-import PaymentVirtualAccountPage from "./pages/PaymentVirtualAccountPage";
+import PaymentListPage from "./pages/Payment/PaymentListPage";
+import PaymentVirtualAccountPage from "./pages/Payment/PaymentVirtualAccountPage";
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -33,6 +33,7 @@ function LayoutWithSidebar() {
     </div>
   );
 }
+
 
 function App() {
   return (
