@@ -1,5 +1,6 @@
 package com.suriname.payment;
 
+import com.suriname.request.entity.Request;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment,Long> {
     Optional<Payment> findByMerchantUid(String merchantUid);
+    
+    boolean existsByRequest(Request request);
     
     @Query("SELECT p FROM Payment p JOIN p.request r JOIN r.customer c " +
            "WHERE (:customerName IS NULL OR c.name LIKE %:customerName%) " +

@@ -151,6 +151,11 @@ public class PaymentService {
             throw new IllegalArgumentException("요청 ID 또는 접수번호가 필요합니다.");
         }
 
+        // 이미 해당 요청에 대한 결제가 존재하는지 확인
+        if (paymentRepository.existsByRequest(request)) {
+            throw new IllegalArgumentException("해당 수리 요청에 대한 결제가 이미 존재합니다.");
+        }
+
         Payment payment = Payment.builder()
                 .request(request)
                 .merchantUid(dto.getMerchantUid())
