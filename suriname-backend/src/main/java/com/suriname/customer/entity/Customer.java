@@ -1,4 +1,4 @@
-package com.suriname.customer;
+package com.suriname.customer.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.suriname.product.entity.CustomerProduct;
 
 @Entity
 @Table(name = "customer")
@@ -47,6 +51,13 @@ public class Customer {
     public enum Status {
         ACTIVE, INACTIVE
     }
+    
+    @Column(nullable = false)
+    private boolean isDeleted = false; 
+
+    public void markAsDeleted() {
+        this.isDeleted = true;
+    }
 
     @PrePersist
     public void onCreate() {
@@ -80,4 +91,9 @@ public class Customer {
         this.address = address;
         this.birth = birth;
     }
+    
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CustomerProduct> customerProducts = new ArrayList<>();
+
+
 }
