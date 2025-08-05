@@ -51,7 +51,7 @@ public class Employee {
     private Role role;
 
     public enum Role {
-        ADMIN, STAFF, ENGINEER
+        PENDING, ADMIN, STAFF, ENGINEER
     }
 
     public enum Status {

@@ -1,6 +1,6 @@
 package com.suriname.employee.service.mapper;
 
-import com.suriname.employee.dto.EmployeeRequestDto;
+import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.entity.Employee;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ public class EmployeeMapper {
 
     private final PasswordEncoder passwordEncoder;
 
-    public Employee toEntity(EmployeeRequestDto dto) {
+    public Employee toEntity(SignupRequestDto dto) {
         return Employee.builder()
                 .loginId(dto.getLoginId())
                 .password(passwordEncoder.encode(dto.getPassword()))
@@ -21,7 +21,7 @@ public class EmployeeMapper {
                 .email(dto.getEmail())
                 .phone(dto.getPhone())
                 .birth(dto.getBirth())
-                .role(dto.getRole())
+                .role(Employee.Role.PENDING)
                 .build();
     }
 

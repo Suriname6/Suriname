@@ -9,15 +9,15 @@ import {
 import SidebarNavigation from "./components/SidebarNavigation";
 
 import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage';
 import CustomerList from "./pages/Customer/CustomerList";
 import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
 import CustomerAdd from "./pages/Customer/CustomerAdd";
 import CustomerDetail from "./pages/Customer/CustomerDetail";
 import DashboardPage from "./pages/DashboardPage";
-import PaymentListPage from "./pages/PaymentListPage";
-import PaymentVirtualAccountPage from "./pages/PaymentVirtualAccountPage";
+import PaymentListPage from "./pages/Payment/PaymentListPage";
+import PaymentVirtualAccountPage from "./pages/Payment/PaymentVirtualAccountPage";
 import DeliveryList from "./pages/Delivery/DeliveryList";
 import DeliveryRegister from "./pages/Delivery/DeliveryRegister";
 import CompletionList from "./pages/Completion/CompletionList";
@@ -40,13 +40,14 @@ function LayoutWithSidebar() {
   );
 }
 
+
 function App() {
   return (
     <Router>
       <Routes>
         {/* 사이드바 숨김 페이지 */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         
         {/* 공개 페이지 (고객용) */}
         <Route path="/tracking" element={<DeliveryTracking />} />
@@ -59,7 +60,7 @@ function App() {
           <Route path="/customer/upload/excel" element={<CustomerExcelAdd />} />
           <Route path="/customer/upload" element={<CustomerAdd />} />
           <Route path="/customer/detail/:id" element={<CustomerDetail />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/statistics" element={<DashboardPage />} />
           <Route path="/payment/list" element={<PaymentListPage />} />
           <Route
             path="/payment/virtualaccount"
