@@ -1,11 +1,17 @@
 .sidebar {
-  width: 180px;
+  position: fixed; 
+  top: 0;        
+  left: 0;        
+  width: 18vw;
   height: 100vh;
+  min-width: 160px;
+  max-width: 170px;
   background-color: white;
   border-right: 1px solid #d1d5db;
   display: flex;
   flex-direction: column;
   font-family: sans-serif;
+  z-index: 1000;  
 }
 
 .logo-container {

@@ -1,8 +1,8 @@
-package com.suriname.customer;
+package com.suriname.customer.dto;
 
 import java.time.LocalDate;
 
-import com.suriname.product.ProductDto;
+import com.suriname.product.dto.ProductDto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,8 +13,8 @@ public class CustomerRegisterDto {
     private String name;
     private String phone;
     private String email;
-    private String address;
     private LocalDate birth;
+    private String address;
 
     private ProductDto product;
 
