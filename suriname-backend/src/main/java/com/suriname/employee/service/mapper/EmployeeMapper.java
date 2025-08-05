@@ -1,7 +1,8 @@
 package com.suriname.employee.service.mapper;
 
-import com.suriname.employee.dto.EmployeeRequestDto;
+import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
+import com.suriname.employee.dto.EmployeeRequestDto;
 import com.suriname.employee.entity.Employee;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,7 +14,7 @@ public class EmployeeMapper {
 
     private final PasswordEncoder passwordEncoder;
 
-    public Employee toEntity(EmployeeRequestDto dto) {
+    public Employee toEntity(SignupRequestDto dto) {
         return Employee.builder()
                 .loginId(dto.getLoginId())
                 .password(passwordEncoder.encode(dto.getPassword()))
