@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.suriname.category.entity.Category;
-import com.suriname.category.entity.CategoryRepository;
+import com.suriname.category.repository.CategoryRepository;
 import com.suriname.customer.dto.CustomerDetailDto;
 import com.suriname.customer.dto.CustomerListDto;
 import com.suriname.customer.dto.CustomerRegisterDto;
@@ -120,7 +120,8 @@ public class CustomerService {
                     p.getCategory().getName(),
                     p.getProductBrand(),
                     p.getModelCode(),
-                    p.getSerialNumber()
+                    p.getSerialNumber(),
+                    p.getMemo()
                 );
             }).toList();
 
@@ -188,15 +189,23 @@ public class CustomerService {
     }
 
 
-
-
-    // 삭제
+    // 단건 삭제
     @Transactional
     public void softDelete(Long customerId) {
         Customer customer = customerRepository.findById(customerId)
             .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다."));
         customer.markAsDeleted();
         customerRepository.save(customer);
+    }
+    // 다건 삭제
+    @Transactional
+    public void softDelete(List<Long> customerIds) {
+        for (Long customerId : customerIds) {
+            Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다. ID: " + customerId));
+            customer.markAsDeleted();
+            customerRepository.save(customer);
+        }
     }
 
     

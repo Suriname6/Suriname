@@ -34,15 +34,19 @@ public class CustomerExcelService {
             Sheet sheet = workbook.getSheetAt(0); 
 
             for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null || isRowEmpty(row)) continue;
+                try {
+                    Row row = sheet.getRow(i);
+                    if (row == null || isRowEmpty(row)) continue;
 
-                CustomerRegisterDto dto = parseRow(row);
-                if (dto != null) {
-                    customerService.registerCustomer(dto);
+                    CustomerRegisterDto dto = parseRow(row);
+                    if (dto != null) {
+                        customerService.registerCustomer(dto);
+                    }
+                } catch (Exception e) {
+                    System.err.println("엑셀 행 " + (i+1) + " 처리 중 오류: " + e.getMessage());
                 }
-
             }
+
         }
     }
 
@@ -76,17 +80,38 @@ public class CustomerExcelService {
         product.setSerialNumber(getCellValue(row, 9));   
 
         dto.setProduct(product);
-        if (product.getProductName() == null || product.getProductName().isEmpty()) {
-            return null;
-        }
+        boolean isValidProduct =
+                (product.getProductName() != null && !product.getProductName().isBlank()) ||
+                (product.getModelCode() != null && !product.getModelCode().isBlank());
+
+        if (!isValidProduct) return null;
+
         return dto;
     }
 
     private String getCellValue(Row row, int idx) {
         if (idx >= row.getLastCellNum()) return "";
         Cell cell = row.getCell(idx);
-        return (cell != null) ? cell.toString().trim() : "";
+        if (cell == null) return "";
+
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue().trim();
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getLocalDateTimeCellValue().toLocalDate().toString();
+                } else {
+                    return String.valueOf((long) cell.getNumericCellValue()); 
+                }
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA:
+                return cell.getCellFormula();
+            default:
+                return "";
+        }
     }
+
 
     
     private boolean isRowEmpty(Row row) {

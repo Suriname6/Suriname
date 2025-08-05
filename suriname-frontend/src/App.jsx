@@ -18,6 +18,10 @@ import CustomerDetail from "./pages/Customer/CustomerDetail";
 import DashboardPage from "./pages/DashboardPage";
 import PaymentListPage from "./pages/PaymentListPage";
 import PaymentVirtualAccountPage from "./pages/PaymentVirtualAccountPage";
+import ProductList from "./pages/Product/ProductList";
+import ProductAdd from "./pages/Product/ProductAdd";
+import ProductExcelAdd from "./pages/Product/ProductExcelAdd";
+import ProductDetail from "./pages/Product/ProductDetail";
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -55,6 +59,11 @@ function App() {
             path="/payment/virtualaccount"
             element={<PaymentVirtualAccountPage />}
           />
+
+          <Route path="/product/list" element={<ProductList />} />
+          <Route path="/product/upload" element={<ProductAdd />} />
+          <Route path="/product/upload/excel" element={<ProductExcelAdd />} />
+          <Route path="/product/detail/:id" element={<ProductDetail />} />
         </Route>
       </Routes>
     </Router>
