@@ -1,0 +1,193 @@
+.container {
+  padding: 24px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.addButton {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.addButton:hover {
+  background-color: #2563eb;
+}
+
+.filterContainer {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filterButton {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.filterButton:hover {
+  background-color: #f3f4f6;
+}
+
+.filterButton.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.tableContainer {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background-color: #f8f9fa;
+}
+
+.table th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #4b5563;
+}
+
+.tableRow {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tableRow:hover {
+  background-color: #f8f9fa;
+}
+
+.addressCell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.statusPending {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.statusShipped {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.statusDelivered {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.loading {
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.noData {
+  padding: 48px;
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+}
+
+.pageButton {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.pageButton:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.pageButton.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
