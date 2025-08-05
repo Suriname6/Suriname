@@ -31,4 +31,7 @@ public class SignupRequestDto {
 
     @NotNull
     private LocalDate birth;
+
+    @NotNull
+    private String address;
 }
