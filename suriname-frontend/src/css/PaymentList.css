@@ -3,3 +3,286 @@
   height: 100vh;
   background-color: #f5f5f5;
 }
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.search-wrap {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-close-btn {
+  text-align: right;
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 15px;
+  cursor: pointer;
+}
+
+.search-toggle-btn {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 20px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-left: auto;
+  width: fit-content;
+  display: block;
+}
+
+.search-toggle-btn:hover {
+  background-color: #f9fafb;
+}
+
+.search-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.search-row {
+  display: flex;
+  gap: 15px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.search-row:last-child {
+  justify-content: flex-start;
+  align-items: end;
+}
+
+.search-row:last-child .search-field.status-field {
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+
+.search-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  flex: 1;
+}
+
+.search-field.date-range {
+  min-width: 260px;
+  flex: 2;
+}
+
+.search-field.status-field {
+  min-width: 120px;
+  max-width: 150px;
+  flex: 0 0 auto;
+}
+
+.search-field label {
+  font-size: 12px;
+  color: #374151;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.search-field input,
+.search-field select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+}
+
+.search-field input:focus,
+.search-field select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.date-range {
+  flex-direction: column !important;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.date-range .date-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-range span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.search-actions {
+  display: flex;
+  align-items: end;
+  flex-shrink: 0;
+}
+
+.search-btn {
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.search-btn:hover {
+  background-color: #4b5563;
+}
+
+.content-section {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.section-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.select-all input[type="checkbox"] {
+  margin: 0;
+}
+
+.delete-btn {
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.delete-btn:hover {
+  background-color: #4b5563;
+}
+
+.payment-table-container {
+  overflow-x: auto;
+}
+
+.payment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.payment-table th {
+  background-color: #f3f4f6;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.payment-table td {
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 1px solid #f3f4f6;
+  color: #4b5563;
+}
+
+.payment-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.payment-table th:first-child,
+.payment-table td:first-child {
+  width: 40px;
+  padding-left: 12px;
+}
+
+.payment-table input[type="checkbox"] {
+  margin: 0;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  gap: 8px;
+}
+
+.page-btn {
+  background-color: white;
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  min-width: 36px;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.page-btn:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.page-btn.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.page-separator {
+  color: #9ca3af;
+  font-size: 14px;
+  margin: 0 4px;
+}
+
+.pagination-info {
+  text-align: center;
+  padding: 10px 20px;
+  color: #6b7280;
+  font-size: 14px;
+  border-top: 1px solid #f3f4f6;
+}

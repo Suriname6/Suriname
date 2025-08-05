@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage';
 import PaymentListPage from './pages/PaymentListPage';
 import PaymentVirtualAccountPage from './pages/PaymentVirtualAccountPage';
 
+
 function App() {
   return (
     <Router>
@@ -17,7 +18,6 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/payment/list" element={<PaymentListPage />} />
         <Route path="/payment/virtualaccount" element={<PaymentVirtualAccountPage />} />
-        
       </Routes>
     </Router>
   );

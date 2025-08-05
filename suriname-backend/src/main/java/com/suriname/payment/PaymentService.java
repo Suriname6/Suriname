@@ -5,6 +5,10 @@ import com.suriname.request.entity.Request;
 import com.suriname.request.entity.RequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +17,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +35,105 @@ public class PaymentService {
     // 결제 목록 조회
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
+    }
+
+    // 검색 및 페이징이 적용된 결제 목록 조회
+    public PaymentPageResponse getPaymentsWithSearch(int page, int size, String customerName, 
+            String receptionNumber, String bankName, String paymentAmount, String status, String startDate, String endDate) {
+        
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("paymentId").descending());
+            Page<Payment> paymentPage;
+            
+            // 검색 조건이 있으면 필터링, 없으면 전체 조회
+            if (hasSearchCriteria(customerName, receptionNumber, bankName, paymentAmount, status, startDate, endDate)) {
+                paymentPage = paymentRepository.findWithFilters(customerName, receptionNumber, bankName, 
+                        parsePaymentAmount(paymentAmount), status, parseDate(startDate), parseDate(endDate), pageable);
+            } else {
+                paymentPage = paymentRepository.findAll(pageable);
+            }
+            
+            List<PaymentDto> paymentDtos = paymentPage.getContent().stream()
+                    .map(payment -> {
+                        try {
+                            return new PaymentDto(payment);
+                        } catch (Exception e) {
+                            // 개별 PaymentDto 변환 실패 시 로그 출력하고 null 반환
+                            System.err.println("Failed to convert payment to DTO: " + payment.getPaymentId() + ", Error: " + e.getMessage());
+                            e.printStackTrace();
+                            return null;
+                        }
+                    })
+                    .filter(dto -> dto != null) // null 제거
+                    .collect(Collectors.toList());
+            
+            return new PaymentPageResponse(
+                    paymentDtos,
+                    paymentPage.getTotalPages(),
+                    paymentPage.getTotalElements(),
+                    paymentPage.getNumber(),
+                    paymentPage.getSize(),
+                    paymentPage.isFirst(),
+                    paymentPage.isLast()
+            );
+        } catch (Exception e) {
+            System.err.println("Error in getPaymentsWithSearch: " + e.getMessage());
+            e.printStackTrace();
+            
+            // 에러 발생 시 빈 응답 반환
+            return new PaymentPageResponse(
+                    java.util.Collections.emptyList(),
+                    0, 0, page, size, true, true
+            );
+        }
+    }
+    
+    @Transactional
+    public void deletePayment(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 결제가 존재하지 않습니다."));
+        paymentRepository.delete(payment);
+    }
+    
+    @Transactional
+    public void deletePayments(List<Long> paymentIds) {
+        List<Payment> payments = paymentRepository.findAllById(paymentIds);
+        paymentRepository.deleteAll(payments);
+    }
+    
+    private boolean hasSearchCriteria(String customerName, String receptionNumber, String bankName, 
+            String paymentAmount, String status, String startDate, String endDate) {
+        return (customerName != null && !customerName.trim().isEmpty()) ||
+               (receptionNumber != null && !receptionNumber.trim().isEmpty()) ||
+               (bankName != null && !bankName.trim().isEmpty()) ||
+               (paymentAmount != null && !paymentAmount.trim().isEmpty()) ||
+               (status != null && !status.trim().isEmpty()) ||
+               (startDate != null && !startDate.trim().isEmpty()) ||
+               (endDate != null && !endDate.trim().isEmpty());
+    }
+    
+    private LocalDateTime parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(dateStr + "T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    private Integer parsePaymentAmount(String amountStr) {
+        if (amountStr == null || amountStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            // 콤마 제거 후 숫자로 변환
+            String cleanAmount = amountStr.replaceAll("[,\\s]", "");
+            return Integer.parseInt(cleanAmount);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @Transactional
