@@ -44,12 +44,6 @@ export default function AdminDashboard() {
             <main className="flex-1 p-6">
               <header className="mb-6">
                 <div className="flex items-center gap-4 mb-6">
-                  <img
-                      className="w-[217px] h-[220px] object-cover"
-                      alt="Suriname"
-                      src={null}
-                  />
-
                   <div className="flex gap-4">
                     <Input type="date" className="w-auto" defaultValue="" />
                     <Input type="date" className="w-auto" defaultValue="" />
@@ -58,15 +52,18 @@ export default function AdminDashboard() {
 
                 <div className="flex gap-6 mb-6">
                   {statisticsData.map((stat, index) => (
-                      <Card key={index} className="min-w-[200px]">
+                      <Card
+                          key={index}
+                          className="min-w-[386px] shadow-[6px_6px_54px_#0000000d]"
+                      >
                         <CardContent className="p-6">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center gap-2 opacity-70 [font-family:'Nunito_Sans-SemiBold',Helvetica] font-semibold text-[#202224] text-2xl tracking-[0] leading-[normal] mb-4">
                             <stat.icon className="w-6 h-6 text-blue-500" />
-                            <span className="text-sm text-gray-600">
-                          {stat.title}
-                        </span>
+                            <span className="text-2xl text-gray-600">
+                            {stat.title}
+                          </span>
                           </div>
-                          <div className="text-3xl font-bold text-gray-900 mb-1">
+                          <div className="[font-family:'Nunito_Sans-Bold',Helvetica] font-bold text-[#202224] text-5xl tracking-[1.00px] leading-[normal]">
                             {stat.value}
                           </div>
                           {stat.change && (
@@ -95,24 +92,6 @@ export default function AdminDashboard() {
                         </CardContent>
                       </Card>
                   ))}
-
-                  <Card className="w-[68px] shadow-[0px_4px_14px_#0000001a]">
-                    <CardContent className="p-0">
-                      {timeOptions.map((option, index) => (
-                          <Button
-                              key={option.value}
-                              variant="ghost"
-                              className={`w-full h-11 justify-start px-4 rounded-none ${
-                                  index === 0 ? "rounded-t-lg" : ""
-                              } ${
-                                  index === timeOptions.length - 1 ? "rounded-b-lg" : ""
-                              } [font-family:'Montserrat-Regular',Helvetica] font-normal text-[#333333] text-base`}
-                          >
-                            {option.label}
-                          </Button>
-                      ))}
-                    </CardContent>
-                  </Card>
                 </div>
               </header>
 

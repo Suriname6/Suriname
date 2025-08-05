@@ -1,6 +1,7 @@
-import { Button, Card, CardContent } from "@mui/material";
+import { Button, Menu, MenuItem, Card, CardContent } from "@mui/material";
 import { ChevronDown, MoreHorizontal } from "lucide-react";
-import React from "react";
+import React, { useState }  from "react";
+
 
 export const StatisticsSection = () => {
     const monthLabels = [
@@ -11,6 +12,18 @@ export const StatisticsSection = () => {
         { label: "May" },
         { label: "Jun" },
     ];
+
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = anchorEl
+
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = (option) => {
+        console.log("선택됨:", option);
+        setAnchorEl(null);
+    };
 
     return (
         <Card className="w-full bg-neutral-50 rounded-3xl shadow-lg">
@@ -24,12 +37,20 @@ export const StatisticsSection = () => {
 
                     <div className="flex items-center gap-2">
                         <Button
-                            variant="secondary"
-                            className="h-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-2xl"
+                            variant="outlined"
+                            onClick={handleClick}
+
+
                         >
-                            <span className="text-sm font-normal text-gray-900">월간</span>
-                            <ChevronDown className="w-5 h-5 ml-2" />
+                            월간
                         </Button>
+                        <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
+                            {["일간", "주간", "월간", "년간"].map((label) => (
+                                <MenuItem key={label} onClick={() => handleClose(label)}>
+                                    {label}
+                                </MenuItem>
+                            ))}
+                        </Menu>
 
                         <Button
                             variant="secondary"
