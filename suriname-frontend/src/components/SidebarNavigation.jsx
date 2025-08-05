@@ -1,11 +1,12 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/suriname.png"; 
 import '../css/SidebarNavigation.css';
 import { getUserRole } from "../utils/auth"
 
 export default function SidebarNavigation() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [hoveredSection, setHoveredSection] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
@@ -13,6 +14,24 @@ export default function SidebarNavigation() {
   const [hoveredSubItem, setHoveredSubItem] = useState(null);
 
   const role = getUserRole();
+
+  // URL과 메뉴 매핑
+  const urlToMenuMapping = {
+    "/payment/list": { parentMenu: "결제 관리", subItem: "입금 상태 목록" },
+    "/payment/virtualaccount": { parentMenu: "결제 관리", subItem: "가상 계좌 발급 요청" },
+    // 추가 경로들을 여기에 매핑
+  };
+
+  // URL 변경 시 선택된 메뉴 상태 업데이트
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const menuInfo = urlToMenuMapping[currentPath];
+    
+    if (menuInfo) {
+      setActiveSection(menuInfo.parentMenu);
+      setSelectedSubItem(menuInfo.subItem);
+    }
+  }, [location.pathname]);
 
   let filteredMenu = {
     "고객 관리": ["고객 목록", "고객 등록"],
@@ -31,6 +50,15 @@ export default function SidebarNavigation() {
   const handleSubItemClick = (subItem, parentMenu) => {
     setSelectedSubItem(subItem);
     setActiveSection(parentMenu);
+
+    // 페이지 네비게이션 처리
+    if (subItem === "입금 상태 목록") {
+      navigate("/payment/list");
+    }
+    if (subItem === "가상 계좌 발급 요청") {
+      navigate("/payment/virtualaccount");
+    }
+    // 추가 네비게이션 경로들...
   };
 
   const handleMenuGroupEnter = (mainMenu) => {
