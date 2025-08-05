@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Employee {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long employeeId;
@@ -86,4 +85,15 @@ public class Employee {
         this.status = Status.INACTIVE;
     }
 
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+    public void changeEmail(String email) {
+        this.email = email;
+    }
+
+    public void changePhone(String phone) {
+        this.phone = phone;
+    }
 }

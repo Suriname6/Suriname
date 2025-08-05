@@ -1,14 +1,11 @@
 package com.suriname.request.entity;
 
-import com.suriname.customer.Customer;
+import com.suriname.customer.entity.Customer;
 import com.suriname.employee.entity.Employee;
-import com.suriname.product.CustomerProduct;
+import com.suriname.product.entity.CustomerProduct;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "request")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Setter
 public class Request {
 
     @Id
@@ -57,11 +55,11 @@ public class Request {
     private LocalDateTime createdAt;
 
     public enum Status {
-        RECEIVED,
-        IN_PROGRESS,
-        AWAITING_PAYMENT,
-        READY_FOR_DELIVERY,
-        COMPLETED
+        RECEIVED,    // 접수
+        REPAIRING,  // 수리중
+        WAITING_FOR_PAYMENT, // 입금대기
+        WAITING_FOR_DELIVERY, // 배송대기
+        COMPLETED   // 완료
     }
 
     @PrePersist
@@ -92,5 +90,11 @@ public class Request {
 
     public void changeStatus(Status newStatus) {
         this.status = newStatus;
+    }
+
+    public static Request of(Long requestId) {
+        Request r = new Request();
+        r.setRequestId(requestId);
+        return r;
     }
 }

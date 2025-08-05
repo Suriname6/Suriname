@@ -1,6 +1,6 @@
 package com.suriname.notification.entity;
 
-import com.suriname.customer.Customer;
+import com.suriname.customer.entity.Customer;
 import com.suriname.employee.entity.Employee;
 import com.suriname.request.entity.Request;
 import jakarta.persistence.*;
@@ -50,9 +50,15 @@ public class Notification {
     private LocalDateTime createdAt;
 
     public enum NotificationType {
-        RECEIVED,
+        REQUEST_COMPLETED,
         REPAIR_COMPLETED,
-        DELIVERY_STARTED
+        DELIVERY_STARTED,
+        ENGINEER_REJECTED,
+        COLLECTION_FAILED,
+        REPAIR_IMPOSSIBLE,
+        PAYMENT_DELAYED,
+        UNPAID,
+        REPAIR_DELAYED
     }
 
     @PrePersist
