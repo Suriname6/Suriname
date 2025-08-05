@@ -9,8 +9,8 @@ import {
 import SidebarNavigation from "./components/SidebarNavigation";
 
 import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage';
 import CustomerList from "./pages/Customer/CustomerList";
 import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
 import CustomerAdd from "./pages/Customer/CustomerAdd";
@@ -40,8 +40,8 @@ function App() {
     <Router>
       <Routes>
         {/* 사이드바 숨김 페이지 */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
 
         {/* 사이드바 포함 페이지 */}
         <Route element={<LayoutWithSidebar />}>

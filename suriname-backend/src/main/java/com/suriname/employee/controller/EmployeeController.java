@@ -1,6 +1,6 @@
 package com.suriname.employee.controller;
 
-import com.suriname.employee.dto.EmployeeRequestDto;
+import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.dto.EmployeeUpdateRequestDto;
 import com.suriname.employee.service.EmployeeService;
@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -18,13 +19,14 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    @PostMapping()
-    public ResponseEntity<EmployeeResponseDto> createEmployee(
-            @RequestBody @Valid EmployeeRequestDto requestDto
+    @PostMapping("/signup")
+    public ResponseEntity<EmployeeResponseDto> signup(
+            @RequestBody @Valid SignupRequestDto requestDto
             )
     {
-        EmployeeResponseDto responseDto = employeeService.createEmployee(requestDto);
-        return ResponseEntity.ok(responseDto);
+        EmployeeResponseDto responseDto = employeeService.signup(requestDto);
+        URI location = URI.create("/employee/" + responseDto.getEmployeeId());
+        return ResponseEntity.created(location).body(responseDto);
     }
 
     @GetMapping

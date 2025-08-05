@@ -90,6 +90,17 @@ export default function SidebarNavigation() {
     setHoveredSubItem(null);
   };
 
+  const handleLogout = async () => {
+    try {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+
+      navigate("/login");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+    }
+  };
+
   return (
     <div className="sidebar">
       <div className="logo-container" onClick={() => navigate("/")}>
@@ -137,7 +148,9 @@ export default function SidebarNavigation() {
       </div>
 
       <div className="logout">
-        <div className="logout-button">로그아웃</div>
+        <div className="logout-button" onClick={handleLogout}>
+          로그아웃
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
 package com.suriname.employee.service;
 
-import com.suriname.employee.dto.EmployeeRequestDto;
+import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.dto.EmployeeUpdateRequestDto;
+import com.suriname.employee.dto.EmployeeRequestDto;
 import com.suriname.employee.entity.Employee;
 import com.suriname.employee.repository.EmployeeRepository;
 import com.suriname.employee.service.mapper.EmployeeMapper;
@@ -23,7 +24,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
-    public EmployeeResponseDto createEmployee(EmployeeRequestDto requestDto) {
+    public EmployeeResponseDto signup(SignupRequestDto requestDto) {
         validateDuplicateLoginId(requestDto.getLoginId());
 
         Employee employee = employeeMapper.toEntity(requestDto);
