@@ -40,7 +40,12 @@ public class AuthService {
 
         String refreshToken = jwtTokenProvider.createRefreshToken(employee.getLoginId());
 
-        return new LoginResponseDto(accessToken, refreshToken);
+        return new LoginResponseDto(
+                accessToken,
+                refreshToken,
+                employee.getName(),
+                employee.getRole().name()
+        );
     }
 
     public TokenRefreshResponseDto refreshToken(TokenRefreshRequestDto requestDto) {

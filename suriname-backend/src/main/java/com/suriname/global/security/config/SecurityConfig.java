@@ -39,7 +39,7 @@ public class SecurityConfig {
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()
+                        .requestMatchers("/login", "/refresh").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
