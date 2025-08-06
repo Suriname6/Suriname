@@ -27,6 +27,7 @@ import DeliveryTracking from "./pages/Public/DeliveryTracking";
 import SatisfactionSurvey from "./pages/Public/SatisfactionSurvey";
 import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
+import RepairPresetPage from "./pages/Repair/RepairPresetPage";
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -70,6 +71,7 @@ function App() {
             element={<PaymentVirtualAccountPage />}
           />
           <Route path="/repair/list" element={<RepairListPage />} />
+          <Route path="/repair/preset" element={<RepairPresetPage />} />
           <Route path="/repair/write" element={<RepairWritePage />} />
           <Route path="/delivery/list" element={<DeliveryList />} />
           <Route path="/delivery/register" element={<DeliveryRegister />} />

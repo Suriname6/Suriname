@@ -153,7 +153,6 @@ const RepairWritePage = () => {
 
         {/* 고객 정보 */}
         <div className={styles.sectionContent}>
-          <h2 className={styles.sectionTitle}>고객 정보</h2>
           
           <div className={styles.inputGroup}>
             <div className={styles.inputField} style={{ flex: 1 }}>
@@ -197,20 +196,20 @@ const RepairWritePage = () => {
                 value={formData.issueCategory} 
                 onChange={(e) => handleInputChange('issueCategory', e.target.value)}
               >
-                <option value="">키패드의 신호</option>
+                <option value="">카테고리 선택</option>
                 {issueCategories.map(category => (
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
             </div>
             <div className={styles.inputField} style={{ flex: 1 }}>
-              <label className={styles.inputLabel}>프리즈 문제</label>
+              <label className={styles.inputLabel}>프리셋 품목</label>
               <select 
                 className={styles.inputControl}
                 value={formData.priceCategory} 
                 onChange={(e) => handleInputChange('priceCategory', e.target.value)}
               >
-                <option value="">프리즈 문제</option>
+                <option value="">프리셋 품목</option>
                 {priceCategories.map(category => (
                   <option key={category} value={category}>{category}</option>
                 ))}

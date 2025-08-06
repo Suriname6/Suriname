@@ -17,8 +17,7 @@ export default function SidebarNavigation() {
   "접수 등록": "/request/register",*/
     "수리 내역": "/repair/list",
     "수리 내역 작성": "/repair/write",
-    /*
-  "프리셋 등록": "/repair/preset",*/
+    "프리셋 등록": "/repair/preset",
     "입금 상태 목록": "/payment/list",
     "가상 계좌 발급 요청": "/payment/virtualaccount",
     "배송 목록": "/delivery/list",
