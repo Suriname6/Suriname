@@ -7,5 +7,7 @@ import java.util.Optional;
 
 @Repository
 public interface RequestRepository extends JpaRepository<Request, Long> {
+    
+    // 접수번호로 Request 조회
     Optional<Request> findByRequestNo(String requestNo);
 }

@@ -21,9 +21,12 @@ export default function SidebarNavigation() {
   "프리셋 등록": "/repair/preset",*/
     "입금 상태 목록": "/payment/list",
     "가상 계좌 발급 요청": "/payment/virtualaccount",
-    /* "배송 목록": "/delivery/list",
-  "배송 등록": "/delivery/register",
-  "직원 목록": "/staff/list",
+    "배송 목록": "/delivery/list",
+    "배송 등록": "/delivery/register",
+    "배송 분석": "/delivery/analytics",
+    "완료 처리 목록": "/completion/list",
+    "완료 처리 등록": "/completion/register",
+    /* "직원 목록": "/staff/list",
   "직원 가입 요청 목록": "/staff/requests",*/
   "통계": "/dashboard/statistics",
   "담당자별 성과": "/dashboard/performance",
@@ -39,6 +42,7 @@ export default function SidebarNavigation() {
 
   // URL과 메뉴 매핑
   const urlToMenuMapping = {};
+
 
   // URL 변경 시 선택된 메뉴 상태 업데이트
   useEffect(() => {
@@ -57,7 +61,8 @@ export default function SidebarNavigation() {
     "A/S 접수": ["접수 목록", "접수 등록"],
     "수리 처리": ["수리 내역", "수리 내역 작성", "프리셋 등록"],
     "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
-    "배송 관리": ["배송 목록", "배송 등록"],
+    "배송 관리": ["배송 목록", "배송 등록", "배송 분석"],
+    "완료 처리": ["완료 처리 목록", "완료 처리 등록"],
   };
 
   if (role === "ADMIN") {
