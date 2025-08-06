@@ -77,7 +77,10 @@ public class PaymentController {
     public ResponseEntity<Void> tossWebhook(@RequestBody String payload,
                                            @RequestHeader(value = "X-Toss-Signature", required = false) String signature) {
         try {
-            // 웹훅 서명 검증
+            System.out.println("토스페이먼츠 웹훅 수신: " + payload);
+            System.out.println("토스페이먼츠 웹훅 서명: " + signature);
+
+            // 웹훅 서명 검증 (테스트 환경에서는 스킵)
             if (signature != null) {
                 if (!paymentService.verifyTossWebhookSignature(payload, signature)) {
                     return ResponseEntity.badRequest().build();

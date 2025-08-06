@@ -194,47 +194,93 @@ public class PaymentService {
 
     @Transactional
     public void handleTossWebhook(JsonNode webhookData) {
-        String eventType = webhookData.get("eventType").asText();
-        JsonNode data = webhookData.get("data");
-
-        System.out.println("토스페이먼츠 웹훅 이벤트 타입: " + eventType);
-        System.out.println("토스페이먼츠 웹훅 데이터: " + data.toString());
-
-        String orderId = data.get("orderId").asText();
+        System.out.println("토스페이먼츠 웹훅 데이터: " + webhookData.toString());
         
-        Payment payment = paymentRepository.findByMerchantUid(orderId).orElse(null);
-        if (payment == null) {
-            System.err.println("해당 결제를 찾을 수 없습니다: " + orderId);
+        // 토스페이먼츠 테스트 환경에서는 직접 데이터가 전송됨 (DEPOSIT_CALLBACK)
+        if (webhookData.has("orderId") && webhookData.has("status")) {
+            String orderId = webhookData.get("orderId") != null ? webhookData.get("orderId").asText() : null;
+            String status = webhookData.get("status") != null ? webhookData.get("status").asText() : null;
+            
+            System.out.println("DEPOSIT_CALLBACK - 주문 ID: " + orderId);
+            System.out.println("DEPOSIT_CALLBACK - 상태: " + status);
+            
+            if (orderId == null || status == null) {
+                System.err.println("필수 필드가 누락되었습니다: orderId=" + orderId + ", status=" + status);
+                return;
+            }
+            
+            Payment payment = paymentRepository.findByMerchantUid(orderId).orElse(null);
+            if (payment == null) {
+                System.err.println("해당 merchant_uid로 결제를 찾을 수 없습니다: " + orderId);
+                return;
+            }
+            
+            System.out.println("기존 결제 상태: " + payment.getStatus());
+            
+            if ("DONE".equals(status)) {
+                payment.markCompleted();
+                paymentRepository.save(payment);
+                System.out.println("입금 완료 처리 성공: " + orderId + " -> " + payment.getStatus());
+            } else {
+                System.out.println("처리되지 않은 상태: " + status);
+            }
             return;
         }
 
+        // 일반적인 웹훅 구조 처리
+        if (!webhookData.has("eventType")) {
+            System.err.println("eventType 필드가 없습니다.");
+            return;
+        }
+        
+        String eventType = webhookData.get("eventType") != null ? webhookData.get("eventType").asText() : null;
+        if (eventType == null) {
+            System.err.println("eventType이 null입니다.");
+            return;
+        }
+        
+        if (!webhookData.has("data")) {
+            System.err.println("data 필드가 없습니다.");
+            return;
+        }
+        
+        JsonNode data = webhookData.get("data");
+        if (data == null) {
+            System.err.println("data가 null입니다.");
+            return;
+        }
+        
+        String orderId = data.has("orderId") && data.get("orderId") != null ? 
+                        data.get("orderId").asText() : null;
+        
+        if (orderId == null) {
+            System.err.println("orderId가 null이거나 존재하지 않습니다.");
+            return;
+        }
+        
+        Payment payment = paymentRepository.findByMerchantUid(orderId).orElse(null);
+        if (payment == null) {
+            System.err.println("해당 merchant_uid로 결제를 찾을 수 없습니다: " + orderId);
+            return;
+        }
+
+        System.out.println("이벤트 타입: " + eventType + ", 주문 ID: " + orderId);
+
         switch (eventType) {
             case "VIRTUAL_ACCOUNT_ISSUED" -> {
-                // 토스페이먼츠 가상계좌 발급 완료 이벤트
-                String account = data.get("virtualAccount").get("accountNumber").asText();
-                String bank = data.get("virtualAccount").get("bank").asText();
-                payment.setAccountAndBank(account, bank);
-                System.out.println("가상계좌 정보 업데이트: " + bank + " " + account);
+                if (data.has("virtualAccount") && data.get("virtualAccount") != null) {
+                    JsonNode virtualAccount = data.get("virtualAccount");
+                    String account = virtualAccount.has("accountNumber") && virtualAccount.get("accountNumber") != null ? 
+                                   virtualAccount.get("accountNumber").asText() : "";
+                    String bank = virtualAccount.has("bank") && virtualAccount.get("bank") != null ? 
+                                virtualAccount.get("bank").asText() : "";
+                    payment.setAccountAndBank(account, bank);
+                    System.out.println("가상계좌 정보 업데이트: " + bank + " " + account);
+                }
             }
             case "PAYMENT_CONFIRMED" -> {
-                // 토스페이먼츠 결제 완료 이벤트
                 payment.markCompleted();
                 System.out.println("결제 완료 처리: " + orderId);
-            }
-            case "PAYMENT_FAILED" -> {
-                // 결제 실패 처리
-                Payment failedPayment = Payment.builder()
-                        .request(payment.getRequest())
-                        .merchantUid(payment.getMerchantUid())
-                        .account(payment.getAccount())
-                        .bank(payment.getBank())
-                        .cost(payment.getCost())
-                        .status(Payment.Status.FAILED)
-                        .memo("결제 실패: " + (data.has("failureCode") ? data.get("failureCode").asText() + " - " + data.get("failureMessage").asText() : "알 수 없는 오류"))
-                        .build();
-                paymentRepository.save(failedPayment);
-                System.out.println("결제 실패 처리: " + orderId);
-                return;
             }
             default -> {
                 System.out.println("처리되지 않은 웹훅 이벤트: " + eventType);
@@ -243,6 +289,7 @@ public class PaymentService {
         }
 
         paymentRepository.save(payment);
+        System.out.println("결제 상태 업데이트 완료: " + payment.getStatus());
     }
 
     // 토스페이먼츠 웹훅 서명 검증

@@ -14,9 +14,10 @@ export default function SidebarNavigation() {
     /* "제품 목록": "/product/list",
   "제품 등록": "/product/register",
   "접수 목록": "/request/list",
-  "접수 등록": "/request/register",
-  "수리 내역": "/repair/list",
-  "수리 내역 작성": "/repair/write",
+  "접수 등록": "/request/register",*/
+    "수리 내역": "/repair/list",
+    "수리 내역 작성": "/repair/write",
+    /*
   "프리셋 등록": "/repair/preset",*/
     "입금 상태 목록": "/payment/list",
     "가상 계좌 발급 요청": "/payment/virtualaccount",
@@ -37,14 +38,7 @@ export default function SidebarNavigation() {
   const role = getUserRole();
 
   // URL과 메뉴 매핑
-  const urlToMenuMapping = {
-    "/payment/list": { parentMenu: "결제 관리", subItem: "입금 상태 목록" },
-    "/payment/virtualaccount": {
-      parentMenu: "결제 관리",
-      subItem: "가상 계좌 발급 요청",
-    },
-    // 추가 경로들을 여기에 매핑
-  };
+  const urlToMenuMapping = {};
 
   // URL 변경 시 선택된 메뉴 상태 업데이트
   useEffect(() => {
