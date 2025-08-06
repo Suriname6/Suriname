@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Search, Package, Truck, CheckCircle, Clock, Phone, MapPin } from "lucide-react";
 import styles from "../../css/Public/DeliveryTracking.module.css";
+import { getDeliveryByRequestNo } from "../../utils/mockData";
+import { handleDeliveryTrackingError, validateRequestNo } from "../../utils/errorHandler";
 
 const DeliveryTracking = () => {
   const [requestNo, setRequestNo] = useState("");
@@ -9,159 +11,19 @@ const DeliveryTracking = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Mock 배송 데이터 (배송목록과 완전히 일치)
-  const mockDeliveryData = {
-    // 배송완료 케이스들
-    "AS-20250801-001": {
-      requestNo: "AS-20250801-001",
-      customerName: "김민수",
-      phone: "010-1234-5678",
-      address: "서울특별시 강남구 테헤란로 123",
-      carrierName: "CJ대한통운",
-      trackingNo: "1234567890123",
-      status: "DELIVERED",
-      createdAt: "2025-08-01T09:30:00",
-      completedDate: "2025-08-03T14:20:00"
-    },
-    "AS-20250801-002": {
-      requestNo: "AS-20250801-002",
-      customerName: "이영희",
-      phone: "010-9876-5432",
-      address: "부산광역시 해운대구 센텀중앙로 456",
-      carrierName: "롯데택배",
-      trackingNo: "2345678901234",
-      status: "DELIVERED",
-      createdAt: "2025-08-01T14:15:00",
-      completedDate: "2025-08-02T16:45:00"
-    },
-    "AS-20250801-003": {
-      requestNo: "AS-20250801-003",
-      customerName: "박철수",
-      phone: "010-5555-6666",
-      address: "대구광역시 수성구 동대구로 789",
-      carrierName: "한진택배",
-      trackingNo: "3456789012345",
-      status: "DELIVERED",
-      createdAt: "2025-08-01T11:20:00",
-      completedDate: "2025-08-04T10:30:00"
-    },
-    // 배송중 케이스들
-    "AS-20250802-001": {
-      requestNo: "AS-20250802-001",
-      customerName: "최수진",
-      phone: "010-7777-8888",
-      address: "인천광역시 연수구 컨벤시아대로 321",
-      carrierName: "CJ대한통운",
-      trackingNo: "4567890123456",
-      status: "SHIPPED",
-      createdAt: "2025-08-02T08:45:00",
-      completedDate: null
-    },
-    "AS-20250802-002": {
-      requestNo: "AS-20250802-002",
-      customerName: "정하나",
-      phone: "010-2222-3333",
-      address: "광주광역시 서구 상무중앙로 654",
-      carrierName: "우체국택배",
-      trackingNo: "5678901234567",
-      status: "SHIPPED",
-      createdAt: "2025-08-02T16:30:00",
-      completedDate: null
-    },
-    "AS-20250803-001": {
-      requestNo: "AS-20250803-001",
-      customerName: "강도현",
-      phone: "010-4444-5555",
-      address: "경기도 성남시 분당구 판교역로 987",
-      carrierName: "롯데택배",
-      trackingNo: "6789012345678",
-      status: "SHIPPED",
-      createdAt: "2025-08-03T12:10:00",
-      completedDate: null
-    },
-    // 배송준비 케이스들
-    "AS-20250804-001": {
-      requestNo: "AS-20250804-001",
-      customerName: "윤서영",
-      phone: "010-6666-7777",
-      address: "대전광역시 유성구 대학로 147",
-      carrierName: null,
-      trackingNo: null,
-      status: "PENDING",
-      createdAt: "2025-08-04T09:20:00",
-      completedDate: null
-    },
-    "AS-20250804-002": {
-      requestNo: "AS-20250804-002",
-      customerName: "임지훈",
-      phone: "010-8888-9999",
-      address: "울산광역시 남구 삼산로 258",
-      carrierName: null,
-      trackingNo: null,
-      status: "PENDING",
-      createdAt: "2025-08-04T15:45:00",
-      completedDate: null
-    },
-    "AS-20250805-001": {
-      requestNo: "AS-20250805-001",
-      customerName: "송미라",
-      phone: "010-1111-2222",
-      address: "경기도 수원시 영통구 월드컵로 369",
-      carrierName: null,
-      trackingNo: null,
-      status: "PENDING",
-      createdAt: "2025-08-05T10:30:00",
-      completedDate: null
-    },
-    "AS-20250805-002": {
-      requestNo: "AS-20250805-002",
-      customerName: "오현수",
-      phone: "010-3333-4444",
-      address: "제주특별자치도 제주시 중앙로 741",
-      carrierName: "한진택배",
-      trackingNo: "7890123456789",
-      status: "SHIPPED",
-      createdAt: "2025-08-05T13:15:00",
-      completedDate: null
-    },
-    "AS-20250805-003": {
-      requestNo: "AS-20250805-003",
-      customerName: "한예슬",
-      phone: "010-9999-0000",
-      address: "강원도 춘천시 중앙로 852",
-      carrierName: "CJ대한통운",
-      trackingNo: "8901234567890",
-      status: "DELIVERED",
-      createdAt: "2025-08-05T08:00:00",
-      completedDate: "2025-08-06T11:30:00"
-    },
-    "AS-20250806-001": {
-      requestNo: "AS-20250806-001",
-      customerName: "신동욱",
-      phone: "010-5555-7777",
-      address: "충청북도 청주시 상당구 상당로 963",
-      carrierName: null,
-      trackingNo: null,
-      status: "PENDING",
-      createdAt: "2025-08-06T07:45:00",
-      completedDate: null
-    }
-  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
     
-    if (!requestNo.trim()) {
-      setError("접수번호를 입력해주세요 (예: AS-20250801-001)");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
     try {
+      // 통합 Validation 사용
+      validateRequestNo(requestNo);
+      
+      setLoading(true);
+      setError("");
+
       // 실제 API 호출 시도
-      const response = await axios.get(`/api/public/delivery/${requestNo}`);
+      const response = await axios.get(`/api/public/delivery/${requestNo.trim()}`);
       
       if (response.data.status === 200) {
         setDeliveryInfo(response.data.data);
@@ -170,16 +32,18 @@ const DeliveryTracking = () => {
         setDeliveryInfo(null);
       }
     } catch (error) {
-      console.log("API 호출 실패, Mock 데이터 사용:", error);
+      console.log("배송조회 API 연결 실패, 샘플 데이터로 표시:", error);
       
-      // API 실패시 Mock 데이터 사용
-      const mockData = mockDeliveryData[requestNo.trim()];
+      // 중앙화된 Mock 데이터 사용
+      const mockData = getDeliveryByRequestNo(requestNo.trim());
       
       if (mockData) {
         setDeliveryInfo(mockData);
         setError("");
       } else {
-        setError("입력하신 접수번호를 찾을 수 없습니다. 접수번호를 다시 확인해주세요.");
+        // 통합 에러 처리 사용
+        const errorMessage = handleDeliveryTrackingError(error);
+        setError(errorMessage);
         setDeliveryInfo(null);
       }
     } finally {

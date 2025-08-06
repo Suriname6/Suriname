@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Search, Package } from "lucide-react";
 import styles from "../../css/Delivery/DeliveryRegister.module.css";
+import { mockRequests } from "../../utils/mockData";
+import { handleDeliveryRegistrationError, validateRequiredFields } from "../../utils/errorHandler";
 
 const DeliveryRegister = () => {
   const [formData, setFormData] = useState({
@@ -39,153 +41,6 @@ const DeliveryRegister = () => {
     }
   }, [showRequestModal]);
 
-  // Mock A/S 접수 데이터 (배송 대기 중인 상태)
-  const mockRequests = [
-    {
-      requestId: 1,
-      requestNo: "AS-20250801-001",
-      customer: {
-        name: "김민수",
-        phone: "010-1234-5678"
-      },
-      inputProductName: "삼성 갤럭시 노트20",
-      content: "화면 터치가 안되는 문제로 A/S 신청합니다.",
-      requestDate: "2025-08-01T10:30:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 2,
-      requestNo: "AS-20250801-002",
-      customer: {
-        name: "이영희",
-        phone: "010-9876-5432"
-      },
-      inputProductName: "LG 그램 노트북 17인치",
-      content: "배터리가 충전되지 않아 점검 요청드립니다.",
-      requestDate: "2025-08-01T14:20:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 3,
-      requestNo: "AS-20250802-001",
-      customer: {
-        name: "박철수",
-        phone: "010-5555-6666"
-      },
-      inputProductName: "아이폰 15 Pro",
-      content: "카메라가 흐리게 나오는 증상이 있습니다.",
-      requestDate: "2025-08-02T09:15:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 4,
-      requestNo: "AS-20250802-002",
-      customer: {
-        name: "최수진",
-        phone: "010-7777-8888"
-      },
-      inputProductName: "다이슨 청소기 V15",
-      content: "흡입력이 약해지고 이상한 소리가 납니다.",
-      requestDate: "2025-08-02T16:45:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 5,
-      requestNo: "AS-20250803-001",
-      customer: {
-        name: "정하나",
-        phone: "010-2222-3333"
-      },
-      inputProductName: "에어팟 프로 2세대",
-      content: "좌측 이어폰에서 소리가 나지 않습니다.",
-      requestDate: "2025-08-03T11:30:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 6,
-      requestNo: "AS-20250803-002",
-      customer: {
-        name: "강도현",
-        phone: "010-4444-5555"
-      },
-      inputProductName: "MacBook Air M2",
-      content: "키보드 스페이스바가 제대로 작동하지 않습니다.",
-      requestDate: "2025-08-03T13:50:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 7,
-      requestNo: "AS-20250804-001",
-      customer: {
-        name: "윤서영",
-        phone: "010-6666-7777"
-      },
-      inputProductName: "샤오미 공기청정기",
-      content: "필터 교체 후에도 이상한 냄새가 계속 납니다.",
-      requestDate: "2025-08-04T08:20:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 8,
-      requestNo: "AS-20250804-002",
-      customer: {
-        name: "임지훈",
-        phone: "010-8888-9999"
-      },
-      inputProductName: "소니 WH-1000XM5 헤드폰",
-      content: "노이즈 캔슬링 기능이 작동하지 않습니다.",
-      requestDate: "2025-08-04T15:40:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 9,
-      requestNo: "AS-20250805-001",
-      customer: {
-        name: "송미라",
-        phone: "010-1111-2222"
-      },
-      inputProductName: "닌텐도 스위치 OLED",
-      content: "화면에 선이 나타나고 터치가 불안정합니다.",
-      requestDate: "2025-08-05T12:15:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 10,
-      requestNo: "AS-20250805-002",
-      customer: {
-        name: "오현수",
-        phone: "010-3333-4444"
-      },
-      inputProductName: "iPad Pro 12.9인치",
-      content: "Apple Pencil 인식이 되지 않는 문제입니다.",
-      requestDate: "2025-08-05T17:25:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 11,
-      requestNo: "AS-20250806-001",
-      customer: {
-        name: "한예슬",
-        phone: "010-9999-0000"
-      },
-      inputProductName: "비스포크 냉장고 4도어",
-      content: "냉동실 온도가 제대로 유지되지 않습니다.",
-      requestDate: "2025-08-06T09:30:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 12,
-      requestNo: "AS-20250806-002",
-      customer: {
-        name: "신동욱",
-        phone: "010-5555-7777"
-      },
-      inputProductName: "갤럭시 워치6 클래식",
-      content: "화면이 계속 꺼지고 배터리가 빨리 소모됩니다.",
-      requestDate: "2025-08-06T14:10:00",
-      status: "WAITING_FOR_DELIVERY"
-    }
-  ];
 
   const fetchRequestList = async () => {
     try {
@@ -227,18 +82,16 @@ const DeliveryRegister = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.requestId) {
-      alert("A/S 접수를 선택해주세요.");
-      return;
-    }
-
-    if (!formData.name || !formData.phone || !formData.zipcode || !formData.address) {
-      alert("필수 항목을 모두 입력해주세요.");
-      return;
-    }
-
-    setLoading(true);
     try {
+      // 통합 Validation 사용
+      if (!formData.requestId) {
+        alert("A/S 접수를 선택해주세요.");
+        return;
+      }
+
+      validateRequiredFields(formData, ['name', 'phone', 'zipcode', 'address']);
+
+      setLoading(true);
       const response = await axios.post("/api/delivery", formData);
       
       if (response.data.status === 201) {
@@ -248,42 +101,9 @@ const DeliveryRegister = () => {
         alert(response.data.message || "등록에 실패했습니다.");
       }
     } catch (error) {
-      console.error("배송 등록 실패:", error);
-      
-      // 사용자 친화적인 에러 메시지 생성
-      let userMessage = "";
-      
-      if (error.response) {
-        // 서버에서 응답이 온 경우
-        const status = error.response.status;
-        const serverMessage = error.response.data?.message || "";
-        
-        if (status === 400) {
-          if (serverMessage.includes("접수")) {
-            userMessage = "선택한 A/S 접수를 찾을 수 없습니다. 다시 선택해주세요.";
-          } else if (serverMessage.includes("이미")) {
-            userMessage = "이미 배송이 등록된 접수입니다. 배송목록에서 확인해주세요.";
-          } else if (serverMessage.includes("필수") || serverMessage.includes("입력")) {
-            userMessage = "필수 정보가 누락되었습니다. 모든 항목을 확인해주세요.";
-          } else {
-            userMessage = `입력 정보를 확인해주세요: ${serverMessage}`;
-          }
-        } else if (status === 404) {
-          userMessage = "A/S 접수 정보를 찾을 수 없습니다. 접수번호를 확인해주세요.";
-        } else if (status >= 500) {
-          userMessage = "서버에 일시적인 문제가 있습니다. 잠시 후 다시 시도해주세요.";
-        } else {
-          userMessage = `처리 중 문제가 발생했습니다: ${serverMessage}`;
-        }
-      } else if (error.request) {
-        // 네트워크 연결 문제
-        userMessage = "인터넷 연결을 확인하고 다시 시도해주세요.";
-      } else {
-        // 기타 에러
-        userMessage = "예상치 못한 문제가 발생했습니다. 페이지를 새로고침 후 다시 시도해주세요.";
-      }
-      
-      alert(userMessage);
+      // 통합 에러 처리 사용
+      const errorMessage = handleDeliveryRegistrationError(error);
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
