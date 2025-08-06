@@ -1,5 +1,7 @@
 package com.suriname.payment;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import java.util.List;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // 결제 목록 조회 (페이징 및 검색)
     @GetMapping
@@ -69,26 +72,31 @@ public class PaymentController {
         return ResponseEntity.ok(res);
     }
 
-    // 포트원 webhook 수신
-    @PostMapping("/webhook/portone")
-    public ResponseEntity<Void> portoneWebhook(@RequestBody PortOneWebhookDto dto,
-                                               @RequestHeader(value = "X-PortOne-Signature", required = false) String signature,
-                                               HttpServletRequest request) {
+    // 토스페이먼츠 webhook 수신
+    @PostMapping("/webhook/toss")
+    public ResponseEntity<Void> tossWebhook(@RequestBody String payload,
+                                           @RequestHeader(value = "X-Toss-Signature", required = false) String signature) {
+        try {
+            System.out.println("토스페이먼츠 웹훅 수신: " + payload);
+            System.out.println("토스페이먼츠 웹훅 서명: " + signature);
 
-        // 웹훅 서명 검증을 위해 raw body 읽기
-        if (signature != null) {
-            try {
-                String rawBody = getRawBody(request);
-                if (!paymentService.verifyWebhookSignature(rawBody, signature)) {
+            // 웹훅 서명 검증 (테스트 환경에서는 스킵)
+            if (signature != null) {
+                if (!paymentService.verifyTossWebhookSignature(payload, signature)) {
                     return ResponseEntity.badRequest().build();
                 }
-            } catch (IOException e) {
-                return ResponseEntity.badRequest().build();
             }
-        }
 
-        paymentService.handleWebhook(dto);
-        return ResponseEntity.ok().build();
+            // JSON 파싱
+            JsonNode webhookData = objectMapper.readTree(payload);
+            paymentService.handleTossWebhook(webhookData);
+            
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            System.err.println("토스페이먼츠 웹훅 처리 오류: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 
     private String getRawBody(HttpServletRequest request) throws IOException {
