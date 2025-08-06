@@ -129,59 +129,93 @@ const RepairWritePage = () => {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.customerContainer}>
       <SidebarNavigation />
       
+      {/* 탭 네비게이션 */}
+      <div className={styles.tabNavigation}>
+        <div className={styles.tabContainer}>
+          <button className={`${styles.tabButton} ${styles.active}`}>
+            수리 내역 작성
+          </button>
+        </div>
+      </div>
+
       <div className={styles.sectionContainer}>
-        {/* 헤더와 수리 기사 */}
-        <div className={styles.headerSection}>
-          <h1 className={styles.pageTitle}>수리 내역</h1>
-          <div className={styles.technicianInfo}>
+        
+        {/* 수리 기사 정보 */}
+        <div className={styles.technicianSection}>
+          <div className={styles.technicianBox}>
             <span className={styles.technicianLabel}>수리 기사</span>
             <span className={styles.technicianName}>{formData.repairTechnician}</span>
           </div>
         </div>
 
-        {/* 고객 정보 박스들 */}
-        <div className={styles.customerInfoBoxes}>
-          <div className={styles.infoBox}>
-            <span className={styles.boxLabel}>고객명</span>
-            <span className={styles.boxValue}>{formData.customerName}</span>
-          </div>
-          <div className={styles.infoBox}>
-            <span className={styles.boxLabel}>제품명</span>
-            <span className={styles.boxValue}>{formData.productName}</span>
-          </div>
-          <div className={styles.infoBox}>
-            <span className={styles.boxLabel}>접수번호</span>
-            <span className={styles.boxValue}>{formData.serialNumber}</span>
+        {/* 고객 정보 */}
+        <div className={styles.sectionContent}>
+          <h2 className={styles.sectionTitle}>고객 정보</h2>
+          
+          <div className={styles.inputGroup}>
+            <div className={styles.inputField} style={{ flex: 1 }}>
+              <label className={styles.inputLabel}>고객명</label>
+              <input
+                type="text"
+                className={styles.inputControl}
+                value={formData.customerName}
+                readOnly
+              />
+            </div>
+            <div className={styles.inputField} style={{ flex: 1 }}>
+              <label className={styles.inputLabel}>제품명</label>
+              <input
+                type="text"
+                className={styles.inputControl}
+                value={formData.productName}
+                readOnly
+              />
+            </div>
+            <div className={styles.inputField} style={{ flex: 1 }}>
+              <label className={styles.inputLabel}>접수번호</label>
+              <input
+                type="text"
+                className={styles.inputControl}
+                value={formData.serialNumber}
+                readOnly
+              />
+            </div>
           </div>
         </div>
 
         {/* 수리 프리셋 선택 */}
-        <div className={styles.section}>
+        <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>수리 프리셋 선택</h2>
-          <div className={styles.presetRow}>
-            <select 
-              className={styles.presetSelect}
-              value={formData.issueCategory} 
-              onChange={(e) => handleInputChange('issueCategory', e.target.value)}
-            >
-              <option value="">키패드의 신호</option>
-              {issueCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-            <select 
-              className={styles.presetSelect}
-              value={formData.priceCategory} 
-              onChange={(e) => handleInputChange('priceCategory', e.target.value)}
-            >
-              <option value="">프리즈 문제</option>
-              {priceCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+          <div className={styles.inputGroup}>
+            <div className={styles.inputField} style={{ flex: 1 }}>
+              <label className={styles.inputLabel}>키패드의 신호</label>
+              <select 
+                className={styles.inputControl}
+                value={formData.issueCategory} 
+                onChange={(e) => handleInputChange('issueCategory', e.target.value)}
+              >
+                <option value="">키패드의 신호</option>
+                {issueCategories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.inputField} style={{ flex: 1 }}>
+              <label className={styles.inputLabel}>프리즈 문제</label>
+              <select 
+                className={styles.inputControl}
+                value={formData.priceCategory} 
+                onChange={(e) => handleInputChange('priceCategory', e.target.value)}
+              >
+                <option value="">프리즈 문제</option>
+                {priceCategories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

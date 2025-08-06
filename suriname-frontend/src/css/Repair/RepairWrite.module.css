@@ -1,10 +1,46 @@
 /* 공통 스타일 */
-.container {
+.customerContainer {
     margin-left: 200px;
     padding: 32px 24px;
     min-height: 100vh;
     background-color: #ffffff;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* 탭 네비게이션 */
+.tabNavigation {
+    margin-bottom: 32px;
+}
+
+.tabContainer {
+    background-color: #eff4ff;
+    border-radius: 100px;
+    padding: 4px;
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+}
+
+.tabButton {
+    flex: 1;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 100px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tabButton.active {
+    background-color: #ffffff;
+    color: #2563eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tabButton.inactive {
+    background-color: transparent;
+    color: #6b7280;
 }
 
 /* 섹션 공통 */
@@ -36,31 +72,24 @@
     border-bottom: 2px solid #f1f5f9;
 }
 
-/* 헤더 섹션 */
-.headerSection {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* 수리 기사 섹션 */
+.technicianSection {
     width: 100%;
     max-width: 600px;
-    margin-bottom: 32px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 24px;
 }
 
-.pageTitle {
-    font-size: 24px;
-    font-weight: 600;
-    color: #181d27;
-    margin: 0;
-}
-
-.technicianInfo {
+.technicianBox {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     padding: 8px 16px;
-    background-color: #f8fafc;
+    background-color: white;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .technicianLabel {
@@ -75,34 +104,77 @@
     color: #0f172a;
 }
 
-/* 고객 정보 박스들 */
-.customerInfoBoxes {
+/* 입력 필드 그룹 */
+.inputGroup {
     display: flex;
-    gap: 16px;
+    gap: 24px;
+    margin-bottom: 24px;
+    align-items: flex-end;
+}
+
+.inputField {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.inputLabel {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+    white-space: nowrap;
+}
+
+.inputControl {
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: #f9fafb;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.inputControl:focus {
+    outline: none;
+    border-color: #2563eb;
+    background-color: white;
+}
+
+.inputControl[readonly] {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+/* 고객 정보 박스들 (가로 배치) */
+.customerInfoRow {
+    display: flex;
+    gap: 24px;
     margin-bottom: 48px;
     width: 100%;
     max-width: 600px;
 }
 
-.infoBox {
+.customerInfoBox {
     flex: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 16px;
-    background-color: #f8fafc;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background-color: white;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.boxLabel {
+.infoLabel {
     font-size: 14px;
     font-weight: 500;
     color: #64748b;
 }
 
-.boxValue {
+.infoValue {
     font-size: 14px;
     font-weight: 600;
     color: #0f172a;
@@ -122,6 +194,8 @@
     font-size: 16px;
     background-color: #f9fafb;
     color: #374151;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .presetSelect:focus {
@@ -189,6 +263,7 @@
     border-radius: 4px;
     font-size: 14px;
     background-color: #f9fafb;
+    box-sizing: border-box;
 }
 
 .tableInput:focus {
@@ -265,6 +340,7 @@
     font-size: 14px;
     font-weight: 500;
     color: #374151;
+    margin-bottom: 8px;
 }
 
 .fieldInput {
@@ -273,6 +349,8 @@
     border-radius: 8px;
     font-size: 16px;
     background-color: #f9fafb;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .fieldInput:focus {
@@ -455,68 +533,4 @@
 
 .submitButton:hover {
     background-color: #1d4ed8;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1200px) {
-    .container {
-        margin-left: 0;
-        padding: 16px;
-    }
-    
-    .customerInfoBoxes {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .presetRow {
-        flex-direction: column;
-        gap: 16px;
-    }
-    
-    .estimateGrid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    
-    .tableHeader,
-    .tableRow {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-    
-    .headerCell,
-    .tableCell {
-        border-right: none;
-        border-bottom: 1px solid #e2e8f0;
-        justify-content: flex-start;
-    }
-    
-    .headerCell:last-child,
-    .tableCell:last-child {
-        border-bottom: none;
-        justify-content: center;
-    }
-    
-    .buttonGroup {
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 8px;
-    }
-    
-    .headerSection {
-        flex-direction: column;
-        gap: 16px;
-        text-align: center;
-    }
-    
-    .agreementSection {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
 }
