@@ -18,6 +18,8 @@ import CustomerDetail from "./pages/Customer/CustomerDetail";
 import DashboardPage from "./pages/DashboardPage";
 import PaymentListPage from "./pages/Payment/PaymentListPage";
 import PaymentVirtualAccountPage from "./pages/Payment/PaymentVirtualAccountPage";
+import StaffListPage from "./pages/staff/StaffListPage";
+import StaffRequestPage from "./pages/staff/StaffRequestPage";
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -56,6 +58,8 @@ function App() {
             path="/payment/virtualaccount"
             element={<PaymentVirtualAccountPage />}
           />
+          <Route path="/staff/list" element={<StaffListPage />} />
+          <Route path="/staff/request" element={<StaffRequestPage />} />
         </Route>
       </Routes>
     </Router>

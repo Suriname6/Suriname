@@ -21,9 +21,9 @@ export default function SidebarNavigation() {
     "입금 상태 목록": "/payment/list",
     "가상 계좌 발급 요청": "/payment/virtualaccount",
     /* "배송 목록": "/delivery/list",
-  "배송 등록": "/delivery/register",
+  "배송 등록": "/delivery/register",*/
   "직원 목록": "/staff/list",
-  "직원 가입 요청 목록": "/staff/requests",*/
+  "직원 가입 요청 목록": "/staff/requests",
   "통계": "/dashboard/statistics",
   "담당자별 성과": "/dashboard/performance",
   "리포트": "/dashboard/report",
