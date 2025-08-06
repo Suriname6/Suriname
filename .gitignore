@@ -16,3 +16,17 @@ suriname-backend/.env.properties
 .env.properties
 /.metadata/
 .gradle/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build outputs
+build/
+dist/
+
+# Local development files
+start.bat
