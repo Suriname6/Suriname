@@ -3,17 +3,15 @@ package com.suriname.employee.service;
 import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.dto.EmployeeUpdateRequestDto;
-import com.suriname.employee.dto.EmployeeRequestDto;
 import com.suriname.employee.entity.Employee;
 import com.suriname.employee.repository.EmployeeRepository;
 import com.suriname.employee.service.mapper.EmployeeMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,13 +38,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeMapper.toDto(employee);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<EmployeeResponseDto> getAllEmployees() {
-        return employeeRepository.findAll().stream()
-                .map(employeeMapper::toDto)
-                .collect(Collectors.toList());
-    }
+//    @Override
+//    @Transactional(readOnly = true)
+//    public List<EmployeeResponseDto> getAllEmployees() {
+//        return employeeRepository.findAll().stream()
+//                .map(employeeMapper::toDto)
+//                .collect(Collectors.toList());
+//    }
 
     @Override
     @Transactional
@@ -76,5 +74,19 @@ public class EmployeeServiceImpl implements EmployeeService {
     private Employee findEmployee(Long id) {
         return employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 직원이 존재하지 않습니다."));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponseDto> getEmployees(String role, Pageable pageable) {
+        Page<Employee> employees;
+
+        if (role == null || role.isBlank()) {
+            employees = employeeRepository.findAll(pageable);
+        } else {
+            employees = employeeRepository.findByRole(Employee.Role.valueOf(role.toUpperCase()), pageable);
+        }
+
+        return employees.map(employeeMapper::toDto);
     }
 }
