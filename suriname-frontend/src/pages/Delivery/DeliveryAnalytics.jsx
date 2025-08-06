@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, Package, Truck, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import styles from '../../css/Delivery/DeliveryAnalytics.module.css';
@@ -55,25 +56,76 @@ const DeliveryAnalytics = () => {
         const fetchDashboardData = async () => {
             try {
                 setLoading(true);
-                // 실제 API 호출 (현재는 Mock 데이터 사용)
-                // const response = await axios.get('/api/delivery/analytics/dashboard');
-                // setDashboardData(response.data.data);
+                // 실제 API 호출 시도
+                const response = await axios.get('/api/delivery/analytics');
                 
-                // Mock 데이터 사용
-                setTimeout(() => {
+                if (response.data.status === 200) {
+                    // API 데이터를 Mock 데이터 형식에 맞게 변환
+                    const formattedData = formatApiDataForDisplay(response.data.data);
+                    setDashboardData(formattedData);
+                } else {
+                    console.log("분석 API 응답 오류, 샘플 데이터 사용:", response.data.message);
                     setDashboardData(mockData);
-                    setLoading(false);
-                }, 1000);
+                }
                 
             } catch (error) {
-                console.error('대시보드 데이터 로딩 실패:', error);
+                console.log("분석 API 연결 실패, 샘플 데이터로 표시:", error);
                 setDashboardData(mockData); // 오류 시 Mock 데이터 사용
+            } finally {
                 setLoading(false);
             }
         };
 
         fetchDashboardData();
     }, [selectedTimeframe]);
+
+    // API 데이터를 화면 표시용 형식으로 변환
+    const formatApiDataForDisplay = (apiData) => {
+        return {
+            totalDeliveries: apiData.totalDeliveries || 0,
+            recentDeliveries: apiData.totalDeliveries || 0,
+            pendingCount: apiData.pendingCount || 0,
+            shippedCount: apiData.shippedCount || 0,
+            deliveredCount: apiData.deliveredCount || 0,
+            carrierStats: {
+                distribution: apiData.carrierStats || {},
+                topCarrier: getTopCarrier(apiData.carrierStats || {})
+            },
+            performanceMetrics: {
+                completionRate: calculateCompletionRate(apiData),
+                averageDeliveryTime: 2.3, // 계산 로직 필요
+                onTimeDeliveryRate: 87.5  // 계산 로직 필요
+            },
+            dailyStats: {
+                dailyCounts: apiData.dailyStats || {},
+                averagePerDay: calculateAveragePerDay(apiData.dailyStats || {})
+            },
+            regionStats: apiData.regionStats || {}
+        };
+    };
+
+    const getTopCarrier = (carrierStats) => {
+        let maxCount = 0;
+        let topCarrier = '';
+        for (const [carrier, count] of Object.entries(carrierStats)) {
+            if (count > maxCount) {
+                maxCount = count;
+                topCarrier = carrier;
+            }
+        }
+        return topCarrier;
+    };
+
+    const calculateCompletionRate = (apiData) => {
+        const total = apiData.totalDeliveries || 0;
+        const completed = apiData.deliveredCount || 0;
+        return total > 0 ? ((completed / total) * 100).toFixed(1) : 0;
+    };
+
+    const calculateAveragePerDay = (dailyStats) => {
+        const values = Object.values(dailyStats);
+        return values.length > 0 ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(0) : 0;
+    };
 
     if (loading) {
         return (

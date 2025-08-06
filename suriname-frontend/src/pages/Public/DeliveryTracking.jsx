@@ -152,7 +152,7 @@ const DeliveryTracking = () => {
     e.preventDefault();
     
     if (!requestNo.trim()) {
-      setError("접수번호를 입력해주세요.");
+      setError("접수번호를 입력해주세요 (예: AS-20250801-001)");
       return;
     }
 
@@ -179,7 +179,7 @@ const DeliveryTracking = () => {
         setDeliveryInfo(mockData);
         setError("");
       } else {
-        setError("접수번호를 확인해주세요. 배송 정보를 찾을 수 없습니다.");
+        setError("입력하신 접수번호를 찾을 수 없습니다. 접수번호를 다시 확인해주세요.");
         setDeliveryInfo(null);
       }
     } finally {
@@ -342,7 +342,7 @@ const DeliveryTracking = () => {
                           }
                         })
                         .catch(() => {
-                          alert("택배사 조회 서비스에 일시적인 문제가 있습니다.");
+                          alert("택배사 홈페이지 연결에 문제가 있습니다. 택배사 앱이나 홈페이지를 직접 이용해주세요.");
                         });
                     }}
                   >

@@ -249,8 +249,41 @@ const DeliveryRegister = () => {
       }
     } catch (error) {
       console.error("배송 등록 실패:", error);
-      const errorMessage = error.response?.data?.message || "배송 등록에 실패했습니다.";
-      alert(errorMessage);
+      
+      // 사용자 친화적인 에러 메시지 생성
+      let userMessage = "";
+      
+      if (error.response) {
+        // 서버에서 응답이 온 경우
+        const status = error.response.status;
+        const serverMessage = error.response.data?.message || "";
+        
+        if (status === 400) {
+          if (serverMessage.includes("접수")) {
+            userMessage = "선택한 A/S 접수를 찾을 수 없습니다. 다시 선택해주세요.";
+          } else if (serverMessage.includes("이미")) {
+            userMessage = "이미 배송이 등록된 접수입니다. 배송목록에서 확인해주세요.";
+          } else if (serverMessage.includes("필수") || serverMessage.includes("입력")) {
+            userMessage = "필수 정보가 누락되었습니다. 모든 항목을 확인해주세요.";
+          } else {
+            userMessage = `입력 정보를 확인해주세요: ${serverMessage}`;
+          }
+        } else if (status === 404) {
+          userMessage = "A/S 접수 정보를 찾을 수 없습니다. 접수번호를 확인해주세요.";
+        } else if (status >= 500) {
+          userMessage = "서버에 일시적인 문제가 있습니다. 잠시 후 다시 시도해주세요.";
+        } else {
+          userMessage = `처리 중 문제가 발생했습니다: ${serverMessage}`;
+        }
+      } else if (error.request) {
+        // 네트워크 연결 문제
+        userMessage = "인터넷 연결을 확인하고 다시 시도해주세요.";
+      } else {
+        // 기타 에러
+        userMessage = "예상치 못한 문제가 발생했습니다. 페이지를 새로고침 후 다시 시도해주세요.";
+      }
+      
+      alert(userMessage);
     } finally {
       setLoading(false);
     }

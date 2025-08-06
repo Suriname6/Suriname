@@ -225,7 +225,7 @@ const DeliveryList = () => {
         setDeliveries(response.data.data.content);
         setTotalPages(response.data.data.totalPages);
       } catch (apiError) {
-        console.log("API 호출 실패, Mock 데이터 사용:", apiError);
+        console.log("API 호출 실패, 샘플 데이터로 표시:", apiError);
         
         // Mock 데이터 필터링 및 페이지네이션
         let filteredData = mockDeliveries;
