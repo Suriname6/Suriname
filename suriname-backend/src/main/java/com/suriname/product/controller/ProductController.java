@@ -16,6 +16,7 @@ import com.suriname.product.service.ProductService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -37,7 +38,7 @@ public class ProductController {
 	public ResponseEntity<?> registerProduct(@RequestBody ProductDto dto) {
 		Category category = categoryRepository.findByName(dto.getCategoryName())
 				.orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
-		productService.registerProduct(dto, category);
+		productService.registerProduct(dto);
 		return ResponseEntity.ok(Map.of("status", 200, "message", "제품이 등록되었습니다."));
 	}
 
@@ -93,4 +94,7 @@ public class ProductController {
 		productService.importFromExcel(file);
 		return ResponseEntity.ok(Map.of("status", 200, "message", "엑셀 등록이 완료되었습니다."));
 	}
+	
+	
+
 }

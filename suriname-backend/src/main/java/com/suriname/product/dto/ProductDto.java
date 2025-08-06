@@ -19,8 +19,9 @@ public class ProductDto {
     private String categoryName;
     private String productBrand;
     private String modelCode;
-    private String serialNumber;
     private String memo;
+    private Boolean isDeleted;
+    private Boolean isVisible;
     
     public static ProductDto fromEntity(Product product) {
         return ProductDto.builder()
@@ -29,8 +30,9 @@ public class ProductDto {
                 .categoryName(product.getCategory().getName())  // Category 엔티티에 getName() 메서드가 있어야 함
                 .productBrand(product.getProductBrand())
                 .modelCode(product.getModelCode())
-                .serialNumber(product.getSerialNumber())
                 .memo(product.getMemo())
+                .isDeleted(product.getIsDeleted())
+                .isVisible(product.getIsVisible())
                 .build();
     }
 
@@ -39,10 +41,10 @@ public class ProductDto {
                 .productName(productName)
                 .productBrand(productBrand)
                 .modelCode(modelCode)
-                .serialNumber(serialNumber)
                 .category(category)
                 .memo(memo)
                 .isVisible(true)
+                .isDeleted(false)
                 .build();
     }
 }

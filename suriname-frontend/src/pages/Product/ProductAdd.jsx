@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styles from "../../css/Product/ProductAdd.module.css";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +6,20 @@ import { useNavigate } from "react-router-dom";
 const ProductAdd = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("individual");
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/api/categories");
+        setCategories(res.data);
+      } catch (error) {
+        console.error("카테고리 불러오기 실패:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // 일반 등록 폼 상태
   const [individualForm, setIndividualForm] = useState({
@@ -13,7 +27,6 @@ const ProductAdd = () => {
     categoryName: "",
     productBrand: "",
     modelCode: "",
-    serialNumber: "",
     memo: "",
   });
 
@@ -36,12 +49,9 @@ const ProductAdd = () => {
         return;
       }
 
-      const response = await axios.post(
-        "/api/products/register",
-        individualForm
-      );
+      const response = await axios.post("/api/products", individualForm);
 
-      if (response.data.success) {
+      if (response.data.status === 200) {
         alert("제품이 성공적으로 등록되었습니다.");
         navigate("/product/list");
       } else {
@@ -49,7 +59,9 @@ const ProductAdd = () => {
       }
     } catch (error) {
       console.error("제품 등록 오류:", error);
-      alert("제품 등록 중 오류가 발생했습니다.");
+      const errorMessage =
+        error.response?.data?.message || error.message || "알 수 없는 오류";
+      alert(`제품 등록 중 오류가 발생했습니다.\n\n[오류 내용] ${errorMessage}`);
     }
   };
 
@@ -120,12 +132,11 @@ const ProductAdd = () => {
                   }
                 >
                   <option value="">선택</option>
-                  <option value="노트북">노트북</option>
-                  <option value="데스크탑">데스크탑</option>
-                  <option value="태블릿">태블릿</option>
-                  <option value="스마트폰">스마트폰</option>
-                  <option value="모니터">모니터</option>
-                  <option value="프린터">프린터</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -156,18 +167,6 @@ const ProductAdd = () => {
                     handleIndividualChange("modelCode", e.target.value)
                   }
                   placeholder="모델코드를 입력하세요"
-                />
-              </div>
-              <div className={styles.inputField}>
-                <label className={styles.inputLabel}>제품고유번호</label>
-                <input
-                  type="text"
-                  className={styles.inputControl}
-                  value={individualForm.serialNumber}
-                  onChange={(e) =>
-                    handleIndividualChange("serialNumber", e.target.value)
-                  }
-                  placeholder="시리얼 넘버를 입력하세요"
                 />
               </div>
             </div>

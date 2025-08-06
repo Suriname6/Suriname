@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SearchBarLayout from "../../components/SearchLayout";
 import styles from "../../css/Product/ProductSearchBar.module.css";
+import axios from "axios";
 
 const ProductSearchBar = ({ onSearch }) => {
   const [form, setForm] = useState({
@@ -8,8 +9,7 @@ const ProductSearchBar = ({ onSearch }) => {
     categoryName: "",
     productBrand: "",
     modelCode: "",
-    serialNumber: "",
-    status: "",
+    isVisible: "",
   });
 
   const handleChange = (field, value) => {
@@ -17,8 +17,15 @@ const ProductSearchBar = ({ onSearch }) => {
   };
 
   const handleSearch = () => {
+    console.log("검색 요청:", form);
     onSearch(form);
   };
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    axios.get("/api/categories").then((res) => setCategories(res.data));
+  }, []);
 
   return (
     <SearchBarLayout onSearch={handleSearch}>
@@ -40,10 +47,11 @@ const ProductSearchBar = ({ onSearch }) => {
           onChange={(e) => handleChange("categoryName", e.target.value)}
         >
           <option value="">선택</option>
-          <option value="노트북">노트북</option>
-          <option value="데스크탑">데스크탑</option>
-          <option value="태블릿">태블릿</option>
-          <option value="스마트폰">스마트폰</option>
+          {categories.map((c, i) => (
+            <option key={i} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -71,16 +79,6 @@ const ProductSearchBar = ({ onSearch }) => {
           type="text"
           value={form.modelCode}
           onChange={(e) => handleChange("modelCode", e.target.value)}
-        />
-      </div>
-
-      <div className={styles.formGroup}>
-        <label className={styles.label}>제품고유번호</label>
-        <input
-          className={styles.inputField}
-          type="text"
-          value={form.serialNumber}
-          onChange={(e) => handleChange("serialNumber", e.target.value)}
         />
       </div>
     </SearchBarLayout>

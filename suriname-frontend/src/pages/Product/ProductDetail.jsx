@@ -8,6 +8,7 @@ const ProductDetail = () => {
   const [formData, setFormData] = useState(null);
   const [originalData, setOriginalData] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   // 데이터 로드
   useEffect(() => {
@@ -16,12 +17,22 @@ const ProductDetail = () => {
         const res = await axios.get(`/api/products/${id}`);
         setFormData(res.data.data);
         setOriginalData(res.data.data);
-        console.log(res.data.data);
       } catch (error) {
         console.error("제품 정보 불러오기 실패:", error);
       }
     };
+
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/api/categories");
+        setCategories(res.data); // ["노트북", "태블릿", ...]
+      } catch (error) {
+        console.error("카테고리 목록 불러오기 실패:", error);
+      }
+    };
+
     fetchProduct();
+    fetchCategories();
   }, [id]);
 
   // 입력 변경 핸들러
@@ -118,12 +129,11 @@ const ProductDetail = () => {
                 }
               >
                 <option value="">선택</option>
-                <option value="노트북">노트북</option>
-                <option value="데스크탑">데스크탑</option>
-                <option value="태블릿">태블릿</option>
-                <option value="스마트폰">스마트폰</option>
-                <option value="모니터">모니터</option>
-                <option value="프린터">프린터</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -152,18 +162,6 @@ const ProductDetail = () => {
                 value={formData.modelCode || ""}
                 onChange={(e) => handleInputChange("modelCode", e.target.value)}
                 placeholder="모델코드를 입력하세요"
-              />
-            </div>
-            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
-              <label className={styles.inputLabel}>제품고유번호</label>
-              <input
-                type="text"
-                className={styles.inputControl}
-                value={formData.serialNumber || ""}
-                onChange={(e) =>
-                  handleInputChange("serialNumber", e.target.value)
-                }
-                placeholder="시리얼 넘버를 입력하세요"
               />
             </div>
           </div>

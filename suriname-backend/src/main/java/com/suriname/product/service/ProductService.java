@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.suriname.category.entity.Category;
+import com.suriname.category.repository.CategoryRepository;
 import com.suriname.product.dto.ProductDto;
 import com.suriname.product.dto.ProductSearchDto;
 import com.suriname.product.entity.Product;
@@ -25,6 +26,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductExcelService productExcelService;
+    private final CategoryRepository categoryRepository;
 
     // 조회
     public List<ProductDto> getAllProducts() {
@@ -34,9 +36,20 @@ public class ProductService {
     }
 
     // 등록
-    public void registerProduct(ProductDto dto, Category category) {
+    public void registerProduct(ProductDto dto) {
+        Category category = categoryRepository.findByName(dto.getCategoryName())
+            .orElseGet(() -> {
+                Category newCategory = Category.builder()
+                        .name(dto.getCategoryName())
+                        .parent(null)
+                        .isVisible(true)
+                        .build();
+                return categoryRepository.save(newCategory);
+            });
+
         productRepository.save(dto.toEntity(category));
     }
+
 
     // 수정
     public void updateProduct(Long id, ProductDto dto, Category category) {
@@ -87,6 +100,8 @@ public class ProductService {
     // 엑셀
     public void importFromExcel(MultipartFile file) {
         productExcelService.importFromExcel(file);
+        
+        
     }
 }
 

@@ -43,8 +43,21 @@ const CustomerExcelAdd = () => {
         "/api/customers/upload/excel",
         formData
       );
-      alert("업로드 성공!");
-      console.log(response.data);
+      const { successCount, failures } = response.data.data;
+
+      // 성공 메시지
+      let message = `총 ${successCount}건이 성공적으로 등록되었습니다.`;
+
+      // 실패한 항목이 있다면 상세 메시지 추가
+      if (failures && failures.length > 0) {
+        message += `\n\n[등록 실패 항목]`;
+        failures.forEach((fail) => {
+          message += `\n- ${fail.row}행: ${fail.reason}`;
+        });
+      }
+
+      alert(message);
+      setUploadedFiles([]);
     } catch (error) {
       console.error("업로드 실패:", error);
       alert(

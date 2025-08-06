@@ -130,7 +130,6 @@ const ProductList = () => {
               <th>제품분류</th>
               <th>제품명</th>
               <th>모델코드</th>
-              <th>제품고유번호</th>
               <th>비고</th>
             </tr>
           </thead>
@@ -156,7 +155,6 @@ const ProductList = () => {
                   <td>{item.productName}</td>
 
                   <td>{item.modelCode}</td>
-                  <td>{item.serialNumber}</td>
                   <td>{item.memo || "-"}</td>
                 </tr>
               ))

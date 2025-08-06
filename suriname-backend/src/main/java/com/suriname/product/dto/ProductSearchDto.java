@@ -1,5 +1,6 @@
 package com.suriname.product.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ProductSearchDto {
     private String productName;
-    private Long categoryId;
+    private String categoryName;
     private String productBrand;
     private String modelCode;
     private String serialNumber;

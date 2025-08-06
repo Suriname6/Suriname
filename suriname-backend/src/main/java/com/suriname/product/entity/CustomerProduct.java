@@ -28,6 +28,9 @@ public class CustomerProduct {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Column(name="serial_number")
+    private String serialNumber;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -45,15 +48,16 @@ public class CustomerProduct {
         this.updatedAt = LocalDateTime.now();
     }
 
-    @Builder
-    public CustomerProduct(Customer customer, Product product) {
+    public CustomerProduct(Customer customer, Product product, String serialNumber) {
         this.customer = customer;
         this.product = product;
+        this.serialNumber = serialNumber;
     }
     
-    public void updateCustomerAndProduct(Customer customer, Product product) {
+    public void updateCustomerAndProduct(Customer customer, Product product, String serialNumber) {
         this.customer = customer;
         this.product = product;
+        this.serialNumber = serialNumber;
         this.updatedAt = LocalDateTime.now();
     }
 

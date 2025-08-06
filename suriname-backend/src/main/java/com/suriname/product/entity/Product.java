@@ -34,9 +34,6 @@ public class Product {
 	@Column(nullable = false, length = 50)
 	private String modelCode;
 
-	@Column(nullable = false, unique = true, length = 100)
-	private String serialNumber;
-
 	@Column(nullable = false)
 	private LocalDateTime createdAt;
 
@@ -52,13 +49,14 @@ public class Product {
 	@Column(nullable = false)
 	private Boolean isDeleted = false;
 
-	
 	@PrePersist
 	public void onCreate() {
 		this.createdAt = LocalDateTime.now();
 		this.updatedAt = LocalDateTime.now();
-		this.isVisible = true;
-		this.isDeleted = false;
+		if (this.isVisible == null)
+			this.isVisible = true;
+		if (this.isDeleted == null)
+			this.isDeleted = false;
 	}
 
 	@PreUpdate
@@ -68,19 +66,18 @@ public class Product {
 
 	@Builder
 	public Product(Category category, String productName, String productBrand, String modelCode, String serialNumber,
-			String memo, Boolean isVisible) {
+			String memo, Boolean isDeleted, Boolean isVisible) {
 		this.category = category;
 		this.productName = productName;
 		this.productBrand = productBrand;
 		this.modelCode = modelCode;
-		this.serialNumber = serialNumber;
 		this.memo = memo;
 		this.isVisible = true;
 		this.isDeleted = false;
 	}
 
 	public void markAsDeleted() {
-		 this.isDeleted = true; 
+		this.isDeleted = true;
 		this.isVisible = false;
 	}
 
@@ -89,7 +86,6 @@ public class Product {
 		this.productName = productName;
 		this.productBrand = productBrand;
 		this.modelCode = modelCode;
-		this.serialNumber = serialNumber;
 		this.category = category;
 	}
 
@@ -97,7 +93,6 @@ public class Product {
 		this.productName = dto.getProductName();
 		this.productBrand = dto.getProductBrand();
 		this.modelCode = dto.getModelCode();
-		this.serialNumber = dto.getSerialNumber();
 		this.memo = dto.getMemo();
 		this.category = category;
 	}

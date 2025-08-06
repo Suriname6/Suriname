@@ -21,4 +21,13 @@ public class CategoryDto {
                 .isVisible(category.getIsVisible())
                 .build();
     }
+    
+    public Category toEntity(Category parent) {
+        return Category.builder()
+                .parent(parent)
+                .name(this.name)
+                .isVisible(this.isVisible != null ? this.isVisible : true)
+                .build();
+    }
+
 }
