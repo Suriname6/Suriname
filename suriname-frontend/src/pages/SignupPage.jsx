@@ -154,7 +154,7 @@ function SignupPage() {
             value={formData.phone}
             onChange={handleChange}
             required
-            placeholder="- 없이 입력"
+            placeholder="-를 포함해 입력"
           />
         </div>
 

@@ -100,4 +100,8 @@ public class Employee {
     public void changePhone(String phone) {
         this.phone = phone;
     }
+
+    public void changeRole(Role newRole) {
+        this.role = newRole;
+    }
 }

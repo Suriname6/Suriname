@@ -11,11 +11,15 @@ import java.util.List;
 
 public class EmployeeSpecification {
 
-    public static Specification<Employee> searchWith(EmployeeSearchRequestDto dto) {
+    public static Specification<Employee> searchWith(EmployeeSearchRequestDto dto, boolean includePending) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(cb.notEqual(root.get("role"), Employee.Role.PENDING));
+            if (!includePending) {
+                predicates.add(cb.notEqual(root.get("role"), Employee.Role.PENDING));
+            } else {
+                predicates.add(cb.equal(root.get("role"), Employee.Role.PENDING));
+            }
 
             if (StringUtils.hasText(dto.getName())) {
                 predicates.add(cb.like(root.get("name"), "%" + dto.getName() + "%"));
@@ -33,7 +37,6 @@ public class EmployeeSpecification {
                 predicates.add(cb.like(root.get("address"), "%" + dto.getAddress() + "%"));
             }
 
-            // enum 파싱
             if (StringUtils.hasText(dto.getRole())) {
                 try {
                     Employee.Role role = Employee.Role.valueOf(dto.getRole().toUpperCase());

@@ -30,6 +30,8 @@ import SatisfactionSurvey from "./pages/Public/SatisfactionSurvey";
 import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
 import RepairPresetPage from "./pages/Repair/RepairPresetPage";
+import StaffApprovalPage from "./pages/staff/StaffApprovalPage";
+import StaffDetailPage from "./pages/staff/StaffDetailPage";
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -74,7 +76,9 @@ function App() {
           />
 
           <Route path="/staff/list" element={<StaffListPage />} />
-          <Route path="/staff/request" element={<StaffRequestPage />} />
+          <Route path="/staff/requests" element={<StaffRequestPage />} />
+          <Route path="/staff/approval/:employeeId" element={<StaffApprovalPage />} />
+          <Route path="/staff/detail/:employeeId" element={<StaffDetailPage />} />
           <Route path="/repair/list" element={<RepairListPage />} />
           <Route path="/repair/preset" element={<RepairPresetPage />} />
           <Route path="/repair/write" element={<RepairWritePage />} />

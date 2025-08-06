@@ -82,21 +82,24 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional(readOnly = true)
     public Page<EmployeeResponseDto> getEmployees(EmployeeSearchRequestDto search, Pageable pageable) {
-        // 🔍 디버깅 로그
-        System.out.println("🔍 [EmployeeService] 검색 요청 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓");
-        System.out.println("name     = [" + search.getName() + "]");
-        System.out.println("loginId  = [" + search.getLoginId() + "]");
-        System.out.println("email    = [" + search.getEmail() + "]");
-        System.out.println("phone    = [" + search.getPhone() + "]");
-        System.out.println("address  = [" + search.getAddress() + "]");
-        System.out.println("role     = [" + search.getRole() + "]");
-        System.out.println("status   = [" + search.getStatus() + "]");
-        System.out.println("page     = " + pageable.getPageNumber());
-        System.out.println("size     = " + pageable.getPageSize());
-        System.out.println("↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑");
-
         return employeeRepository
-                .findAll(EmployeeSpecification.searchWith(search), pageable)
+                .findAll(EmployeeSpecification.searchWith(search, false), pageable)
                 .map(employeeMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponseDto> getPendingEmployees(EmployeeSearchRequestDto search, Pageable pageable) {
+        return employeeRepository
+                .findAll(EmployeeSpecification.searchWith(search, true), pageable)
+                .map(employeeMapper::toDto);
+    }
+
+    @Override
+    @Transactional
+    public EmployeeResponseDto updateRole(Long employeeId, String role) {
+        Employee employee = findEmployee(employeeId);
+        employee.changeRole(Employee.Role.valueOf(role));
+        return employeeMapper.toDto(employee);
     }
 }

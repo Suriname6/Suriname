@@ -20,4 +20,8 @@ public interface EmployeeService {
 
     Page<EmployeeResponseDto> getEmployees(EmployeeSearchRequestDto search, Pageable pageable);
 
+    Page<EmployeeResponseDto> getPendingEmployees(EmployeeSearchRequestDto search, Pageable pageable);
+
+    EmployeeResponseDto updateRole(Long employeeId, String role);
+
 }

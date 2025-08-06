@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../../api/axiosInstance";
-import styles from "../../css/Customer/CustomerList.module.css";
+import styles from "../../css/StaffList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import StaffSearchBar from "./StaffSearchBar";

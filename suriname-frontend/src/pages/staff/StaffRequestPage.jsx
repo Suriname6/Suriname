@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import styles from "../../css/Customer/CustomerList.module.css";
+import axios from "../../api/axiosInstance";
+import styles from "../../css/StaffList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import StaffSearchBar from "./StaffSearchBar";
 
-const StaffListPage = () => {
+const StaffRequestPage = () => { 
   const [data, setData] = useState([]);
-  const [searchConditions, setSearchConditions] = useState({});
+  const [searchConditions, setSearchConditions] = useState({
+    name: "",
+    loginId: "",
+    email: "",
+    phone: "",
+    address: "",
+    status: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedItems, setSelectedItems] = useState(new Set());
@@ -16,26 +23,25 @@ const StaffListPage = () => {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchStaffData();
+    fetchPendingStaff(searchConditions);
   }, [currentPage, searchConditions]);
 
-  const fetchStaffData = async () => {
+  const fetchPendingStaff = async (conditions) => {
     try {
-      const res = await axios.get("/api/users", {
+      const res = await axios.get("/api/users/pending", {
         params: {
-            role: searchConditions.role ?? "",
-            page: currentPage - 1,
-            size: itemsPerPage,
+          ...conditions,
+          page: currentPage - 1,
+          size: itemsPerPage,
         },
       });
 
-      const pageData = res.data.data;
-      setData(pageData.content);
-      setTotalPages(pageData.totalPages);
+      setData(res.data.content);
+      setTotalPages(res.data.totalPages);
       setSelectAll(false);
       setSelectedItems(new Set());
     } catch (err) {
-      console.error("직원 목록 불러오기 실패:", err);
+      console.error("승인 대기 직원 목록 불러오기 실패:", err);
     }
   };
 
@@ -46,7 +52,7 @@ const StaffListPage = () => {
 
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
-    const newSet = checked ? new Set(data.map((item) => item.staffId)) : new Set();
+    const newSet = checked ? new Set(data.map((item) => item.employeeId)) : new Set();
     setSelectedItems(newSet);
   };
 
@@ -57,39 +63,44 @@ const StaffListPage = () => {
     setSelectAll(newSet.size === data.length);
   };
 
-  const handleDelete = async () => {
+  const handleRowClick = (employeeId, event) => {
+    if (event.target.type === "checkbox") return;
+    navigate(`/staff/approval/${employeeId}`);
+  };
+
+  const handleApprove = async () => {
     if (selectedItems.size === 0) {
-      alert("삭제할 항목을 선택해주세요.");
+      alert("승인할 직원을 선택해주세요.");
       return;
     }
 
-    const confirm = window.confirm(`${selectedItems.size}개 항목을 삭제하시겠습니까?`);
+    const confirm = window.confirm(`${selectedItems.size}명 직원을 승인 처리하시겠습니까?`);
     if (!confirm) return;
 
     try {
       const ids = Array.from(selectedItems);
-      if (ids.length === 1) {
-        await axios.delete(`/api/users/${ids[0]}`);
-      } else {
-        await axios.post("/api/staff/delete", ids, {
-          headers: { "Content-Type": "application/json" },
+      for (const id of ids) {
+        await axios.put(`/api/users/${id}`, {
+          role: "STAFF",
         });
       }
-      alert(`${ids.length}개 항목이 삭제되었습니다.`);
-      fetchStaffData();
+
+      alert(`${ids.length}명 직원이 승인되었습니다.`);
+      fetchPendingStaff(searchConditions);
     } catch (err) {
-      console.error("삭제 실패:", err);
-      alert("삭제 중 오류가 발생했습니다.");
+      console.error("승인 실패:", err);
+      alert("승인 처리 중 오류가 발생했습니다.");
     }
   };
 
-  const handleRowClick = (staffId, event) => {
-    if (event.target.type === "checkbox") return;
-    navigate(`/staff/detail/${staffId}`);
+  const formatDate = (dateTimeString) => {
+    return dateTimeString?.split("T")[0] ?? "";
   };
 
   return (
     <div className={styles.container}>
+      <h2>승인 대기 직원 목록</h2>
+
       <StaffSearchBar onSearch={handleSearch} />
 
       <div className={styles.tableHeader}>
@@ -102,8 +113,8 @@ const StaffListPage = () => {
           <span>전체 선택</span>
         </div>
         <div className={styles.deleteButtonWrapper}>
-          <button onClick={handleDelete} className={styles.deleteButton}>
-            삭제
+          <button onClick={handleApprove} className={styles.deleteButton}>
+            승인하기
           </button>
         </div>
       </div>
@@ -112,14 +123,11 @@ const StaffListPage = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>
-                <input type="checkbox" />
-              </th>
+              <th></th>
               <th>직원명</th>
-              <th>사원번호</th>
+              <th>로그인ID</th>
               <th>이메일</th>
               <th>연락처</th>
-              <th>주소</th>
               <th>생년월일</th>
               <th>계정생성일</th>
               <th>계정수정일</th>
@@ -127,36 +135,35 @@ const StaffListPage = () => {
             </tr>
           </thead>
           <tbody>
-            {data.length > 0 ? (
+            {Array.isArray(data) && data.length > 0 ? (
               data.map((item) => (
                 <tr
-                  key={item.staffId}
+                  key={item.employeeId}
                   className={styles.clickableRow}
-                  onClick={(e) => handleRowClick(item.staffId, e)}
+                  onClick={(e) => handleRowClick(item.employeeId, e)}
                 >
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedItems.has(item.staffId)}
-                      onChange={(e) => handleSelectItem(item.staffId, e.target.checked)}
+                      checked={selectedItems.has(item.employeeId)}
+                      onChange={(e) => handleSelectItem(item.employeeId, e.target.checked)}
                     />
                   </td>
                   <td>{item.name}</td>
-                  <td>{item.staffNumber}</td>
+                  <td>{item.loginId}</td>
                   <td>{item.email}</td>
                   <td>{item.phone}</td>
-                  <td>{item.address}</td>
                   <td>{item.birth}</td>
-                  <td>{item.createdAt}</td>
-                  <td>{item.updatedAt}</td>
+                  <td>{formatDate(item.createdAt)}</td>
+                  <td>{formatDate(item.updatedAt)}</td>
                   <td>{item.status === "ACTIVE" ? "활성" : "비활성"}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="10" className={styles.emptyState}>
-                  <h3>데이터가 없습니다</h3>
-                  <p>검색 조건을 변경하거나 새로운 직원을 등록해보세요.</p>
+                <td colSpan="9" className={styles.emptyState}>
+                  <h3>승인 대기 중인 직원이 없습니다</h3>
+                  <p>신규 등록된 직원을 기다려주세요.</p>
                 </td>
               </tr>
             )}
@@ -188,4 +195,4 @@ const StaffListPage = () => {
   );
 };
 
-export default StaffListPage;
+export default StaffRequestPage;
