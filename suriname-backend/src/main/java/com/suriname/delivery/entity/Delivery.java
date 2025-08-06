@@ -86,4 +86,19 @@ public class Delivery {
         this.status = Status.DELIVERED;
         this.completedDate = LocalDateTime.now();
     }
+
+    public void updateStatus(Status newStatus) {
+        this.status = newStatus;
+        if (newStatus == Status.DELIVERED) {
+            this.completedDate = LocalDateTime.now();
+        }
+    }
+
+    public void updateTrackingInfo(String trackingNo, String carrierName) {
+        this.trackingNo = trackingNo;
+        this.carrierName = carrierName;
+        if (this.status == Status.PENDING) {
+            this.status = Status.SHIPPED;
+        }
+    }
 }
