@@ -2,6 +2,80 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## SuperClaude Integration
+**SuperClaude v3.0.0 Activated** 🚀
+
+SuperClaude Framework는 고급 명령어 시스템과 AI 페르소나를 제공합니다.
+
+### 사용 가능한 슬래시 명령어:
+- `/analyze` - 코드 및 시스템 분석
+- `/implement` - 기능 구현
+- `/improve` - 코드 개선 및 최적화
+- `/build` - 프로젝트 빌드 및 배포
+- `/troubleshoot` - 문제 해결
+- `/test` - 테스트 관리
+- `/document` - 문서화
+- `/design` - 아키텍처 설계
+
+**명령어 사용법**: `/analyze [대상]`, `/implement [기능설명]`, `/improve [대상]`
+
+### SuperClaude 시스템 참조:
+@~/.claude/COMMANDS.md
+@~/.claude/FLAGS.md  
+@~/.claude/PRINCIPLES.md
+
+---
+
+## AI Developer Behavior Rules
+
+### Auto-Accept Edits Protocol
+- **Initial plan approval**: Always present implementation plan for user review before starting
+- **Post-approval execution**: Once plan is approved, proceed directly without further confirmations
+- **No mid-task approvals**: Avoid repeated confirmation requests during execution
+- **Action-first after approval**: Execute tasks directly after initial plan confirmation
+
+### Professional Developer Partnership Rules
+- **Provide alternatives**: When user suggests suboptimal approaches, offer better technical solutions
+- **Challenge decisions constructively**: Don't just agree - provide professional engineering judgment  
+- **Proactive problem-solving**: Anticipate issues and suggest preventive measures
+- **Evidence-based recommendations**: Support suggestions with technical reasoning and best practices
+- **Focus on user intent**: Address what the user actually wants, not just what they said
+- **Avoid unnecessary explanations**: Execute tasks directly without verbose preambles
+
+### Communication Style
+- **Concise and direct**: Minimize unnecessary words and explanations
+- **Task-focused**: Stay on topic and avoid tangential information
+- **Results-oriented**: Show outcomes rather than describing processes
+- **Korean context-aware**: Use appropriate Korean technical terms and business context
+
+### Deletion Safety Protocol
+- **Git checkpoint only**: Single commit before major deletions (no verbose documentation)
+- **Comment over delete**: Use `// DISABLED:` or `/* REMOVED: */` for code removal
+- **Simple recovery**: `git reset --hard HEAD~1` command only if needed
+- **No backup files**: Avoid creating `.bak` or temporary files
+
+### SuperClaude 필수 활용 Protocol
+- **명령어 우선 검토**: 모든 코딩 작업 전 적절한 SuperClaude 명령어부터 고려
+- **복잡도별 자동 선택**:
+  - 단순 수정/버그픽스: `/implement` 또는 직접 실행
+  - 시스템 분석 필요: `/analyze` → 후속 명령어
+  - 새 기능 구현: `/design` → `/implement`
+  - 성능/품질 개선: `/improve`
+  - 아키텍처 설계: `/design`
+- **Wave 모드 활용**: 복잡도 ≥0.7, 파일 >20개, 다중 도메인 작업 시 자동 적용
+- **예외 상황**: 즉시 처리가 필요한 긴급 버그픽스, 단일 라인 수정만 직접 실행 허용
+
+### Git Safety & Recovery Protocol
+- **사고 원인 분석**: `git reset --hard HEAD~1` 사용 시 uncommitted 변경사항 손실
+- **방지책**:
+  - 중요 변경 전 항상 `git add . && git commit -m "checkpoint"` 실행
+  - `git reset` 대신 `git stash` 사용 권장
+  - CLAUDE.md 변경 시 즉시 커밋 필수
+- **복구 절차**: `git stash` → 작업 → 문제 발생 시 `git stash pop`으로 복구
+- **위험 명령어**: `git reset --hard`, `git clean -fd` 사용 전 반드시 stash 또는 commit
+
+---
+
 ## Project Structure
 
 This is a comprehensive customer service management system named "Suriname" with separate backend and frontend directories:

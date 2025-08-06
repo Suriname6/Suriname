@@ -20,9 +20,10 @@ export default function SidebarNavigation() {
   "프리셋 등록": "/repair/preset",*/
     "입금 상태 목록": "/payment/list",
     "가상 계좌 발급 요청": "/payment/virtualaccount",
-    /* "배송 목록": "/delivery/list",
-  "배송 등록": "/delivery/register",
-  "직원 목록": "/staff/list",
+    "배송 목록": "/delivery/list",
+    "배송 등록": "/delivery/register",
+    "배송 분석": "/delivery/analytics",
+    /* "직원 목록": "/staff/list",
   "직원 가입 요청 목록": "/staff/requests",*/
   "통계": "/dashboard/statistics",
   "담당자별 성과": "/dashboard/performance",
@@ -43,6 +44,9 @@ export default function SidebarNavigation() {
       parentMenu: "결제 관리",
       subItem: "가상 계좌 발급 요청",
     },
+    "/delivery/list": { parentMenu: "배송 관리", subItem: "배송 목록" },
+    "/delivery/register": { parentMenu: "배송 관리", subItem: "배송 등록" },
+    "/delivery/analytics": { parentMenu: "배송 관리", subItem: "배송 분석" },
     // 추가 경로들을 여기에 매핑
   };
 
@@ -63,7 +67,7 @@ export default function SidebarNavigation() {
     "A/S 접수": ["접수 목록", "접수 등록"],
     "수리 처리": ["수리 내역", "수리 내역 작성", "프리셋 등록"],
     "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
-    "배송 관리": ["배송 목록", "배송 등록"],
+    "배송 관리": ["배송 목록", "배송 등록", "배송 분석"],
   };
 
   if (role === "ADMIN") {

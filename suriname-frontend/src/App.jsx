@@ -20,6 +20,7 @@ import PaymentListPage from "./pages/Payment/PaymentListPage";
 import PaymentVirtualAccountPage from "./pages/Payment/PaymentVirtualAccountPage";
 import DeliveryList from "./pages/Delivery/DeliveryList";
 import DeliveryRegister from "./pages/Delivery/DeliveryRegister";
+import DeliveryAnalytics from "./pages/Delivery/DeliveryAnalytics";
 import CompletionList from "./pages/Completion/CompletionList";
 import CompletionRegister from "./pages/Completion/CompletionRegister";
 import DeliveryTracking from "./pages/Public/DeliveryTracking";
@@ -33,7 +34,10 @@ function LayoutWithSidebar() {
   return (
     <div className="flex">
       {!shouldHideSidebar && <SidebarNavigation />}
-      <div className="flex-1 p-6 bg-gray-100 min-h-screen">
+      <div 
+        className="flex-1 p-6 bg-gray-100 min-h-screen"
+        style={{ marginLeft: shouldHideSidebar ? '0' : '170px' }}
+      >
         <Outlet />
       </div>
     </div>
@@ -68,6 +72,7 @@ function App() {
           />
           <Route path="/delivery/list" element={<DeliveryList />} />
           <Route path="/delivery/register" element={<DeliveryRegister />} />
+          <Route path="/delivery/analytics" element={<DeliveryAnalytics />} />
           <Route path="/completion/list" element={<CompletionList />} />
           <Route path="/completion/register" element={<CompletionRegister />} />
         </Route>
