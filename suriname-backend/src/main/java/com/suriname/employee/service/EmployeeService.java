@@ -1,5 +1,6 @@
 package com.suriname.employee.service;
 
+import com.suriname.employee.dto.EmployeeSearchRequestDto;
 import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.dto.EmployeeUpdateRequestDto;
@@ -17,6 +18,6 @@ public interface EmployeeService {
 
     void deactivateEmployee(Long employeeId);
 
-    Page<EmployeeResponseDto> getEmployees(String role, Pageable pageable);
+    Page<EmployeeResponseDto> getEmployees(EmployeeSearchRequestDto search, Pageable pageable);
 
 }

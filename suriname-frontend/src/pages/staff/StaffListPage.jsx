@@ -7,7 +7,15 @@ import StaffSearchBar from "./StaffSearchBar";
 
 const StaffListPage = () => {
   const [data, setData] = useState([]);
-  const [searchConditions, setSearchConditions] = useState({});
+  const [searchConditions, setSearchConditions] = useState({
+    name: "",
+    loginId: "",
+    email: "",
+    phone: "",
+    address: "",
+    role: "",
+    status: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedItems, setSelectedItems] = useState(new Set());
@@ -16,22 +24,27 @@ const StaffListPage = () => {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchStaffData();
+    fetchStaffData(searchConditions);
   }, [currentPage, searchConditions]);
 
-  const fetchStaffData = async () => {
+  const fetchStaffData = async (conditions) => {
     try {
+      console.log("axios 요청 params:", {
+        ...conditions,
+        page: currentPage - 1,
+        size: itemsPerPage,
+      });
+
       const res = await axios.get("/api/users", {
         params: {
-          role: searchConditions.role ?? "",
+          ...conditions,
           page: currentPage - 1,
           size: itemsPerPage,
         },
       });
 
-      const pageData = res.data; // ✅ 수정: res.data.data → res.data
-      setData(pageData.content);
-      setTotalPages(pageData.totalPages);
+      setData(res.data.content);
+      setTotalPages(res.data.totalPages);
       setSelectAll(false);
       setSelectedItems(new Set());
     } catch (err) {
@@ -73,7 +86,7 @@ const StaffListPage = () => {
       }
 
       alert(`${ids.length}개 항목이 삭제되었습니다.`);
-      fetchStaffData();
+      fetchStaffData(searchConditions);
     } catch (err) {
       console.error("삭제 실패:", err);
       alert("삭제 중 오류가 발생했습니다.");
@@ -125,7 +138,7 @@ const StaffListPage = () => {
             </tr>
           </thead>
           <tbody>
-            {data.length > 0 ? (
+            {Array.isArray(data) && data.length > 0 ? (
               data.map((item) => (
                 <tr
                   key={item.employeeId}

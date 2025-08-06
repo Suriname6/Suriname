@@ -30,6 +30,9 @@ public class Employee {
     @Column(nullable = false, length = 100)
     private String email;
 
+    @Column(nullable = false, length = 100)
+    private String address;
+
     @Column(nullable = false, length = 20)
     private String phone;
 
@@ -70,11 +73,12 @@ public class Employee {
     }
 
     @Builder
-    public Employee(String loginId, String password, String name, String email, String phone, LocalDate birth, Role role) {
+    public Employee(String loginId, String password, String name, String email, String address, String phone, LocalDate birth, Role role) {
         this.loginId = loginId;
         this.password = password;
         this.name = name;
         this.email = email;
+        this.address = address;
         this.phone = phone;
         this.birth = birth;
         this.role = role;

@@ -19,6 +19,7 @@ public class EmployeeMapper {
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .name(dto.getName())
                 .email(dto.getEmail())
+                .address(dto.getAddress())
                 .phone(dto.getPhone())
                 .birth(dto.getBirth())
                 .role(Employee.Role.PENDING)
@@ -32,6 +33,7 @@ public class EmployeeMapper {
                 employee.getName(),
                 employee.getEmail(),
                 employee.getPhone(),
+                employee.getAddress(),
                 employee.getBirth(),
                 employee.getCreatedAt(),
                 employee.getUpdatedAt(),

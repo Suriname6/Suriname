@@ -1,5 +1,6 @@
 package com.suriname.employee.controller;
 
+import com.suriname.employee.dto.EmployeeSearchRequestDto;
 import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.dto.EmployeeUpdateRequestDto;
@@ -32,13 +33,13 @@ public class EmployeeController {
 
     @GetMapping
     public ResponseEntity<Page<EmployeeResponseDto>> getAllEmployees(
-            @RequestParam(required = false) String role,
+            @ModelAttribute EmployeeSearchRequestDto search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     )
     {
         Page<EmployeeResponseDto> responseDtos =
-                employeeService.getEmployees(role, PageRequest.of(page, size));
+                employeeService.getEmployees(search, PageRequest.of(page, size));
         return ResponseEntity.ok(responseDtos);
     }
 

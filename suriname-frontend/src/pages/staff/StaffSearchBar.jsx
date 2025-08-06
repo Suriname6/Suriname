@@ -5,7 +5,7 @@ import styles from "../../css/Customer/CustomerSearchBar.module.css";
 const StaffSearchBar = ({ onSearch }) => {
   const [form, setForm] = useState({
     name: "",
-    staffNumber: "",
+    loginId: "",
     email: "",
     phone: "",
     address: "",
@@ -34,12 +34,12 @@ const StaffSearchBar = ({ onSearch }) => {
       </div>
 
       <div className={styles.formGroup}>
-        <label className={styles.label}>사원번호</label>
+        <label className={styles.label}>아이디</label>
         <input
           className={styles.inputField}
           type="text"
-          value={form.staffNumber}
-          onChange={(e) => handleChange("staffNumber", e.target.value)}
+          value={form.loginId}
+          onChange={(e) => handleChange("loginId", e.target.value)}
         />
       </div>
 

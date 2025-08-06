@@ -1,10 +1,12 @@
 package com.suriname.employee.service;
 
+import com.suriname.employee.dto.EmployeeSearchRequestDto;
 import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.dto.EmployeeUpdateRequestDto;
 import com.suriname.employee.entity.Employee;
 import com.suriname.employee.repository.EmployeeRepository;
+import com.suriname.employee.repository.EmployeeSpecification;
 import com.suriname.employee.service.mapper.EmployeeMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -78,15 +81,22 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<EmployeeResponseDto> getEmployees(String role, Pageable pageable) {
-        Page<Employee> employees;
+    public Page<EmployeeResponseDto> getEmployees(EmployeeSearchRequestDto search, Pageable pageable) {
+        // 🔍 디버깅 로그
+        System.out.println("🔍 [EmployeeService] 검색 요청 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓");
+        System.out.println("name     = [" + search.getName() + "]");
+        System.out.println("loginId  = [" + search.getLoginId() + "]");
+        System.out.println("email    = [" + search.getEmail() + "]");
+        System.out.println("phone    = [" + search.getPhone() + "]");
+        System.out.println("address  = [" + search.getAddress() + "]");
+        System.out.println("role     = [" + search.getRole() + "]");
+        System.out.println("status   = [" + search.getStatus() + "]");
+        System.out.println("page     = " + pageable.getPageNumber());
+        System.out.println("size     = " + pageable.getPageSize());
+        System.out.println("↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑");
 
-        if (role == null || role.isBlank()) {
-            employees = employeeRepository.findAll(pageable);
-        } else {
-            employees = employeeRepository.findByRole(Employee.Role.valueOf(role.toUpperCase()), pageable);
-        }
-
-        return employees.map(employeeMapper::toDto);
+        return employeeRepository
+                .findAll(EmployeeSpecification.searchWith(search), pageable)
+                .map(employeeMapper::toDto);
     }
 }
