@@ -1,0 +1,148 @@
+{
+  "project": {
+    "name": "Suriname Customer Management System",
+    "type": "fullstack",
+    "backend": "Spring Boot",
+    "frontend": "React",
+    "database": "MySQL"
+  },
+  "development": {
+    "ports": {
+      "backend": 8081,
+      "frontend": 5173,
+      "fallback_backend": 8082,
+      "fallback_frontend": 5174
+    }
+  },
+  "tools": {
+    "enabled": ["context7", "sequential", "magic", "playwright"],
+    "preferences": {
+      "auto_port_management": true,
+      "css_scope_validation": true,
+      "git_safety_mode": true
+    }
+  },
+  "team": {
+    "authority": "delivery_management",
+    "member": "박재엽",
+    "restricted_areas": [
+      "customer_management",
+      "payment_system", 
+      "repair_system",
+      "analytics_dashboard",
+      "employee_management"
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Write(**/*)",
+      "Read(**/*)",
+      "Delete(**/*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo rm -rf *)",
+      "Bash(format c:)",
+      "Bash(del /f /s /q c:\\*)",
+      "Bash(shutdown *)",
+      "Bash(reboot *)",
+      "Write(/etc/**/*)",
+      "Write(/root/**/*)",
+      "Write(/usr/**/*)",
+      "Write(/boot/**/*)",
+      "Write(/sys/**/*)",
+      "Write(/proc/**/*)",
+      "Write(C:\\Windows\\**/*)",
+      "Write(C:\\Program Files\\**/*)",
+      "Write(C:\\System32\\**/*)",
+      "Delete(/etc/**/*)",
+      "Delete(/root/**/*)",
+      "Delete(/usr/**/*)",
+      "Delete(/boot/**/*)",
+      "Delete(/sys/**/*)",
+      "Delete(/proc/**/*)",
+      "Delete(C:\\Windows\\**/*)",
+      "Delete(C:\\Program Files\\**/*)",
+      "Delete(C:\\System32\\**/*)"
+    ]
+  },
+  "autoApproval": {
+    "enabled": true,
+    "allowAll": true,
+    "patterns": [
+      "*"
+    ],
+    "filePatterns": [
+      "**/*"
+    ],
+    "commandPatterns": [
+      "*"
+    ],
+    "exclusions": [
+      "rm -rf /",
+      "sudo rm -rf *",
+      "format *",
+      "del /f /s /q c:\\*",
+      "shutdown *",
+      "reboot *"
+    ]
+  },
+  "projectSettings": {
+    "name": "K-Life Navigator",
+    "type": "Next.js + Supabase",
+    "description": "Korean Life Navigation Platform with AI assistance - Full Auto Approval Mode",
+    "autoApprovalMode": "aggressive",
+    "securityLevel": "development",
+    "mainPorts": [3000, 3001, 8000, 54321],
+    "databases": ["supabase", "postgresql"],
+    "frameworks": ["next.js", "react", "typescript", "tailwindcss", "python", "fastapi"],
+    "devCommands": {
+      "frontend": "cd web-app && npm run dev",
+      "backend": "cd backend/node-api && npm run dev",
+      "ai": "cd backend/python-ai && python -m uvicorn src.main:app --reload",
+      "admin": "cd admin-dashboard && npm run dev",
+      "database": "supabase start",
+      "all": "npm run dev:all"
+    },
+    "approvalSettings": {
+      "autoApproveFileCreation": true,
+      "autoApproveFileModification": true,
+      "autoApproveFileDeletion": true,
+      "autoApprovePackageInstallation": true,
+      "autoApproveGitOperations": true,
+      "autoApproveServerCommands": true,
+      "autoApproveDatabaseOperations": true,
+      "autoApproveDockerOperations": true,
+      "autoApproveEnvironmentChanges": true,
+      "autoApproveConfigChanges": true,
+      "confirmDestructiveOperations": false,
+      "bypassSecurityWarnings": true
+    }
+  },
+  "advancedSettings": {
+    "globalAutoApproval": true,
+    "skipConfirmations": true,
+    "fastMode": true,
+    "developerMode": true,
+    "verboseLogging": false,
+    "silentApprovals": true,
+    "backgroundExecution": true,
+    "parallelOperations": true,
+    "optimisticApprovals": true,
+    "trustAllOperations": true
+  },
+  "shortcuts": {
+    "approveAll": "ctrl+shift+a",
+    "skipToNext": "ctrl+shift+s",
+    "fastExecution": "ctrl+shift+f",
+    "silentMode": "ctrl+shift+q"
+  },
+  "metadata": {
+    "version": "2.0.0",
+    "lastUpdated": "2024-12-19",
+    "approvalMode": "maximum",
+    "warningLevel": "minimal",
+    "description": "완전 자동 승인 모드 - 개발 환경용"
+  }
+}
