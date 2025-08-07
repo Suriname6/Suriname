@@ -1,5 +1,6 @@
 package com.suriname.repairpreset.entity;
 
+import com.suriname.category.entity.Category;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -18,8 +19,9 @@ public class RepairPreset {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long repairPresetsId;
 
-    @Column(nullable = false)
-    private Long categoryId;
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -39,8 +41,8 @@ public class RepairPreset {
     }
 
     @Builder
-    public RepairPreset(Long categoryId, String name, Integer cost) {
-        this.categoryId = categoryId;
+    public RepairPreset(Category category, String name, Integer cost) {
+        this.category = category;
         this.name = name;
         this.cost = cost;
         this.isActive = true;
