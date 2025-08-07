@@ -3,7 +3,6 @@ package com.suriname.product.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.suriname.customer.dto.CustomerListDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.suriname.customer.entity.Customer;
@@ -25,7 +24,7 @@ public interface CustomerProductRepository extends JpaRepository<CustomerProduct
 		  cg.name AS categoryName,
 		  p.product_brand AS productBrand,
 		  p.model_code AS modelCode,
-		  p.serial_number AS serialNumber
+		  cp.serial_number AS serialNumber
 		FROM customer_product cp
 		JOIN customer c ON cp.customer_id = c.customer_id
 		JOIN product p ON cp.product_id = p.product_id

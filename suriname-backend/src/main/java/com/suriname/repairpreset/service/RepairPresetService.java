@@ -1,7 +1,7 @@
 package com.suriname.repairpreset.service;
 
 import com.suriname.category.entity.Category;
-import com.suriname.category.entity.CategoryRepository;
+import com.suriname.category.repository.CategoryRepository;
 import com.suriname.repairpreset.dto.PresetRequestDto;
 import com.suriname.repairpreset.dto.PresetResponseDto;
 import com.suriname.repairpreset.entity.RepairPreset;

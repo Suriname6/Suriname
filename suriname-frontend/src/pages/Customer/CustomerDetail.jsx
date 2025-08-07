@@ -9,6 +9,7 @@ const CustomerDetail = () => {
   const [originalData, setOriginalData] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
   const [product, setProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
 
   // 데이터 로드
   useEffect(() => {
@@ -17,7 +18,7 @@ const CustomerDetail = () => {
         const res = await axios.get(`/api/customers/${id}`);
         setFormData(res.data.data);
         setOriginalData(res.data.data);
-        setProduct(res.data.data.products?.[0] || null);
+        setProduct(res.data.data.product || null);
       } catch (error) {
         console.error("고객 정보 불러오기 실패:", error);
       }
@@ -30,7 +31,11 @@ const CustomerDetail = () => {
     (field, value) => {
       setFormData((prev) => {
         const updated = { ...prev, [field]: value };
-        setIsDirty(JSON.stringify(updated) !== JSON.stringify(originalData));
+        setIsDirty(
+          JSON.stringify({ ...formData, product: updated }) !==
+            JSON.stringify(originalData)
+        );
+
         return updated;
       });
     },
@@ -62,6 +67,19 @@ const CustomerDetail = () => {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/api/categories");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("카테고리 불러오기 실패:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // 저장 함수
   const handleSave = async () => {
@@ -153,40 +171,46 @@ const CustomerDetail = () => {
         {/* 제품 정보 섹션 */}
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>제품 정보</h2>
-
           <div className={styles.inputGroup}>
-            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
+            <div className={styles.inputField} style={{ flex: 0.8 }}>
               <label className={styles.inputLabel}>제품분류</label>
-              <input
-                type="text"
+              <select
                 className={styles.inputControl}
-                value={product?.categoryName || ""}
+                value={product?.categoryId || ""}
                 onChange={(e) =>
-                  handleProductChange("categoryName", e.target.value)
+                  handleProductChange("categoryId", parseInt(e.target.value))
                 }
-              />
+              >
+                <option value="">선택</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
+            <div className={styles.inputField} style={{ flex: 1.2 }}>
               <label className={styles.inputLabel}>제품명</label>
               <input
                 type="text"
                 className={styles.inputControl}
+                placeholder="제품명"
                 value={product?.productName || ""}
                 onChange={(e) =>
-                  handleProductChange("productName", e.target.value)
+                  handleInputChange("productName", e.target.value)
                 }
               />
             </div>
           </div>
 
           <div className={styles.inputGroup}>
-            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
+            <div className={styles.inputField} style={{ flex: 0.8 }}>
               <label className={styles.inputLabel}>제조사</label>
               <select
                 className={styles.inputControl}
                 value={product?.productBrand || ""}
                 onChange={(e) =>
-                  handleProductChange("productBrand", e.target.value)
+                  handleInputChange("productBrand", e.target.value)
                 }
               >
                 <option value="">선택</option>
@@ -196,19 +220,17 @@ const CustomerDetail = () => {
                 <option value="기타">기타</option>
               </select>
             </div>
-            <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
+            <div className={styles.inputField} style={{ flex: 1.2 }}>
               <label className={styles.inputLabel}>모델코드</label>
               <input
                 type="text"
                 className={styles.inputControl}
+                placeholder="모델코드"
                 value={product?.modelCode || ""}
-                onChange={(e) =>
-                  handleProductChange("modelCode", e.target.value)
-                }
+                onChange={(e) => handleInputChange("modelCode", e.target.value)}
               />
             </div>
           </div>
-
           <div className={styles.inputGroup}>
             <div className={`${styles.inputField} ${styles.inputFieldFull}`}>
               <label className={styles.inputLabel}>제품고유번호</label>
@@ -245,5 +267,4 @@ const CustomerDetail = () => {
     </div>
   );
 };
-
 export default CustomerDetail;

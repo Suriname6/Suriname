@@ -4,17 +4,16 @@ import ExcelUploadBox from "../../components/ExcelUploadBox";
 import axios from "axios";
 import styles from "../../css/Customer/CustomerExcelAdd.module.css";
 
-const CustomerExcelAdd = () => {
+const ProductExcelAdd = () => {
   const [selectedTab, setSelectedTab] = useState("excel");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
   const navigate = useNavigate();
 
   const handleTabClick = (tab) => {
     if (tab === "general") {
-      navigate("/customer/upload");
+      navigate("/product/upload");
     }
   };
-
-  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const removeFile = (index) => {
     setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
@@ -22,8 +21,8 @@ const CustomerExcelAdd = () => {
 
   const downloadTemplate = () => {
     const link = document.createElement("a");
-    link.href = "/CustomerListTemplate.xlsx";
-    link.download = "CustomerListTemplate2025.xlsx";
+    link.href = "/ProductListTemplate.xlsx";
+    link.download = "ProductListTemplate2025.xlsx";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -39,25 +38,9 @@ const CustomerExcelAdd = () => {
     formData.append("file", uploadedFiles[0]);
 
     try {
-      const response = await axios.post(
-        "/api/customers/upload/excel",
-        formData
-      );
-      const { successCount, failures } = response.data.data;
-
-      // 성공 메시지
-      let message = `총 ${successCount}건이 성공적으로 등록되었습니다.`;
-
-      // 실패한 항목이 있다면 상세 메시지 추가
-      if (failures && failures.length > 0) {
-        message += `\n\n[등록 실패 항목]`;
-        failures.forEach((fail) => {
-          message += `\n- ${fail.row}행: ${fail.reason}`;
-        });
-      }
-
-      alert(message);
-      setUploadedFiles([]);
+      const response = await axios.post("/api/products/upload/excel", formData);
+      alert("업로드 성공!");
+      console.log(response.data);
     } catch (error) {
       console.error("업로드 실패:", error);
       alert(
@@ -86,28 +69,25 @@ const CustomerExcelAdd = () => {
             className={`${styles.tabButton} ${
               selectedTab === "excel" ? styles.active : styles.inactive
             }`}
-            onClick={() => {
-              setSelectedTab("excel");
-              handleTabClick("excel");
-            }}
+            onClick={() => setSelectedTab("excel")}
           >
             엑셀 일괄 등록
           </button>
         </div>
       </div>
 
-      {/* Content Container - Centered */}
+      {/* Content Container */}
       <div className={styles.contentContainer}>
-        {/* File Template Section */}
+        {/* Template Section */}
         <div className={styles.templateSection}>
           <h2 className={styles.sectionTitle}>파일 양식</h2>
-          <p className={styles.sectionDescription}>고객 데이터 작성 양식</p>
+          <p className={styles.sectionDescription}>제품 데이터 작성 양식</p>
 
           <div className={styles.templateCard}>
             <div className={styles.templateInfo}>
               <div className={styles.templateIcon}>📄</div>
               <span className={styles.templateName}>
-                CustomerListTemplate 2025.xlsx
+                ProductListTemplate 2025.xlsx
               </span>
               <span className={styles.templateBadge}>XLS</span>
             </div>
@@ -120,7 +100,7 @@ const CustomerExcelAdd = () => {
           </div>
         </div>
 
-        {/* Data Upload Section */}
+        {/* Upload Section */}
         <div className={styles.uploadSection}>
           <h2 className={styles.sectionTitle}>데이터 삽입</h2>
           <p className={styles.uploadDescription}>
@@ -136,7 +116,7 @@ const CustomerExcelAdd = () => {
             }}
           />
 
-          {/* Uploaded Files */}
+          {/* Uploaded Files List */}
           <div className={styles.uploadedFiles}>
             {uploadedFiles.map((file, index) => (
               <div key={index} className={styles.fileItem}>
@@ -154,9 +134,12 @@ const CustomerExcelAdd = () => {
             ))}
           </div>
 
-          {/* Action Buttons - Right Aligned */}
+          {/* Buttons */}
           <div className={styles.buttonGroup}>
-            <button className={`${styles.button} ${styles.cancelButton}`}>
+            <button
+              className={`${styles.button} ${styles.cancelButton}`}
+              onClick={() => navigate("/product/list")}
+            >
               취소
             </button>
             <button
@@ -172,4 +155,4 @@ const CustomerExcelAdd = () => {
   );
 };
 
-export default CustomerExcelAdd;
+export default ProductExcelAdd;

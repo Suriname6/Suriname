@@ -10,5 +10,6 @@ public class CustomerSearchDto {
 	    private String address;
 	    private String productName;
 	    private String modelCode;
+	    private String categoryName;
 	    private String manufacturer;
 }

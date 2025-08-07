@@ -1,5 +1,5 @@
 /* 공통 스타일 */
-.customerContainer {
+.productContainer {
     margin-left: 200px;
     padding: 32px 24px;
     min-height: 100vh;
@@ -7,40 +7,8 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* 탭 네비게이션 */
-.tabNavigation {
-    margin-bottom: 32px;
-}
-
-.tabContainer {
-    background-color: #eff4ff;
-    border-radius: 100px;
-    padding: 4px;
-    display: flex;
-    width: 100%;
-    max-width: 1000px;
-}
-
-.tabButton {
-    flex: 1;
-    padding: 16px 24px;
-    border: none;
-    border-radius: 100px;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.tabButton.active {
-    background-color: #ffffff;
-    color: #2563eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.tabButton.inactive {
-    background-color: transparent;
-    color: #6b7280;
+.loading {
+    padding: 24px;
 }
 
 /* 섹션 공통 */
@@ -80,21 +48,28 @@
     min-width: 0;
 }
 
+.inputFieldSmall {
+    flex: 0.7;
+}
+
+.inputFieldLarge {
+    flex: 1.3;
+}
+
+.inputFieldFull {
+    width: 100%;
+}
+
+.inputFieldEqual {
+    flex: 1;
+}
+
 .inputLabel {
     font-size: 14px;
     font-weight: 500;
     color: #374151;
     margin-bottom: 8px;
     white-space: nowrap;
-
-}
-
-.inputLabelShort {
-    width: 60px;
-}
-
-.inputLabelLong {
-    width: 100px;
 }
 
 .inputControl {
@@ -107,6 +82,39 @@
     box-sizing: border-box;
 }
 
+.inputControl[type="date"] {
+    color: #374151;
+}
+
+.inputControl:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.inputControl::placeholder {
+    color: #9ca3af;
+}
+
+/* textarea 스타일 */
+.textareaControl {
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+}
+
+/* 읽기 전용 필드 */
+.readOnly {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.readOnly:focus {
+    border-color: #d1d5db;
+    box-shadow: none;
+}
+
 /* 버튼 그룹 */
 .buttonGroup {
     width: 100%;
@@ -116,14 +124,13 @@
     gap: 16px;
 }
 
-.cancelButton,
-.submitButton {
+.button {
     padding: 12px 32px;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 500;
-    cursor: pointer;
     transition: all 0.2s;
+    cursor: pointer;
 }
 
 .cancelButton {
@@ -132,8 +139,13 @@
     color: #374151;
 }
 
-.cancelButton:hover {
+.cancelButton:hover:not(:disabled) {
     background-color: #f9fafb;
+}
+
+.cancelButton:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .submitButton {
@@ -142,6 +154,39 @@
     color: white;
 }
 
-.submitButton:hover {
+.submitButton:hover:not(:disabled) {
     background-color: #1d4ed8;
+}
+
+.submitButton:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .productContainer {
+        margin-left: 0;
+        padding: 16px;
+    }
+
+    .inputGroup {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .inputFieldSmall,
+    .inputFieldLarge,
+    .inputFieldEqual {
+        flex: none;
+        width: 100%;
+    }
+
+    .buttonGroup {
+        flex-direction: column;
+    }
+
+    .button {
+        width: 100%;
+    }
 }

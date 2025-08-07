@@ -17,17 +17,16 @@ public class CustomerSpecification {
             Predicate predicate = cb.conjunction();
             predicate = cb.and(predicate, cb.isFalse(root.get("isDeleted")));
 
-            // 고객 이름
+            // 고객
             if (dto.getCustomerName() != null && !dto.getCustomerName().isBlank()) {
                 predicate = cb.and(predicate, cb.like(root.get("name"), "%" + dto.getCustomerName() + "%"));
             }
 
-            // 주소
+       
             if (dto.getAddress() != null && !dto.getAddress().isBlank()) {
                 predicate = cb.and(predicate, cb.like(root.get("address"), "%" + dto.getAddress() + "%"));
             }
 
-            // Join: Customer → CustomerProduct → Product
             Join<Customer, CustomerProduct> cpJoin = root.join("customerProducts", jakarta.persistence.criteria.JoinType.LEFT);
             Join<CustomerProduct, Product> productJoin = cpJoin.join("product", jakarta.persistence.criteria.JoinType.LEFT);
 
@@ -53,6 +52,11 @@ public class CustomerSpecification {
                     if (dto.getManufacturer() != null && !dto.getManufacturer().isBlank()) {
                         predicate = cb.and(predicate,
                             cb.like(productJoin.get("productBrand"), "%" + dto.getManufacturer() + "%"));
+                    }
+                    if (dto.getCategoryName() != null && !dto.getCategoryName().isBlank()) {
+                        Join<Product, ?> categoryJoin = productJoin.join("category", jakarta.persistence.criteria.JoinType.LEFT);
+                        predicate = cb.and(predicate,
+                            cb.equal(categoryJoin.get("name"), dto.getCategoryName()));
                     }
                 }
 

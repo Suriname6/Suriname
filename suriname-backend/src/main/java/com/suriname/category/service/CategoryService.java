@@ -1,7 +1,8 @@
 package com.suriname.category.service;
 
 import com.suriname.category.dto.CategoryResponseDto;
-import com.suriname.category.entity.CategoryRepository;
+import com.suriname.category.repository.CategoryRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

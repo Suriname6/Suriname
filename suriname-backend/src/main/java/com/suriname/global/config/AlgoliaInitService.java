@@ -57,7 +57,7 @@ public class AlgoliaInitService {
         try {
             Dotenv dotenv = Dotenv.configure()
                     .directory(".")
-                    .filename("env.properties")
+                    .filename(".env.properties")
                     .load();
             
             algoliaAppId = dotenv.get("ALGOLIA_APP_ID");
