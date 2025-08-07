@@ -2,10 +2,7 @@ package com.suriname.payment;
 
 import com.suriname.request.entity.Request;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "payment")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Setter
 public class Payment {
 
     @Id
@@ -33,7 +31,6 @@ public class Payment {
     @Column(length = 50)
     private String bank;
 
-    @Column(nullable = false)
     private Integer cost;
 
     @Enumerated(EnumType.STRING)
