@@ -166,7 +166,7 @@ const RepairListPage = () => {
   const handleRowClick = (quote) => {
     // 수리 내역 작성 페이지로 이동하면서 데이터 전달
     console.log('클릭된 견적:', quote);
-    navigate('/repair-write', { 
+    navigate('/repair/write', { 
       state: { 
         quote: quote,
         mode: 'edit' // 상세보기/편집 모드임을 나타냄

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class RepairPreset {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "repair_presets_id")
     private Long repairPresetsId;
 
     @Column(nullable = false)
@@ -23,6 +23,9 @@ public class RepairPreset {
 
     @Column(nullable = false, length = 100)
     private String name;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @Column(nullable = false)
     private Integer cost;
@@ -39,9 +42,10 @@ public class RepairPreset {
     }
 
     @Builder
-    public RepairPreset(Long categoryId, String name, Integer cost) {
+    public RepairPreset(Long categoryId, String name, String description, Integer cost) {
         this.categoryId = categoryId;
         this.name = name;
+        this.description = description;
         this.cost = cost;
         this.isActive = true;
     }
