@@ -1,15 +1,15 @@
 package com.suriname.repairpreset.controller;
 
-import com.suriname.repairpreset.dto.RepairPresetCreateDto;
-import com.suriname.repairpreset.dto.RepairPresetDto;
-import com.suriname.repairpreset.entity.RepairPreset;
+import com.suriname.repairpreset.dto.PresetRequestDto;
+import com.suriname.repairpreset.dto.PresetResponseDto;
 import com.suriname.repairpreset.service.RepairPresetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/repair-presets")
@@ -18,74 +18,30 @@ public class RepairPresetController {
 
     private final RepairPresetService repairPresetService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createPreset(@RequestBody RepairPresetCreateDto createDto) {
-        try {
-            RepairPreset createdPreset = repairPresetService.createPreset(createDto);
-            
-            return ResponseEntity.ok(Map.of(
-                "status", 201,
-                "data", Map.of(
-                    "presetId", createdPreset.getRepairPresetsId(),
-                    "name", createdPreset.getName()
-                )
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "status", 400,
-                "message", e.getMessage()
-            ));
-        }
+    public ResponseEntity<Void> createPreset(@RequestBody PresetRequestDto requestDto) {
+        repairPresetService.createPreset(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllPresets() {
-        try {
-            List<RepairPresetDto> presets = repairPresetService.getAllActivePresets();
-            
-            return ResponseEntity.ok(Map.of(
-                "status", 200,
-                "data", presets
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "status", 500,
-                "message", "프리셋 목록 조회 중 오류가 발생했습니다."
-            ));
-        }
+    public ResponseEntity<List<PresetResponseDto>> getAllPresets(
+            @RequestParam(value = "category_Id", required = false) Long categoryId
+    )
+    {
+        List<PresetResponseDto> responseDtos = (categoryId == null)
+                ? repairPresetService.getAllPresets()
+                :repairPresetService.getPresetsByCategory(categoryId);
+
+        return ResponseEntity.ok(responseDtos);
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<Map<String, Object>> getPresetsByCategory(@PathVariable Long categoryId) {
-        try {
-            List<RepairPresetDto> presets = repairPresetService.getPresetsByCategory(categoryId);
-            
-            return ResponseEntity.ok(Map.of(
-                "status", 200,
-                "data", presets
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "status", 500,
-                "message", "카테고리별 프리셋 조회 중 오류가 발생했습니다."
-            ));
-        }
-    }
-
-    @DeleteMapping("/{presetId}")
-    public ResponseEntity<Map<String, Object>> deletePreset(@PathVariable Long presetId) {
-        try {
-            repairPresetService.deletePreset(presetId);
-            
-            return ResponseEntity.ok(Map.of(
-                "status", 200,
-                "message", "프리셋이 삭제되었습니다."
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "status", 400,
-                "message", e.getMessage()
-            ));
-        }
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deactivatePreset(@PathVariable Long id) {
+        repairPresetService.deactivatePreset(id);
+        return ResponseEntity.noContent().build();
     }
 }
