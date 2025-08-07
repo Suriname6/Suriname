@@ -1,0 +1,359 @@
+import React, { useState, useEffect } from 'react';
+import SidebarNavigation from '../../components/SidebarNavigation';
+import styles from '../../css/Repair/RepairList.module.css';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+const RepairListPage = () => {
+  const [searchData, setSearchData] = useState({
+    customerName: '',
+    company: '',
+    productName: '',
+    productSerialNumber: '',
+    receptionCompany: '',
+    receptionStatus: '',
+    receptionTechnician: '',
+    startDate: '',
+    endDate: ''
+  });
+
+  const [repairs, setRepairs] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+    size: 10,
+    first: true,
+    last: true
+  });
+  const [selectedRepairs, setSelectedRepairs] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // 샘플 데이터 (실제 API 연동 전 테스트용)
+  const sampleRepairs = [
+    {
+      id: 1,
+      serialNumber: 'AWS-250723-001',
+      customerName: '김민수',
+      productName: '아수스 G14',
+      productSerialNumber: 'SN-12345',
+      receptionDate: '2025-07-23',
+      repairStatus: '수리중',
+      repairTechnician: '이기사',
+      paymentStatus: '완료'
+    },
+    // 더미 데이터 생성
+    ...Array.from({ length: 9 }, (_, i) => ({
+      id: i + 2,
+      serialNumber: 'AWS-250723-001',
+      customerName: '김민수',
+      productName: '아수스 G14',
+      productSerialNumber: 'SN-12345',
+      receptionDate: '2025-07-23',
+      repairStatus: '수리중',
+      repairTechnician: '이기사',
+      paymentStatus: '완료'
+    }))
+  ];
+
+  // 컴포넌트 마운트 시 데이터 로드
+  useEffect(() => {
+    fetchRepairs();
+  }, [pagination.currentPage]);
+
+  // API 호출 함수 (현재 샘플 데이터 사용)
+  const fetchRepairs = async (searchParams = null) => {
+    setLoading(true);
+    try {
+      // 실제 API 호출 시 이 부분을 변경
+      setTimeout(() => {
+        setRepairs(sampleRepairs);
+        setPagination({
+          currentPage: 0,
+          totalPages: 2,
+          totalElements: sampleRepairs.length,
+          size: 10,
+          first: true,
+          last: false
+        });
+        setLoading(false);
+      }, 500);
+    } catch (error) {
+      console.error('Error fetching repairs:', error);
+      alert(`데이터 조회 오류: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
+      setLoading(false);
+    }
+  };
+
+  const deleteSelectedRepairs = async () => {
+    if (selectedRepairs.length === 0) {
+      alert('선택된 항목이 없습니다.');
+      return;
+    }
+
+    if (!confirm(`선택된 ${selectedRepairs.length}개 항목을 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      // 실제 삭제 API 호출
+      alert('선택된 항목이 삭제되었습니다.');
+      setSelectedRepairs([]);
+      setSelectAll(false);
+      fetchRepairs();
+    } catch (error) {
+      console.error('Error deleting repairs:', error);
+      alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+    }
+  };
+
+  // 검색 입력 처리
+  const handleInputChange = (field, value) => {
+    setSearchData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSearch = () => {
+    setPagination(prev => ({ ...prev, currentPage: 0 }));
+    fetchRepairs(searchData);
+  };
+
+  const handlePageChange = (page) => {
+    setPagination(prev => ({ ...prev, currentPage: page }));
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedRepairs([]);
+    } else {
+      setSelectedRepairs(repairs.map(repair => repair.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleSelectRepair = (repairId) => {
+    setSelectedRepairs(prev => {
+      if (prev.includes(repairId)) {
+        const newSelected = prev.filter(id => id !== repairId);
+        setSelectAll(false);
+        return newSelected;
+      } else {
+        const newSelected = [...prev, repairId];
+        setSelectAll(newSelected.length === repairs.length);
+        return newSelected;
+      }
+    });
+  };
+
+  const toggleSearchVisible = () => {
+    setSearchVisible(!searchVisible);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return dateString;
+  };
+
+  return (
+    <div className={styles.container}>
+      <SidebarNavigation />
+      
+      {!searchVisible ? (
+        <div className={styles.searchToggle}>
+          <button className={styles.searchToggleBtn} onClick={toggleSearchVisible}>
+            검색 조건
+          </button>
+        </div>
+      ) : (
+        <div className={styles.searchWrap}>
+          <div className={styles.searchCloseBtn}>
+            <button onClick={toggleSearchVisible}>
+              검색 조건 닫기
+            </button>
+          </div>
+          
+          <div className={styles.searchFields}>
+            <div className={styles.searchRow}>
+              <div className={styles.searchField}>
+                <label>고객명</label>
+                <input
+                  type="text"
+                  placeholder="입력"
+                  value={searchData.customerName}
+                  onChange={(e) => handleInputChange('customerName', e.target.value)}
+                />
+              </div>
+
+              <div className={styles.searchField}>
+                <label>제품명</label>
+                <input
+                  type="text"
+                  value={searchData.productName}
+                  onChange={(e) => handleInputChange('productName', e.target.value)}
+                />
+              </div>
+              
+              <div className={styles.searchField}>
+                <label>제품 고유번호</label>
+                <input
+                  type="text"
+                  placeholder="입력"
+                  value={searchData.productSerialNumber}
+                  onChange={(e) => handleInputChange('productSerialNumber', e.target.value)}
+                />
+              </div>
+              <div className={styles.searchField}>
+                              <label>담당 기사</label>
+                              <input
+                                type="text"
+                                placeholder="입력"
+                                value={searchData.receptionTechnician}
+                                onChange={(e) => handleInputChange('receptionTechnician', e.target.value)}
+                              />
+                            </div>
+            </div>
+            
+            <div className={styles.searchRow}>
+
+              
+              <div className={styles.searchField}>
+                <label>접수 상태</label>
+                <input
+                  type="text"
+                  placeholder="입력"
+                  value={searchData.receptionStatus}
+                  onChange={(e) => handleInputChange('receptionStatus', e.target.value)}
+                />
+              </div>
+              
+              <div className={styles.searchField}>
+                <label>접수 날짜</label>
+                <input
+                  type="date"
+                  placeholder="yyyy-mm-dd"
+                  value={searchData.startDate}
+                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                />
+              </div>
+              
+              <div className={styles.searchField}>
+                <label>종료 날짜</label>
+                <input
+                  type="date"
+                  placeholder="yyyy-mm-dd"
+                  value={searchData.endDate}
+                  onChange={(e) => handleInputChange('endDate', e.target.value)}
+                />
+              </div>
+              
+              <button className={styles.searchButton} onClick={handleSearch} disabled={loading}>
+                {loading ? '검색 중...' : '검색'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={styles.tableHeader}>
+        <div>
+          <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={handleSelectAll}
+          />
+          <span>전체 선택</span>
+        </div>
+        <div className={styles.deleteButtonWrapper}>
+          <button onClick={deleteSelectedRepairs} className={styles.deleteButton}>
+            삭제
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.tableWrapper}>
+        {loading ? (
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            데이터를 불러오는 중...
+          </div>
+        ) : (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>
+                  <input type="checkbox" />
+                </th>
+                <th>접수번호</th>
+                <th>고객명</th>
+                <th>제품명</th>
+                <th>제품 시리얼</th>
+                <th>접수일자</th>
+                <th>수리상태</th>
+                <th>수리기사</th>
+                <th>결제상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              {repairs.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className={styles.emptyState}>
+                    <h3>데이터가 없습니다</h3>
+                    <p>검색 조건에 맞는 수리 내역이 접수되지 않았습니다.</p>
+                  </td>
+                </tr>
+              ) : (
+                repairs.map((repair) => (
+                  <tr key={repair.id}>
+                    <td>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedRepairs.includes(repair.id)}
+                        onChange={() => handleSelectRepair(repair.id)}
+                      />
+                    </td>
+                    <td>{repair.serialNumber}</td>
+                    <td>{repair.customerName}</td>
+                    <td>{repair.productName}</td>
+                    <td>{repair.productSerialNumber}</td>
+                    <td>{formatDate(repair.receptionDate)}</td>
+                    <td>{repair.repairStatus}</td>
+                    <td>{repair.repairTechnician}</td>
+                    <td>{repair.paymentStatus}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(Math.max(0, pagination.currentPage - 1))}
+          disabled={pagination.currentPage === 0}
+        >
+          <ChevronLeft />
+        </button>
+        {Array.from({ length: pagination.totalPages }, (_, i) => (
+          <button
+            key={i}
+            onClick={() => handlePageChange(i)}
+            className={pagination.currentPage === i ? styles.activePage : ""}
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(Math.min(pagination.totalPages - 1, pagination.currentPage + 1))}
+          disabled={pagination.currentPage === pagination.totalPages - 1}
+        >
+          <ChevronRight />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default RepairListPage;

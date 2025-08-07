@@ -88,14 +88,19 @@ public class CustomerService {
             CustomerProductDto cpDto = (cp != null) ? CustomerProductDto.fromEntity(cp) : null;
 
             return new CustomerListDto(
-                customer.getCustomerId(),
-                customer.getName(),
-                customer.getPhone(),
-                customer.getEmail(),
-                customer.getBirth() != null ? customer.getBirth().toString() : null,
-                customer.getAddress(),
-                cpDto
-            );
+            	    customer.getCustomerId(),
+            	    customer.getName(),
+            	    customer.getPhone(),
+            	    customer.getEmail(),
+            	    customer.getBirth() != null ? customer.getBirth().toString() : null,
+            	    customer.getAddress(),
+            	    cp != null ? cp.getProduct().getProductName() : null,
+            	    cp != null ? cp.getProduct().getCategory().getName() : null,
+            	    cp != null ? cp.getProduct().getProductBrand() : null,
+            	    cp != null ? cp.getProduct().getModelCode() : null,
+            	    cp != null ? cp.getSerialNumber() : null
+            	);
+
         });
     }
 
@@ -198,14 +203,19 @@ public class CustomerService {
             CustomerProductDto cpDto = (cp != null) ? CustomerProductDto.fromEntity(cp) : null;
 
             return new CustomerListDto(
-                customer.getCustomerId(),
-                customer.getName(),
-                customer.getPhone(),
-                customer.getEmail(),
-                customer.getBirth() != null ? customer.getBirth().toString() : null,
-                customer.getAddress(),
-                cpDto
-            );
+            	    customer.getCustomerId(),
+            	    customer.getName(),
+            	    customer.getPhone(),
+            	    customer.getEmail(),
+            	    customer.getBirth() != null ? customer.getBirth().toString() : null,
+            	    customer.getAddress(),
+            	    cp != null ? cp.getProduct().getProductName() : null,
+            	    cp != null ? cp.getProduct().getCategory().getName() : null,
+            	    cp != null ? cp.getProduct().getProductBrand() : null,
+            	    cp != null ? cp.getProduct().getModelCode() : null,
+            	    cp != null ? cp.getSerialNumber() : null
+            	);
+
         });
     }
 

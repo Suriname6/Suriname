@@ -5,12 +5,12 @@ spring:
   application:
     name: Suriname
   config:
-    import: optional:file:env.properties
+    import: optional:file:.env.properties
 
   datasource:
-    url: "${DB_URL}"
-    username: "${DB_USERNAME}"
-    password: "${DB_PASSWORD}"
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -19,12 +19,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: "${JWT_SECRET}"
   expiration: 86400000
 
-portone:
-  hostname: https://api.portone.io/v2
-  secret-key: "${PORTONE_SECRET_KEY}"
+toss:
+  secret-key: "${TOSS_SECRET_KEY}"
+  client-key: "${TOSS_CLIENT_KEY}"

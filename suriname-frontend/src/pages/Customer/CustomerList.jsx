@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styles from "../../css/Customer/CustomerList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import CustomerSearchBar from "./CustomerSearchBar";
+import CustomerSearch from "../../components/Search/CustomerSearch";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 
@@ -107,7 +107,12 @@ const CustomerList = () => {
 
   return (
     <div className={styles.container}>
-      <CustomerSearchBar onSearch={handleSearch} />
+      <CustomerSearch 
+        setData={setData} 
+        setTotalPages={setTotalPages}
+        itemsPerPage={itemsPerPage}
+        setCurrentPage={setCurrentPage}
+      />
 
       <div className={styles.tableHeader}>
         <div>

@@ -2,10 +2,7 @@ package com.suriname.payment;
 
 import com.suriname.request.entity.Request;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -13,10 +10,12 @@ import java.time.LocalDateTime;
 @Table(name = "payment")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Setter
 public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "payment_id")
     private Long paymentId;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -26,13 +25,12 @@ public class Payment {
     @Column(name = "merchant_uid", nullable = false, length = 64, unique = true)
     private String merchantUid;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String account;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String bank;
 
-    @Column(nullable = false)
     private Integer cost;
 
     @Enumerated(EnumType.STRING)
@@ -46,7 +44,7 @@ public class Payment {
     private String memo;
 
     public enum Status {
-        FAILED, PENDING, COMPLETED
+        FAILED, PENDING, SUCCESS
     }
 
     @Builder
@@ -61,7 +59,7 @@ public class Payment {
     }
 
     public void markCompleted() {
-        this.status = Status.COMPLETED;
+        this.status = Status.SUCCESS;
         this.confirmedAt = LocalDateTime.now();
     }
 

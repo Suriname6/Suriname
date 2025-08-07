@@ -1,0 +1,35 @@
+package com.suriname.delivery.websocket;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+/**
+ * 실시간 배송 추적을 위한 WebSocket 설정
+ */
+@Configuration
+@EnableWebSocketMessageBroker
+public class DeliveryWebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        // 클라이언트에서 메시지를 받을 prefix 설정
+        config.setApplicationDestinationPrefixes("/app");
+        
+        // 클라이언트로 메시지를 전송할 때 사용할 prefix 설정
+        config.enableSimpleBroker("/topic", "/queue");
+        
+        // 특정 사용자에게 메시지 전송 시 사용
+        config.setUserDestinationPrefix("/user");
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // WebSocket 연결 엔드포인트 설정
+        registry.addEndpoint("/ws/delivery")
+                .setAllowedOriginPatterns("*")  // CORS 설정 (프로덕션에서는 구체적으로 설정)
+                .withSockJS();  // SockJS 사용 (브라우저 호환성)
+    }
+}
