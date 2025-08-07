@@ -1,9 +1,0 @@
-.layout-container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.home-main {
-  flex: 1;
-  padding: 40px;
-}
