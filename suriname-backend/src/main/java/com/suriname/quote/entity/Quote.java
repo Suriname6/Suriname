@@ -18,15 +18,16 @@ public class Quote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long quotesId;
+    @Column(name = "quotes_id")
+    private Long quoteId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id", nullable = false, unique = true)
     private Request request;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approved_by")
-    private Employee approvedBy; // null 허용 (미승인 시)
+    @JoinColumn(name = "employee_id")
+    private Employee employee; // null 허용 (미승인 시)
 
     @Column(nullable = false)
     private Long cost;
@@ -49,8 +50,8 @@ public class Quote {
         this.isApproved = false;
     }
 
-    public void approve(Employee approver) {
-        this.approvedBy = approver;
+    public void approveByEmployee(Employee employee) {
+        this.employee = employee;
         this.approvedAt = LocalDateTime.now();
         this.isApproved = true;
     }

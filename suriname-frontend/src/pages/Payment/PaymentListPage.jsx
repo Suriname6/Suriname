@@ -261,7 +261,7 @@ const PaymentListPage = () => {
             
             <div className={styles.searchRow}>
               <div className={styles.searchField}>
-                <label>입금완료시각 (시작)</label>
+                <label>입금완료시각</label>
                 <input
                   type="date"
                   value={searchData.startDate}
@@ -270,7 +270,7 @@ const PaymentListPage = () => {
               </div>
               
               <div className={styles.searchField}>
-                <label>입금완료시각 (종료)</label>
+                <label>　</label>
                 <input
                   type="date"
                   value={searchData.endDate}

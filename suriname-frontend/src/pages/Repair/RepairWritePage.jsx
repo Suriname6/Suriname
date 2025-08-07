@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import SidebarNavigation from '../../components/SidebarNavigation';
 import styles from '../../css/Repair/RepairWrite.module.css';
 import { X } from 'lucide-react';
 
 const RepairWritePage = () => {
+  const location = useLocation();
+  const quoteData = location.state?.quote || null;
+  const mode = location.state?.mode || 'new';
+  
   const [formData, setFormData] = useState({
-    customerName: '홍길동',
-    productName: '울트라북 G14',
-    serialNumber: 'AWS-250723-001',
-    repairTechnician: '정동길',
+    customerName: quoteData?.customerName || '홍길동',
+    productName: quoteData?.productName || '울트라북 G14',
+    serialNumber: quoteData?.requestNo || 'AWS-250723-001',
+    repairTechnician: quoteData?.employeeName || '정동길',
     issueCategory: '',
     priceCategory: '',
-    estimatedAmount: '',
-    createdDate: new Date().toISOString().split('T')[0],
+    estimatedAmount: quoteData?.cost || '',
+    createdDate: quoteData?.createdAt ? new Date(quoteData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     actualRepairCost: '',
     statusChange: '수리중',
     customerAgreement: false
