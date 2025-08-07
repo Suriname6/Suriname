@@ -16,6 +16,7 @@ public class EmployeeResponseDto {
     private String name;
     private String email;
     private String phone;
+    private String address;
     private LocalDate birth;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
