@@ -17,36 +17,44 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
+	private final JwtTokenProvider jwtTokenProvider;
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        String method = request.getMethod();
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+		String path = request.getRequestURI();
+		String method = request.getMethod();
 
-        return path.equals("/api/auth/login") ||
-                path.equals("/api/auth/refresh") ||
-                (path.equals("/api/users") && method.equals("POST"));
-    }
+		/*
+		 * return path.equals("/api/auth/login") || path.equals("/api/auth/refresh") ||
+		 * (path.equals("/api/users") && method.equals("POST"));
+		 */
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException
-    {
-        String token = jwtTokenProvider.resolveToken(request);
+		boolean shouldSkip = path.equals("/api/auth/login") || path.equals("/api/auth/refresh")
+				|| (path.equals("/api/users") && method.equals("POST"));
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
+		System.out.println("=== JWT FILTER ===");
+		System.out.println("URI: " + path);
+		System.out.println("METHOD: " + method);
+		System.out.println("shouldNotFilter: " + shouldSkip);
 
-            if (authentication instanceof AbstractAuthenticationToken tokenAuth) {
-                tokenAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            }
+		return shouldSkip;
+	}
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+		String token = jwtTokenProvider.resolveToken(request);
 
-        filterChain.doFilter(request, response);
-    }
+		if (token != null && jwtTokenProvider.validateToken(token)) {
+			Authentication authentication = jwtTokenProvider.getAuthentication(token);
+
+			if (authentication instanceof AbstractAuthenticationToken tokenAuth) {
+				tokenAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+			}
+
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+		}
+
+		filterChain.doFilter(request, response);
+	}
 }

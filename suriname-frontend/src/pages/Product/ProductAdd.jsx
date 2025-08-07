@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import styles from "../../css/Product/ProductAdd.module.css";
 import { useNavigate } from "react-router-dom";
+import api from "../../api/api";
 
 const ProductAdd = () => {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ const ProductAdd = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get("/api/categories");
+        const res = await api.get("/api/categories");
         setCategories(res.data);
       } catch (error) {
         console.error("카테고리 불러오기 실패:", error);
@@ -49,7 +49,7 @@ const ProductAdd = () => {
         return;
       }
 
-      const response = await axios.post("/api/products", individualForm);
+      const response = await api.post("/api/products", individualForm);
 
       if (response.data.status === 200) {
         alert("제품이 성공적으로 등록되었습니다.");

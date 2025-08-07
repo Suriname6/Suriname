@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import styles from "../../css/Customer/CustomerList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import CustomerSearch from "../../components/Search/CustomerSearch";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
+import api from "../../api/api";
 
 const CustomerList = () => {
   const [data, setData] = useState([]);
-  const [searchConditions, setSearchConditions] = useState({});
+  const [searchConditions] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedItems, setSelectedItems] = useState(new Set());
@@ -18,7 +18,7 @@ const CustomerList = () => {
 
   const fetchCustomerData = useCallback(async () => {
     try {
-      const response = await axios.post(
+      const response = await api.post(
         "/api/customers/search",
         searchConditions,
         {
@@ -38,11 +38,6 @@ const CustomerList = () => {
   useEffect(() => {
     fetchCustomerData();
   }, [fetchCustomerData]);
-
-  const handleSearch = (searchData) => {
-    setCurrentPage(1);
-    setSearchConditions(searchData);
-  };
 
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
@@ -74,11 +69,11 @@ const CustomerList = () => {
       if (selectedItems.size === 1) {
         // 단건 삭제
         const id = Array.from(selectedItems)[0];
-        await axios.delete(`/api/customers/delete/${id}`);
+        await api.delete(`/api/customers/delete/${id}`);
         alert("1개 항목이 삭제되었습니다.");
       } else {
         // 다건 삭제
-        await axios.post("/api/customers/delete", Array.from(selectedItems), {
+        await api.post("/api/customers/delete", Array.from(selectedItems), {
           headers: {
             "Content-Type": "application/json",
           },
@@ -98,7 +93,6 @@ const CustomerList = () => {
   };
 
   const handleRowClick = (customerId, event) => {
-    // 체크박스 클릭 시에는 네비게이션 방지
     if (event.target.type === "checkbox") {
       return;
     }
@@ -107,8 +101,8 @@ const CustomerList = () => {
 
   return (
     <div className={styles.container}>
-      <CustomerSearch 
-        setData={setData} 
+      <CustomerSearch
+        setData={setData}
         setTotalPages={setTotalPages}
         itemsPerPage={itemsPerPage}
         setCurrentPage={setCurrentPage}
