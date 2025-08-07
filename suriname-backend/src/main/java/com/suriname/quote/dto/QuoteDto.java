@@ -50,7 +50,7 @@ public class QuoteDto {
             if (quote.getRequest().getCustomerProduct() != null && 
                 quote.getRequest().getCustomerProduct().getProduct() != null) {
                 this.productName = quote.getRequest().getCustomerProduct().getProduct().getProductName();
-                this.serialNumber = quote.getRequest().getCustomerProduct().getProduct().getSerialNumber();
+                this.serialNumber = quote.getRequest().getCustomerProduct().getProduct().getModelCode();
             } else if (quote.getRequest().getInputProductName() != null) {
                 // CustomerProduct가 없으면 입력된 제품명 사용
                 this.productName = quote.getRequest().getInputProductName();

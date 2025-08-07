@@ -45,6 +45,44 @@ public class ImageService {
         return savedImage.getImageId();
     }
 
+    public List<Long> uploadMultipleImages(Long requestId, MultipartFile[] files) throws IOException {
+        Request request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("수리 요청을 찾을 수 없습니다."));
+
+        List<Long> uploadedImageIds = new java.util.ArrayList<>();
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            try {
+                s3Service.validateFile(file);
+
+                String fileUrl = s3Service.uploadFile(file, "repair-images");
+
+                Image image = Image.builder()
+                        .request(request)
+                        .fileName(file.getOriginalFilename())
+                        .fileUrl(fileUrl)
+                        .build();
+
+                Image savedImage = imageRepository.save(image);
+                uploadedImageIds.add(savedImage.getImageId());
+                
+                log.info("Multiple image saved: requestId={}, imageId={}, fileName={}", 
+                        requestId, savedImage.getImageId(), savedImage.getFileName());
+
+            } catch (Exception e) {
+                log.error("개별 파일 업로드 실패: {}, 오류: {}", file.getOriginalFilename(), e.getMessage());
+                // 개별 파일 실패는 전체를 중단시키지 않음
+            }
+        }
+
+        log.info("다중 이미지 업로드 완료: requestId={}, 성공={}/{}", requestId, uploadedImageIds.size(), files.length);
+        return uploadedImageIds;
+    }
+
     @Transactional(readOnly = true)
     public List<Image> getImagesByRequestId(Long requestId) {
         return imageRepository.findByRequestRequestIdOrderByCreatedAtAsc(requestId);

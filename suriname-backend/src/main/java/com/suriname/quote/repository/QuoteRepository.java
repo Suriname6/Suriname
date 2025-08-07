@@ -20,19 +20,16 @@ public interface QuoteRepository extends JpaRepository<Quote, Long> {
     List<Quote> findByIsApprovedFalse();
     List<Quote> findByIsApprovedTrue();
     
-    @Query("SELECT DISTINCT q FROM Quote q " +
-           "LEFT JOIN FETCH q.request r " +
-           "LEFT JOIN FETCH r.customer c " +
-           "LEFT JOIN FETCH r.customerProduct cp " +
-           "LEFT JOIN FETCH cp.product p " +
-           "LEFT JOIN FETCH q.employee e " +
-           "LEFT JOIN FETCH r.payment pm " +
-           "WHERE (:customerName IS NULL OR c.name LIKE %:customerName%) " +
-           "AND (:requestNo IS NULL OR r.requestNo LIKE %:requestNo%) " +
-           "AND (:productName IS NULL OR p.productName LIKE %:productName% OR r.inputProductName LIKE %:productName%) " +
-           "AND (:serialNumber IS NULL OR p.serialNumber LIKE %:serialNumber%) " +
+    @Query("SELECT q FROM Quote q " +
+           "JOIN q.request r " +
+           "JOIN r.customer c " +
+           "LEFT JOIN q.employee e " +
+           "WHERE (:customerName IS NULL OR :customerName = '' OR c.name LIKE CONCAT('%', :customerName, '%')) " +
+           "AND (:requestNo IS NULL OR :requestNo = '' OR r.requestNo LIKE CONCAT('%', :requestNo, '%')) " +
+           "AND (:productName IS NULL OR :productName = '' OR r.inputProductName LIKE CONCAT('%', :productName, '%')) " +
+           "AND (:serialNumber IS NULL OR :serialNumber = '') " +
            "AND (:isApproved IS NULL OR q.isApproved = :isApproved) " +
-           "AND (:employeeName IS NULL OR e.name LIKE %:employeeName%) " +
+           "AND (:employeeName IS NULL OR :employeeName = '' OR e.name LIKE CONCAT('%', :employeeName, '%')) " +
            "AND (:startDate IS NULL OR q.createdAt >= :startDate) " +
            "AND (:endDate IS NULL OR q.createdAt <= :endDate)")
     Page<Quote> findWithFilters(@Param("customerName") String customerName,

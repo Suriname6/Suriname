@@ -219,5 +219,8 @@ public class CustomerService {
         });
     }
 
-
+    // 고객명 존재 여부 확인
+    public boolean existsByName(String name) {
+        return customerRepository.findByName(name).isPresent();
+    }
 } 

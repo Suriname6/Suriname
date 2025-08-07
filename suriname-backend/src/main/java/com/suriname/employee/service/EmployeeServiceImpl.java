@@ -107,4 +107,17 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.changeRole(Employee.Role.valueOf(role));
         return employeeMapper.toDto(employee);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByName(String name) {
+        return employeeRepository.existsByName(name);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponseDto> getEngineersByRole(Pageable pageable) {
+        return employeeRepository.findByRole(Employee.Role.ENGINEER, pageable)
+                .map(employeeMapper::toDto);
+    }
 }

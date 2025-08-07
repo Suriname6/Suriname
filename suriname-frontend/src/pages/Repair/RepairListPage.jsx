@@ -163,6 +163,19 @@ const RepairListPage = () => {
     return amount.toLocaleString('ko-KR');
   };
 
+  const formatStatus = (status) => {
+    if (!status) return '수리중';
+    
+    const statusMap = {
+      'IN_PROGRESS': '수리중',
+      'AWAITING_PAYMENT': '입금 대기',
+      'READY_FOR_DELIVERY': '배송 대기',
+      'COMPLETED': '완료'
+    };
+    
+    return statusMap[status] || status;
+  };
+
   const handleRowClick = (quote) => {
     // 수리 내역 작성 페이지로 이동하면서 데이터 전달
     console.log('클릭된 견적:', quote);
@@ -307,7 +320,7 @@ const RepairListPage = () => {
                 <th>제품명</th>
                 <th>제품고유번호</th>
                 <th>접수일자</th>
-                <th>수리상태</th>
+                <th>진행상태</th>
                 <th>접수기사</th>
                 <th>입금상태</th>
               </tr>
@@ -335,7 +348,7 @@ const RepairListPage = () => {
                     <td>{quote.productName}</td>
                     <td>{quote.serialNumber}</td>
                     <td>{formatDateTime(quote.createdAt)}</td>
-                    <td></td>
+                    <td>{formatStatus(quote.statusChange)}</td>
                     <td>{quote.employeeName}</td>
                     <td>{quote.paymentStatus || '-'}</td>
                   </tr>

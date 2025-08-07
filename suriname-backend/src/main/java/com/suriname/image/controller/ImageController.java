@@ -45,6 +45,42 @@ public class ImageController {
         }
     }
 
+    @PostMapping("/upload/multiple/{requestId}")
+    public ResponseEntity<Map<String, Object>> uploadMultipleImages(
+            @PathVariable Long requestId,
+            @RequestParam("files") MultipartFile[] files) {
+        try {
+            if (files == null || files.length == 0) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "status", 400,
+                        "message", "업로드할 파일이 없습니다."
+                ));
+            }
+
+            List<Long> imageIds = imageService.uploadMultipleImages(requestId, files);
+            return ResponseEntity.ok(Map.of(
+                    "status", 201,
+                    "data", Map.of(
+                            "imageIds", imageIds,
+                            "uploadedCount", imageIds.size(),
+                            "totalCount", files.length
+                    )
+            ));
+        } catch (IOException e) {
+            log.error("다중 파일 업로드 실패: requestId={}, error={}", requestId, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", 400,
+                    "message", "파일 업로드에 실패했습니다: " + e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("다중 이미지 업로드 실패: requestId={}, error={}", requestId, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", 400,
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
     @GetMapping("/request/{requestId}")
     public ResponseEntity<Map<String, Object>> getImagesByRequestId(@PathVariable Long requestId) {
         try {

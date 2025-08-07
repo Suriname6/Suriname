@@ -18,7 +18,7 @@ public class Quote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "quote_id")
+    @Column(name = "quote_id", columnDefinition = "BIGINT AUTO_INCREMENT")
     private Long quoteId;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -54,6 +54,18 @@ public class Quote {
         this.employee = employee;
         this.approvedAt = LocalDateTime.now();
         this.isApproved = true;
+    }
+    
+    public void updateQuote(Long cost, String field, Employee employee) {
+        this.cost = cost;
+        this.field = field;
+        if (employee != null) {
+            this.employee = employee;
+            if (!this.isApproved) {
+                this.approvedAt = LocalDateTime.now();
+                this.isApproved = true;
+            }
+        }
     }
 
     @Builder
