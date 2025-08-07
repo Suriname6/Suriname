@@ -4,19 +4,15 @@ import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.entity.Employee;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class EmployeeMapper {
 
-    private final PasswordEncoder passwordEncoder;
-
     public Employee toEntity(SignupRequestDto dto) {
         return Employee.builder()
                 .loginId(dto.getLoginId())
-                .password(passwordEncoder.encode(dto.getPassword()))
                 .name(dto.getName())
                 .email(dto.getEmail())
                 .address(dto.getAddress())

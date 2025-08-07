@@ -12,9 +12,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -22,13 +22,18 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public EmployeeResponseDto signup(SignupRequestDto requestDto) {
         validateDuplicateLoginId(requestDto.getLoginId());
 
+        String encodePassword = passwordEncoder.encode(requestDto.getPassword());
+
         Employee employee = employeeMapper.toEntity(requestDto);
+        employee.changePassword(encodePassword);
+
         employeeRepository.save(employee);
 
         return employeeMapper.toDto(employee);
@@ -54,7 +59,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponseDto updateEmployee(Long employeeId, EmployeeUpdateRequestDto requestDto) {
         Employee employee = findEmployee(employeeId);
 
-        employee.changePassword(requestDto.getNewPassword());
+        employee.changePassword(passwordEncoder.encode(requestDto.getNewPassword()));
         employee.changeEmail(requestDto.getEmail());
         employee.changePhone(requestDto.getPhone());
 
