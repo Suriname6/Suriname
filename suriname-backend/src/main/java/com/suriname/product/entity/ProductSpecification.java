@@ -9,6 +9,7 @@ import com.suriname.product.dto.ProductSearchDto;
 
 public class ProductSpecification {
 
+	// 검색
 	public static Specification<Product> search(ProductSearchDto dto) {
 		return (root, query, cb) -> {
 			
@@ -45,4 +46,16 @@ public class ProductSpecification {
 			return cb.and(predicates.toArray(new Predicate[0]));
 		};
 	}
+	
+	// 자동완성
+	 public static Specification<Product> containsKeyword(String keyword) {
+	        return (root, query, cb) -> {
+	            String likeKeyword = "%" + keyword.toLowerCase() + "%";
+	            return cb.or(
+	                cb.like(cb.lower(root.get("productName")), likeKeyword),
+	                cb.like(cb.lower(root.get("modelCode")), likeKeyword),
+	                cb.like(cb.lower(root.get("productBrand")), likeKeyword)
+	            );
+	        };
+	    }
 }

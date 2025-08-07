@@ -12,6 +12,8 @@ import com.suriname.category.repository.CategoryRepository;
 import com.suriname.product.dto.ProductDto;
 import com.suriname.product.dto.ProductSearchDto;
 import com.suriname.product.entity.Product;
+import com.suriname.product.entity.ProductSpecification;
+import com.suriname.product.repository.ProductRepository;
 import com.suriname.product.service.ProductService;
 
 import java.util.List;
@@ -25,6 +27,7 @@ public class ProductController {
 
 	private final ProductService productService;
 	private final CategoryRepository categoryRepository;
+	private final ProductRepository productRepository;
 
 	// 전체 조회
 	@GetMapping
@@ -83,10 +86,16 @@ public class ProductController {
 
 	// 자동완성
 	@GetMapping("/autocomplete")
-	public ResponseEntity<?> autocomplete(@RequestParam("name") String name) {
-		List<ProductDto> results = productService.autocomplete(name);
-		return ResponseEntity.ok(Map.of("status", 200, "data", results));
+	public ResponseEntity<List<ProductDto>> autocompleteProducts(@RequestParam("keyword") String keyword) {
+		List<Product> products = productRepository.findAll(ProductSpecification.containsKeyword(keyword), PageRequest.of(0, 10)).getContent();
+	    
+		List<ProductDto> result = products.stream()
+	        .map(ProductDto::fromEntity)
+	        .toList();
+
+	    return ResponseEntity.ok(result);
 	}
+
 
 	// 엑셀
 	@PostMapping("upload/excel")

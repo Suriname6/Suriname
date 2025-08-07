@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import styles from "../../css/Customer/CustomerAdd.module.css";
+import AutoComplete from "../../components/AutoComplete";
 
 const CustomerAdd = () => {
   const [selectedTab, setSelectedTab] = useState("general");
@@ -79,6 +80,10 @@ const CustomerAdd = () => {
 
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    console.log("FormData 업데이트:", formData);
+  }, [formData]);
 
   return (
     <div className={styles.customerContainer}>
@@ -209,16 +214,29 @@ const CustomerAdd = () => {
                 ))}
               </select>
             </div>
+
             <div className={styles.inputField} style={{ flex: 1.2 }}>
-              <label className={styles.inputLabel}>제품명</label>
-              <input
-                type="text"
-                className={styles.inputControl}
+              <AutoComplete
+                label="제품명"
                 placeholder="제품명"
                 value={formData.productName}
-                onChange={(e) =>
-                  handleInputChange("productName", e.target.value)
-                }
+                className={styles.inputControl}
+                onChange={(val) => {
+                  console.log("입력값 변경:", val);
+                  handleInputChange("productName", val);
+                }}
+                onSelect={(product) => {
+                  console.log("제품 선택됨:", product);
+                  setFormData((prev) => ({
+                    ...prev,
+                    productName: product.productName,
+                    modelCode: product.modelCode,
+                    productBrand: product.productBrand,
+                    categoryName: product.categoryName,
+                    productId: product.productId,
+                  }));
+                }}
+                fetchUrl="/api/products/autocomplete"
               />
             </div>
           </div>
@@ -240,6 +258,7 @@ const CustomerAdd = () => {
                 <option value="기타">기타</option>
               </select>
             </div>
+
             <div className={styles.inputField} style={{ flex: 1.2 }}>
               <label className={styles.inputLabel}>모델코드</label>
               <input
