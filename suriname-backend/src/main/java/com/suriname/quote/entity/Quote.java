@@ -18,7 +18,7 @@ public class Quote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "quotes_id")
+    @Column(name = "quote_id")
     private Long quoteId;
 
     @OneToOne(fetch = FetchType.LAZY)
