@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import SidebarNavigation from '../../components/SidebarNavigation';
 import styles from '../../css/Repair/RepairWrite.module.css';
 import { X } from 'lucide-react';
+import axios from 'axios';
 
 const RepairWritePage = () => {
   const location = useLocation();
@@ -30,17 +31,19 @@ const RepairWritePage = () => {
 
   const [newItem, setNewItem] = useState({ category: '', description: '', price: '' });
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const issueCategories = [
-    '키패드의 신호',
-    '프리즈 문제',
+    '카테고리 선택',
+    '프리셋 선택',
     '화면 문제',
     '배터리 문제',
     '기타'
   ];
 
   const priceCategories = [
-    '프리즈 문제',
+    '프리셋 선택',
     '화면 문제',
     '배터리 문제',
     '기타'
@@ -85,9 +88,38 @@ const RepairWritePage = () => {
     setRepairItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleFileUpload = (event) => {
+  // 임시로 requestId 사용 (실제로는 quote에서 가져와야 함)
+  const requestId = quoteData?.requestId || 1;
+
+  // 컴포넌트 마운트 시 기존 이미지 로드
+  useEffect(() => {
+    if (requestId) {
+      loadExistingImages();
+    }
+  }, [requestId]);
+
+  const loadExistingImages = async () => {
+    try {
+      const response = await axios.get(`/api/images/request/${requestId}`);
+      if (response.data.status === 200) {
+        setUploadedImages(response.data.data);
+      }
+    } catch (error) {
+      console.error('기존 이미지 로드 실패:', error);
+    }
+  };
+
+  const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
-    files.forEach(file => {
+    
+    if (files.length === 0) return;
+
+    // 이미지 파일만 S3에 업로드, 다른 파일들은 기존 방식대로
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    const otherFiles = files.filter(file => !file.type.startsWith('image/'));
+
+    // 기존 방식으로 다른 파일들 처리
+    otherFiles.forEach(file => {
       if (file.size <= 25 * 1024 * 1024) { // 25MB 제한
         setUploadedFiles(prev => [...prev, {
           id: Date.now() + Math.random(),
@@ -98,6 +130,60 @@ const RepairWritePage = () => {
         alert('파일 크기가 25MB를 초과합니다.');
       }
     });
+
+    // 이미지 파일들은 S3에 업로드
+    if (imageFiles.length > 0) {
+      setUploading(true);
+
+      try {
+        for (const file of imageFiles) {
+          // 파일 크기 검증 (10MB)
+          if (file.size > 10 * 1024 * 1024) {
+            alert(`${file.name}의 크기가 10MB를 초과합니다.`);
+            continue;
+          }
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          const response = await axios.post(`/api/images/upload/${requestId}`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+
+          if (response.data.status === 201) {
+            // 업로드 성공 시 목록 새로고침
+            await loadExistingImages();
+          }
+        }
+        if (imageFiles.length > 0) {
+          alert(`${imageFiles.length}개의 이미지 업로드가 완료되었습니다.`);
+        }
+      } catch (error) {
+        console.error('이미지 업로드 실패:', error);
+        alert('이미지 업로드 중 오류가 발생했습니다.');
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const handleDeleteImage = async (imageId) => {
+    if (!confirm('이미지를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`/api/images/${imageId}`);
+      if (response.data.status === 200) {
+        setUploadedImages(prev => prev.filter(img => img.imageId !== imageId));
+        alert('이미지가 삭제되었습니다.');
+      }
+    } catch (error) {
+      console.error('이미지 삭제 실패:', error);
+      alert('이미지 삭제 중 오류가 발생했습니다.');
+    }
   };
 
   const removeFile = (id) => {
@@ -195,7 +281,7 @@ const RepairWritePage = () => {
           <h2 className={styles.sectionTitle}>수리 프리셋 선택</h2>
           <div className={styles.inputGroup}>
             <div className={styles.inputField} style={{ flex: 1 }}>
-              <label className={styles.inputLabel}>키패드의 신호</label>
+              <label className={styles.inputLabel}>카테고리 선택</label>
               <select 
                 className={styles.inputControl}
                 value={formData.issueCategory} 
@@ -366,23 +452,47 @@ const RepairWritePage = () => {
                 accept=".png,.jpg,.jpeg,.pdf,.docx,.doc"
                 onChange={handleFileUpload}
                 className={styles.fileInput}
+                disabled={uploading}
               />
               <div className={styles.dropText}>
-                Drop file or Browse
+                {uploading ? 'Uploading images...' : 'Drop file or Browse'}
               </div>
               <div className={styles.formatText}>
-                Format: png & Max file size: 25 MB
+                Format: png, pdf, docx & Max file size: 25 MB
               </div>
             </div>
             
             {uploadedFiles.length > 0 && (
               <div className={styles.uploadedFiles}>
+                <h4>📎 문서 파일:</h4>
                 {uploadedFiles.map(file => (
                   <div key={file.id} className={styles.fileItem}>
                     <span className={styles.fileName}>📎 {file.name}</span>
                     <button 
                       className={styles.removeFileBtn}
                       onClick={() => removeFile(file.id)}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {uploadedImages.length > 0 && (
+              <div className={styles.uploadedFiles}>
+                <h4>🖼️ 업로드된 이미지:</h4>
+                {uploadedImages.map(image => (
+                  <div key={image.imageId} className={styles.fileItem}>
+                    <span className={styles.fileName}>
+                      🖼️ {image.fileName} 
+                      <small style={{color: '#666', marginLeft: '8px'}}>
+                        ({new Date(image.createdAt).toLocaleDateString('ko-KR')})
+                      </small>
+                    </span>
+                    <button 
+                      className={styles.removeFileBtn}
+                      onClick={() => handleDeleteImage(image.imageId)}
                     >
                       🗑️
                     </button>

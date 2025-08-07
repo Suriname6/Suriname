@@ -1,5 +1,6 @@
-package com.suriname.request.entity;
+package com.suriname.request.repository;
 
+import com.suriname.request.entity.Request;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
