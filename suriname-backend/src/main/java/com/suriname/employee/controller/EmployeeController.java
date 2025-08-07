@@ -1,37 +1,45 @@
 package com.suriname.employee.controller;
 
-import com.suriname.employee.dto.SignupRequestDto;
-import com.suriname.employee.dto.EmployeeResponseDto;
-import com.suriname.employee.dto.EmployeeUpdateRequestDto;
+import com.suriname.employee.dto.*;
+import com.suriname.employee.entity.Employee;
 import com.suriname.employee.service.EmployeeService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
-@RequestMapping("/employee")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    @PostMapping("/signup")
+    @PostMapping()
     public ResponseEntity<EmployeeResponseDto> signup(
             @RequestBody @Valid SignupRequestDto requestDto
-            )
+    )
     {
         EmployeeResponseDto responseDto = employeeService.signup(requestDto);
-        URI location = URI.create("/employee/" + responseDto.getEmployeeId());
+        URI location = URI.create("/api/users/" + responseDto.getEmployeeId());
         return ResponseEntity.created(location).body(responseDto);
     }
 
     @GetMapping
-    public ResponseEntity<List<EmployeeResponseDto>> getAllEmployees() {
-        List<EmployeeResponseDto> responseDtos = employeeService.getAllEmployees();
+    public ResponseEntity<Page<EmployeeResponseDto>> getAllEmployees(
+            @ModelAttribute EmployeeSearchRequestDto search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    )
+    {
+        Page<EmployeeResponseDto> responseDtos =
+                employeeService.getEmployees(search, PageRequest.of(page, size));
         return ResponseEntity.ok(responseDtos);
     }
 
@@ -55,5 +63,26 @@ public class EmployeeController {
     public ResponseEntity<Void> deactivateEmployee(@PathVariable Long id) {
         employeeService.deactivateEmployee(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<Page<EmployeeResponseDto>> getPendingEmployees(
+            @ModelAttribute EmployeeSearchRequestDto searchDto,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    )
+    {
+        Page<EmployeeResponseDto> result = employeeService.getPendingEmployees(searchDto, PageRequest.of(page, size));
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<EmployeeResponseDto> updateRole(
+            @PathVariable Long id,
+            @RequestBody RoleUpdateRequestDto requestDto
+    )
+    {
+        EmployeeResponseDto responseDto = employeeService.updateRole(id, requestDto.getRole());
+        return ResponseEntity.ok(responseDto);
     }
 }

@@ -18,6 +18,8 @@ import CustomerDetail from "./pages/Customer/CustomerDetail";
 import DashboardPage from "./pages/DashboardPage";
 import PaymentListPage from "./pages/Payment/PaymentListPage";
 import PaymentVirtualAccountPage from "./pages/Payment/PaymentVirtualAccountPage";
+import StaffListPage from "./pages/staff/StaffListPage";
+import StaffRequestPage from "./pages/staff/StaffRequestPage";
 import DeliveryList from "./pages/Delivery/DeliveryList";
 import DeliveryRegister from "./pages/Delivery/DeliveryRegister";
 import DeliveryAnalytics from "./pages/Delivery/DeliveryAnalytics";
@@ -28,6 +30,8 @@ import SatisfactionSurvey from "./pages/Public/SatisfactionSurvey";
 import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
 import RepairPresetPage from "./pages/Repair/RepairPresetPage";
+import StaffApprovalPage from "./pages/staff/StaffApprovalPage";
+import StaffDetailPage from "./pages/staff/StaffDetailPage";
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -70,6 +74,11 @@ function App() {
             path="/payment/virtualaccount"
             element={<PaymentVirtualAccountPage />}
           />
+
+          <Route path="/staff/list" element={<StaffListPage />} />
+          <Route path="/staff/requests" element={<StaffRequestPage />} />
+          <Route path="/staff/approval/:employeeId" element={<StaffApprovalPage />} />
+          <Route path="/staff/detail/:employeeId" element={<StaffDetailPage />} />
           <Route path="/repair/list" element={<RepairListPage />} />
           <Route path="/repair/preset" element={<RepairPresetPage />} />
           <Route path="/repair/write" element={<RepairWritePage />} />
