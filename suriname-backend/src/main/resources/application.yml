@@ -6,12 +6,19 @@ spring:
     name: Suriname
   config:
     import: optional:file:.env.properties
+  sql:
+    init:
+      mode: never
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
 
   datasource:
     url: "${DB_URL}"
     username: "${DB_USERNAME}"
     password: "${DB_PASSWORD}"
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,7 +26,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.H2Dialect
 
 jwt:
   secret: "${JWT_SECRET}"

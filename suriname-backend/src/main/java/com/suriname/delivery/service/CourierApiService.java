@@ -8,7 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+// import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +18,7 @@ import java.util.Map;
 @Slf4j
 public class CourierApiService {
 
-    private final RestTemplate restTemplate;
+    // RestTemplate은 향후 실제 API 연동 시 사용
 
     // 택배사별 API 키 (실제 환경에서는 application.yml에서 관리)
     @Value("${courier.api.cj.key:dummy-key}")
@@ -155,11 +155,11 @@ public class CourierApiService {
     }
 
     /**
-     * API 호출 공통 메서드
+     * API 호출 공통 메서드 (향후 RestTemplate 사용 예정)
      */
     private ResponseEntity<Map> callExternalApi(String url, HttpHeaders headers, Map<String, Object> requestBody) {
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-        return restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
+        // TODO: RestTemplate 연동 시 구현
+        throw new UnsupportedOperationException("실제 API 연동은 향후 구현 예정");
     }
 
     /**

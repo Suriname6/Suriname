@@ -10,7 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+// import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
@@ -19,7 +19,7 @@ import java.util.Map;
 @Slf4j
 public class DeliveryNotificationService {
 
-    private final RestTemplate restTemplate;
+    // RestTemplate은 향후 실제 SMS API 연동 시 사용
 
     // SMS API 설정 (실제 환경에서는 application.yml에서 관리)
     @Value("${sms.api.url:https://api.coolsms.co.kr/sms/4/send}")

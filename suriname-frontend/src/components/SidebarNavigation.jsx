@@ -23,6 +23,7 @@ export default function SidebarNavigation() {
     "배송 목록": "/delivery/list",
     "배송 등록": "/delivery/register",
     "배송 분석": "/delivery/analytics",
+    "만족도 조사": "/delivery/satisfaction",
     "완료 처리 목록": "/completion/list",
     "완료 처리 등록": "/completion/register",
     /* "직원 목록": "/staff/list",
@@ -60,7 +61,7 @@ export default function SidebarNavigation() {
     "A/S 접수": ["접수 목록", "접수 등록"],
     "수리 처리": ["수리 내역", "수리 내역 작성", "프리셋 등록"],
     "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
-    "배송 관리": ["배송 목록", "배송 등록", "배송 분석"],
+    "배송 관리": ["배송 목록", "배송 등록", "배송 분석", "만족도 조사"],
     "완료 처리": ["완료 처리 목록", "완료 처리 등록"],
   };
 

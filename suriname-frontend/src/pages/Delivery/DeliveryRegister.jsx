@@ -44,6 +44,7 @@ const DeliveryRegister = () => {
 
   const fetchRequestList = async () => {
     try {
+      console.log("A/S 접수 목록 API 호출 시작...");
       // 실제 API 호출 시도
       const response = await axios.get("/api/requests", {
         params: {
@@ -52,9 +53,11 @@ const DeliveryRegister = () => {
           size: 20
         }
       });
+      console.log("A/S 접수 API 응답:", response.data);
       setRequestList(response.data.data.content || []);
     } catch (error) {
-      console.log("API 호출 실패, Mock 데이터 사용:", error);
+      console.log("A/S 접수 API 실패, Mock 데이터 사용:", error);
+      console.log("Mock 데이터 개수:", mockRequests.length);
       // API 실패시 Mock 데이터 사용
       setRequestList(mockRequests);
     }
@@ -89,23 +92,34 @@ const DeliveryRegister = () => {
         return;
       }
 
+      console.log("배송등록 시작 - 폼 데이터:", formData);
       validateRequiredFields(formData, ['name', 'phone', 'zipcode', 'address']);
+      console.log("Validation 통과");
 
       setLoading(true);
+      console.log("API 호출 시작...");
+      
       const response = await axios.post("/api/delivery", formData);
+      console.log("API 응답:", response.data);
       
       if (response.data.status === 201) {
+        console.log("등록 성공, 배송목록으로 이동 시도...");
         alert("배송 정보가 등록되었습니다.");
         navigate("/delivery/list");
+        console.log("navigate 호출 완료");
       } else {
+        console.log("등록 실패:", response.data);
         alert(response.data.message || "등록에 실패했습니다.");
       }
     } catch (error) {
+      console.log("배송등록 에러:", error);
       // 통합 에러 처리 사용
       const errorMessage = handleDeliveryRegistrationError(error);
+      console.log("에러 메시지:", errorMessage);
       alert(errorMessage);
     } finally {
       setLoading(false);
+      console.log("로딩 상태 해제");
     }
   };
 

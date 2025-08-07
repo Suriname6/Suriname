@@ -8,6 +8,10 @@ import com.suriname.delivery.entity.Delivery;
 import com.suriname.delivery.repository.DeliveryRepository;
 import com.suriname.request.entity.Request;
 import com.suriname.request.entity.RequestRepository;
+import com.suriname.completion.entity.Completion;
+import com.suriname.completion.repository.CompletionRepository;
+import com.suriname.completion.service.SatisfactionNotificationService;
+import com.suriname.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,6 +34,9 @@ public class DeliveryService {
     private final DeliveryRepository deliveryRepository;
     private final RequestRepository requestRepository;
     private final DeliveryNotificationService notificationService;
+    private final CompletionRepository completionRepository;
+    private final EmployeeRepository employeeRepository;
+    private final SatisfactionNotificationService satisfactionNotificationService;
 
     @Transactional
     public Map<String, Long> registerDelivery(DeliveryRegisterDto dto) {
@@ -144,11 +151,16 @@ public class DeliveryService {
         delivery.updateStatus(dto.getStatus());
         deliveryRepository.save(delivery);
 
-        // 배송 완료 시 Request 상태도 완료로 변경
+        // 배송 완료 시 Request 상태도 완료로 변경 및 자동 Completion 생성
         if (dto.getStatus() == Delivery.Status.DELIVERED) {
             Request request = delivery.getRequest();
             request.changeStatus(Request.Status.COMPLETED);
             requestRepository.save(request);
+            
+            // 완료 처리가 아직 등록되지 않은 경우에만 자동 생성
+            if (completionRepository.findByDelivery(delivery).isEmpty()) {
+                createAutoCompletion(delivery);
+            }
         }
     }
 
@@ -247,5 +259,49 @@ public class DeliveryService {
         if (address.contains("제주")) return "제주";
         
         return "기타";
+    }
+
+    /**
+     * 배송 완료 시 자동 완료 처리 생성
+     */
+    private void createAutoCompletion(Delivery delivery) {
+        try {
+            // 기본 담당자 조회 (Admin 역할 중 첫 번째)
+            var defaultEmployee = employeeRepository.findAll().stream()
+                    .filter(emp -> emp.getRole().name().equals("ADMIN"))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (defaultEmployee == null) {
+                log.warn("기본 담당자를 찾을 수 없어 자동 완료 처리를 건너뜁니다. 배송 ID: {}", delivery.getDeliveryId());
+                return;
+            }
+
+            // 자동 완료 처리 생성
+            Completion autoCompletion = Completion.builder()
+                    .request(delivery.getRequest())
+                    .delivery(delivery)
+                    .completedBy(defaultEmployee)
+                    .completionType(Completion.CompletionType.REPAIR_COMPLETED)
+                    .completionNotes("배송 완료로 인한 자동 완료 처리")
+                    .customerReceived(false) // 초기값
+                    .satisfactionRequested(false) // 초기값
+                    .build();
+
+            completionRepository.save(autoCompletion);
+            
+            log.info("자동 완료 처리 생성 완료 - 접수번호: {}, 배송 ID: {}", 
+                delivery.getRequest().getRequestNo(), delivery.getDeliveryId());
+
+            // 자동 완료 처리 생성 후 만족도 설문 자동 발송
+            try {
+                satisfactionNotificationService.sendSatisfactionSurvey(autoCompletion);
+            } catch (Exception surveyError) {
+                log.error("자동 완료 처리 후 만족도 설문 발송 실패 - 완료 ID: {}", autoCompletion.getCompletionId(), surveyError);
+            }
+
+        } catch (Exception e) {
+            log.error("자동 완료 처리 생성 실패 - 배송 ID: {}", delivery.getDeliveryId(), e);
+        }
     }
 }

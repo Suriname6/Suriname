@@ -84,12 +84,16 @@ public class Completion {
                      Delivery delivery,
                      Employee completedBy,
                      CompletionType completionType,
-                     String completionNotes) {
+                     String completionNotes,
+                     Boolean customerReceived,
+                     Boolean satisfactionRequested) {
         this.request = request;
         this.delivery = delivery;
         this.completedBy = completedBy;
         this.completionType = completionType;
         this.completionNotes = completionNotes;
+        this.customerReceived = customerReceived != null ? customerReceived : false;
+        this.satisfactionRequested = satisfactionRequested != null ? satisfactionRequested : false;
     }
 
     /**
@@ -106,6 +110,28 @@ public class Completion {
     public void requestSatisfactionSurvey() {
         this.satisfactionRequested = true;
         this.satisfactionSentDate = LocalDateTime.now();
+    }
+
+    /**
+     * 만족도 조사 요청 표시 (SatisfactionNotificationService용)
+     */
+    public void markSatisfactionRequested() {
+        this.satisfactionRequested = true;
+    }
+
+    /**
+     * 만족도 발송 날짜 설정 (SatisfactionNotificationService용)
+     */
+    public void setSatisfactionSentDate(LocalDateTime sentDate) {
+        this.satisfactionSentDate = sentDate;
+    }
+
+    /**
+     * 고객 수령 확인 (날짜 지정)
+     */
+    public void confirmCustomerReceipt(LocalDateTime receiptDate) {
+        this.customerReceived = true;
+        this.receivedDate = receiptDate;
     }
 
     /**

@@ -27,6 +27,7 @@ public class CompletionService {
     private final CompletionRepository completionRepository;
     private final DeliveryRepository deliveryRepository;
     private final EmployeeRepository employeeRepository;
+    private final SatisfactionNotificationService satisfactionNotificationService;
 
     /**
      * 완료 처리 등록
@@ -68,6 +69,13 @@ public class CompletionService {
 
         log.info("완료 처리 등록 - 접수번호: {}, 완료 타입: {}", 
             request.getRequestNo(), dto.getCompletionType());
+
+        // 완료 처리 후 만족도 설문 자동 발송
+        try {
+            satisfactionNotificationService.sendSatisfactionSurvey(completion);
+        } catch (Exception e) {
+            log.error("만족도 설문 자동 발송 실패 - 완료 ID: {}", completion.getCompletionId(), e);
+        }
 
         return Map.of("completionId", completion.getCompletionId());
     }
@@ -154,6 +162,15 @@ public class CompletionService {
         
         log.info("고객 수령 확인 - 접수번호: {}, 완료 ID: {}", 
             completion.getRequest().getRequestNo(), completionId);
+        
+        // 고객 수령 확인 후 만족도 설문 자동 발송 (아직 발송되지 않은 경우만)
+        if (!completion.getSatisfactionRequested()) {
+            try {
+                satisfactionNotificationService.sendSatisfactionSurvey(completion);
+            } catch (Exception e) {
+                log.error("고객 수령 확인 후 만족도 설문 발송 실패 - 완료 ID: {}", completionId, e);
+            }
+        }
     }
 
     /**
