@@ -1,0 +1,147 @@
+/* 공통 스타일 */
+.customerContainer {
+    margin-left: 200px;
+    padding: 32px 24px;
+    min-height: 100vh;
+    background-color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* 탭 네비게이션 */
+.tabNavigation {
+    margin-bottom: 32px;
+}
+
+.tabContainer {
+    background-color: #eff4ff;
+    border-radius: 100px;
+    padding: 4px;
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+}
+
+.tabButton {
+    flex: 1;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 100px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tabButton.active {
+    background-color: #ffffff;
+    color: #2563eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tabButton.inactive {
+    background-color: transparent;
+    color: #6b7280;
+}
+
+/* 섹션 공통 */
+.sectionContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.sectionContent {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 48px;
+}
+
+.sectionTitle {
+    font-size: 24px;
+    font-weight: 600;
+    color: #181d27;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+/* 입력 필드 그룹 */
+.inputGroup {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    align-items: flex-end;
+}
+
+.inputField {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.inputLabel {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+    white-space: nowrap;
+
+}
+
+.inputLabelShort {
+    width: 60px;
+}
+
+.inputLabelLong {
+    width: 100px;
+}
+
+.inputControl {
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: #f9fafb;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 버튼 그룹 */
+.buttonGroup {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+}
+
+.cancelButton,
+.submitButton {
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancelButton {
+    background: transparent;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+
+.cancelButton:hover {
+    background-color: #f9fafb;
+}
+
+.submitButton {
+    background-color: #2563eb;
+    border: 1px solid #2563eb;
+    color: white;
+}
+
+.submitButton:hover {
+    background-color: #1d4ed8;
+}

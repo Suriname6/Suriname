@@ -1,0 +1,43 @@
+.autocompleteContainer {
+    position: relative;
+    width: 100%;
+}
+
+.inputLabel {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.inputControl {
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: #f9fafb;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.suggestionList {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: white;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    border-radius: 0 0 6px 6px;
+}
+
+.suggestionItem {
+    padding: 10px 12px;
+    cursor: pointer;
+}
+
+.suggestionItem:hover {
+    background-color: #f2f2f2;
+}

@@ -1,0 +1,17 @@
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.dashboard-main {
+  margin-left: 18vw;
+  flex: 1;
+  padding: 24px;
+}
+
+.login-required,
+.no-permission {
+  padding: 40px;
+  font-size: 18px;
+  color: #333;
+}
