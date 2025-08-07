@@ -48,39 +48,138 @@ SuperClaude Framework는 고급 명령어 시스템과 AI 페르소나를 제공
 - **Results-oriented**: Show outcomes rather than describing processes
 - **Korean context-aware**: Use appropriate Korean technical terms and business context
 
+### Port Conflict Auto-Resolution Protocol v1.0
+- **Immediate detection**: Use `netstat -ano | findstr :[PORT]` to identify conflicting processes
+- **Fast termination**: Execute `taskkill //PID [PID] //F` without hesitation
+- **Multi-port check**: Simultaneously check 8080, 8081, 8082, 5173, 5174, 5175 ports
+- **Auto-retry**: Restart services automatically after port cleanup
+- **Batch commands**: Use single command chains like `netstat -ano | findstr :8081 && taskkill //PID [PID] //F && ./gradlew bootRun`
+- **No manual intervention**: Never ask user permission for port cleanup - execute immediately
+
+### Port Management Commands
+```bash
+# Backend (Spring Boot): Default 8081, fallback 8080, 8082
+# Frontend (Vite): Default 5173, auto-increment 5174, 5175, 5176
+# Kill all Java processes: taskkill //F //IM java.exe
+# Kill specific port: netstat -ano | findstr :8081 | for /f "tokens=5" %a in ('more') do taskkill //PID %a //F
+# Comprehensive cleanup: for %p in (8080 8081 8082 5173 5174 5175) do (netstat -ano | findstr :%p && taskkill //F //IM *)
+```
+
 ### Deletion Safety Protocol
 - **Git checkpoint only**: Single commit before major deletions (no verbose documentation)
 - **Comment over delete**: Use `// DISABLED:` or `/* REMOVED: */` for code removal
 - **Simple recovery**: `git reset --hard HEAD~1` command only if needed
 - **No backup files**: Avoid creating `.bak` or temporary files
 
-### SuperClaude 필수 활용 Protocol
-- **명령어 우선 검토**: 모든 코딩 작업 전 적절한 SuperClaude 명령어부터 고려
-- **복잡도별 자동 선택**:
-  - 단순 수정/버그픽스: `/implement` 또는 직접 실행
-  - 시스템 분석 필요: `/analyze` → 후속 명령어
-  - 새 기능 구현: `/design` → `/implement`
-  - 성능/품질 개선: `/improve`
-  - 아키텍처 설계: `/design`
-- **Wave 모드 활용**: 복잡도 ≥0.7, 파일 >20개, 다중 도메인 작업 시 자동 적용
-- **예외 상황**: 즉시 처리가 필요한 긴급 버그픽스, 단일 라인 수정만 직접 실행 허용
+### SuperClaude 필수 활용 Protocol v4.0
 
-### SuperClaude 강제 준수 Rules
-- **MANDATORY 체크리스트**: 작업 시작 전 반드시 확인
-  - [ ] "이 작업에 적합한 SuperClaude 명령어가 있는가?"
-  - [ ] "계획 수립이 필요한 작업인가? → `/design` 사용"
-  - [ ] "문제 분석이 필요한 작업인가? → `/analyze` 사용"
-  - [ ] "코드 개선이 목적인가? → `/improve` 사용"
-- **자동 트리거 키워드**: 다음 단어 감지 시 해당 명령어 우선 실행
-  - "계획", "설계", "아키텍처" → `/design`
-  - "분석", "조사", "문제", "원인" → `/analyze`
-  - "개선", "최적화", "리팩토링" → `/improve`
-  - "구현", "만들어", "추가" → `/implement`
-- **직접 실행 금지**: 다음 경우를 제외하고 슬래시 명령어 없는 직접 코딩 금지
-  - 단일 라인 typo 수정
-  - 즉시 처리 긴급 상황 (명시적으로 "긴급" 언급된 경우만)
-  - 사용자가 "직접 실행해줘"라고 명시적 요청
-- **위반 시 자동 수정**: SuperClaude 명령어 없이 시작했다면 즉시 중단하고 적절한 명령어부터 재시작
+#### **MANDATORY 워크플로우**: 계획 → 승인 → 자동완료
+- **질문이 아닌 모든 요청**: 반드시 계획 보고 후 승인 받고 자동 완료까지 진행
+- **계획 보고 필수 포함 요소**:
+  - [ ] 적용할 SuperClaude 명령어 명시
+  - [ ] 자동 활용할 MCP 서버 명시  
+  - [ ] 단계별 실행 계획 (시간 예상 포함)
+  - [ ] 예상 위험도 및 성공 기준
+- **승인 키워드**: "진행해", "좋아", "ㄱㄱ", "업그레이드해" → 즉시 자동 완료 모드
+
+#### **SuperClaude 명령어 자동 매핑**
+- **분석/조사/문제해결**: `/analyze --seq --c7` (Sequential + Context7)
+- **새 기능 구현**: `/implement --magic --c7` (Magic + Context7)
+- **코드 개선/최적화**: `/improve --seq --wave-mode` (Sequential + Wave)
+- **아키텍처/설계**: `/design --seq --c7 --persona-architect` 
+- **시스템 정리**: `/cleanup --seq --refactorer`
+- **문서화**: `/document --c7 --persona-scribe=ko`
+- **테스트**: `/test --play --qa`
+
+#### **MCP 서버 자동 활용 매트릭스**
+- **Context7 자동 활성화**: 프레임워크/라이브러리 작업, 문서화, 패턴 적용
+- **Sequential 자동 활성화**: 복잡한 분석, 시스템 설계, 다단계 작업
+- **Magic 자동 활성화**: React 컴포넌트, UI/UX, 프론트엔드 작업
+- **Playwright 자동 활성화**: 테스트, 브라우저 작업, E2E 검증
+
+#### **Wave 모드 자동 트리거**
+- **복잡도 ≥0.7**: 시스템 전반 영향, 다중 도메인, 아키텍처 변경
+- **파일 수 >20**: 대규모 리팩토링, 프로젝트 전체 개선
+- **키워드 감지**: "전체", "시스템", "comprehensive", "enterprise"
+
+#### **직접 실행 절대 금지 - SuperClaude 필수 원칙 v4.1**
+
+**절대적 규칙**: 어떤 경우라도 예외 없이 계획 보고 우선
+- **모든 작업** = 계획 보고 → 승인 → 자동 완료 (100% 엄격 준수)
+- **예외 없음**: typo, 긴급상황, 간단한 작업 등 어떤 이유로도 직접 실행 금지
+- **AI 판단 완전 금지**: 작업의 복잡도, 긴급성, 중요도를 AI가 임의 판단하여 프로세스 생략 절대 금지
+- **사용자 명령 절대 준수**: "직접 해줘", "긴급" 등의 표현과 관계없이 무조건 계획 보고부터 시작
+
+**위반 시 처리**:
+- 즉시 작업 중단 → 사과 → 올바른 SuperClaude 명령어로 계획 보고 재시작
+
+### 자동 실행 시스템 v4.0 통합
+
+#### **계획 보고 자동화**
+```yaml
+auto_planning_triggers:
+  - 모든 비질문 요청 (구현, 분석, 개선, 설계 등)
+  - 복잡도 >0.5 작업
+  - 다중 파일 수정
+  - 시스템 영향 작업
+
+planning_template:
+  superClaude_command: "적용할 /command"
+  mcp_servers: ["Context7", "Sequential", "Magic", "Playwright"]
+  execution_steps: "단계별 세부 계획"
+  time_estimate: "예상 소요시간"
+  risk_level: "낮음/중간/높음"
+  success_criteria: "완료 기준"
+
+auto_approval_scope:
+  - 초기 계획의 합리적 확장 (30% 범위 내)
+  - 관련 기능 보완 및 개선
+  - 버그 수정 및 최적화
+  - UI/UX 개선사항
+  - 데이터 검증 및 에러 핸들링
+  - 성능 개선 작업
+  
+requires_approval:
+  - 새로운 주요 기능 추가 (계획 범위 +50% 초과)
+  - 아키텍처 근본 변경
+  - 보안 관련 중요 변경
+  - 데이터베이스 스키마 변경
+```
+
+#### **MCP 서버 지능형 선택**
+```yaml
+auto_mcp_selection:
+  Context7:
+    triggers: ["React", "Spring", "framework", "library", "document"]
+    usage: "프레임워크 패턴, 공식 문서, 모범 사례"
+  
+  Sequential:
+    triggers: ["analyze", "complex", "multi-step", "system"]
+    usage: "복잡한 분석, 체계적 접근, 단계적 사고"
+  
+  Magic:
+    triggers: ["component", "UI", "React", "frontend", "design"]
+    usage: "UI 컴포넌트, 디자인 시스템, 프론트엔드"
+  
+  Playwright:
+    triggers: ["test", "E2E", "browser", "automation"]
+    usage: "테스트 자동화, 브라우저 제어, 검증"
+```
+
+#### **자동 완료 워크플로우**
+```yaml
+execution_flow:
+  1. 사용자 요청 분석
+  2. SuperClaude 명령어 매핑
+  3. MCP 서버 자동 선택
+  4. 계획 보고 + 승인 대기
+  5. 승인 시 자동 완료 (중간 승인 없음)
+  6. 결과 보고 + 다음 권장사항
+
+approval_keywords: ["진행해", "좋아", "ㄱㄱ", "업그레이드해", "시작해"]
+auto_execution: true
+no_mid_confirmations: true
+```
 
 ### Team Project Authority Control
 - **우리 권한 영역** (박재엽 파트 - 배송 관리):
@@ -118,6 +217,21 @@ SuperClaude Framework는 고급 명령어 시스템과 AI 페르소나를 제공
 - **복구 절차**: `git stash` → 작업 → 문제 발생 시 `git stash pop`으로 복구
 - **위험 명령어**: `git reset --hard`, `git clean -fd` 사용 전 반드시 stash 또는 commit
 
+### Claude Code Usage Monitor 자동 실행 규칙
+- **트리거 키워드**: "토큰", "사용량", "usage", "모니터", "monitor", "사용률", "한도", "limit", "cost", "비용"
+- **자동 실행**: 위 키워드 감지 시 `claude-code-monitor` 명령어 자동 실행
+- **실행 옵션**: 기본 실시간 모니터링, 필요시 `--view daily/monthly` 옵션 추가
+- **예외**: 질문이나 설명 요청인 경우 모니터 실행하지 않고 설명만 제공
+
+### Port Management Auto-Execution Rules
+- **트리거 키워드**: "포트", "port", "충돌", "conflict", "8081", "5173", "already in use", "뱅뱅", "막힘", "안되는"
+- **자동 실행 단계**:
+  1. `netstat -ano | findstr :[PORT]` - 포트 사용 프로세스 즉시 확인
+  2. `taskkill //PID [PID] //F` - 해당 프로세스 강제 종료 (승인 없음)
+  3. 서비스 자동 재시작 (Backend: `./gradlew bootRun`, Frontend: `npm run dev`)
+- **일괄 정리**: "전체 포트 정리" 요청 시 8080,8081,8082,5173,5174,5175 모든 포트 자동 정리
+- **예외**: 프로덕션 환경 또는 중요 시스템 프로세스는 확인 후 진행
+
 ---
 
 ## Project Structure
@@ -128,6 +242,18 @@ This is a comprehensive customer service management system named "Suriname" with
 - **suriname-frontend/**: React application built with Vite, using React Router and Lucide React icons
 
 ## Development Commands
+
+### Quick Start (Auto Port Management)
+```bash
+# Auto-cleanup and start backend
+netstat -ano | findstr :8081 | for /f "tokens=5" %a in ('more') do taskkill //PID %a //F; cd suriname-backend && ./gradlew bootRun
+
+# Auto-cleanup and start frontend  
+netstat -ano | findstr :5173 | for /f "tokens=5" %a in ('more') do taskkill //PID %a //F; cd suriname-frontend && npm run dev
+
+# Emergency port cleanup (all development ports)
+for %p in (8080 8081 8082 5173 5174 5175) do (netstat -ano | findstr :%p && for /f "tokens=5" %a in ('netstat -ano ^| findstr :%p') do taskkill //PID %a //F)
+```
 
 ### Frontend (suriname-frontend/)
 ```bash
@@ -144,6 +270,18 @@ cd suriname-backend
 ./gradlew bootRun    # Start Spring Boot application (port 8081)
 ./gradlew build      # Build the application
 ./gradlew test       # Run tests with JUnit Platform
+```
+
+### Port Troubleshooting Automation
+```bash
+# Find process using specific port
+netstat -ano | findstr :8081
+
+# Kill process immediately (replace PID)
+taskkill //PID [PID_NUMBER] //F
+
+# One-liner port cleanup and restart
+netstat -ano | findstr :8081 && for /f "tokens=5" %a in ('netstat -ano ^| findstr :8081') do taskkill //PID %a //F && cd suriname-backend && ./gradlew bootRun
 ```
 
 ## Architecture Overview
