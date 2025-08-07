@@ -12,21 +12,5 @@
 *.log
 
 # 환경 변수
-suriname-backend/.env.properties
-.env.properties
+.env
 /.metadata/
-.gradle/
-
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-
-# Build outputs
-build/
-dist/
-
-# Local development files
-start.bat
