@@ -55,7 +55,6 @@ public class RepairPresetService {
         preset.inactive();
     }
 
-
     private PresetResponseDto toDto(RepairPreset preset) {
         return new PresetResponseDto(
                 preset.getRepairPresetsId(),
