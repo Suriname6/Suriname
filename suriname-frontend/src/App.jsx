@@ -38,7 +38,7 @@ function LayoutWithSidebar() {
   return (
     <div className="flex">
       {!shouldHideSidebar && <SidebarNavigation />}
-      <div className={`flex-1 p-6 bg-gray-100 min-h-screen ${!shouldHideSidebar ? 'ml-[170px] md:ml-[170px] sm:ml-0' : ''}`}>
+      <div className={`flex-1 p-6 bg-gray-100 min-h-screen`}>
         <Outlet />
       </div>
     </div>

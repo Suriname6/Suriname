@@ -1,5 +1,24 @@
 {
+  "name": "suriname-project",
+  "version": "1.0.0",
+  "description": "Suriname 고객서비스 관리 시스템",
+  "scripts": {
+    "dev": "node scripts/dev-start.js",
+    "stop": "node scripts/dev-stop.js",
+    "port:check": "node scripts/port-manager.js check",
+    "port:resolve": "node scripts/port-manager.js resolve",
+    "port:clean": "node scripts/port-manager.js clean",
+    "backend": "cd suriname-backend && ./gradlew bootRun",
+    "frontend": "cd suriname-frontend && npm run dev",
+    "build": "cd suriname-frontend && npm run build && cd ../suriname-backend && ./gradlew build",
+    "clean": "node scripts/dev-stop.js force"
+  },
   "dependencies": {
     "recharts": "^3.1.2"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }
