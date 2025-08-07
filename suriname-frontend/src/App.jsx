@@ -9,29 +9,41 @@ import {
 import SidebarNavigation from "./components/SidebarNavigation";
 
 import Home from "./pages/Home";
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage';
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+
 import CustomerList from "./pages/Customer/CustomerList";
 import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
 import CustomerAdd from "./pages/Customer/CustomerAdd";
 import CustomerDetail from "./pages/Customer/CustomerDetail";
+
 import DashboardPage from "./pages/DashboardPage";
+
+import ProductList from "./pages/Product/ProductList";
+import ProductAdd from "./pages/Product/ProductAdd";
+import ProductExcelAdd from "./pages/Product/ProductExcelAdd";
+import ProductDetail from "./pages/Product/ProductDetail";
+
 import PaymentListPage from "./pages/Payment/PaymentListPage";
 import PaymentVirtualAccountPage from "./pages/Payment/PaymentVirtualAccountPage";
+
 import StaffListPage from "./pages/staff/StaffListPage";
 import StaffRequestPage from "./pages/staff/StaffRequestPage";
+import StaffApprovalPage from "./pages/staff/StaffApprovalPage";
+import StaffDetailPage from "./pages/staff/StaffDetailPage";
+
 import DeliveryList from "./pages/Delivery/DeliveryList";
 import DeliveryRegister from "./pages/Delivery/DeliveryRegister";
 import DeliveryAnalytics from "./pages/Delivery/DeliveryAnalytics";
+
 import CompletionList from "./pages/Completion/CompletionList";
 import CompletionRegister from "./pages/Completion/CompletionRegister";
 import DeliveryTracking from "./pages/Public/DeliveryTracking";
 import SatisfactionSurvey from "./pages/Public/SatisfactionSurvey";
+
 import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
 import RepairPresetPage from "./pages/Repair/RepairPresetPage";
-import StaffApprovalPage from "./pages/staff/StaffApprovalPage";
-import StaffDetailPage from "./pages/staff/StaffDetailPage";
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -47,7 +59,6 @@ function LayoutWithSidebar() {
     </div>
   );
 }
-
 
 function App() {
   return (
@@ -74,11 +85,21 @@ function App() {
             path="/payment/virtualaccount"
             element={<PaymentVirtualAccountPage />}
           />
+          <Route path="/product/list" element={<ProductList />} />
+          <Route path="/product/upload" element={<ProductAdd />} />
+          <Route path="/product/upload/excel" element={<ProductExcelAdd />} />
+          <Route path="/product/detail/:id" element={<ProductDetail />} />
 
           <Route path="/staff/list" element={<StaffListPage />} />
           <Route path="/staff/requests" element={<StaffRequestPage />} />
-          <Route path="/staff/approval/:employeeId" element={<StaffApprovalPage />} />
-          <Route path="/staff/detail/:employeeId" element={<StaffDetailPage />} />
+          <Route
+            path="/staff/approval/:employeeId"
+            element={<StaffApprovalPage />}
+          />
+          <Route
+            path="/staff/detail/:employeeId"
+            element={<StaffDetailPage />}
+          />
           <Route path="/repair/list" element={<RepairListPage />} />
           <Route path="/repair/preset" element={<RepairPresetPage />} />
           <Route path="/repair/write" element={<RepairWritePage />} />

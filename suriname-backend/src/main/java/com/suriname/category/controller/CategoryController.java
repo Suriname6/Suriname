@@ -1,12 +1,9 @@
 package com.suriname.category.controller;
 
-import com.suriname.category.dto.CategoryResponseDto;
-import com.suriname.category.service.CategoryService;
+import com.suriname.category.entity.Category;
+import com.suriname.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -15,11 +12,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryController {
 
-    private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponseDto>> getVisibleCategories() {
-        List<CategoryResponseDto> responseDtos = categoryService.getVisibleCategories();
-        return ResponseEntity.ok(responseDtos);
+    public List<String> getAllCategoryNames() {
+        return categoryRepository.findAll().stream()
+                .map(Category::getName)
+                .distinct()
+                .toList();
     }
 }

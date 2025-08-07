@@ -1,13 +1,11 @@
 package com.suriname.delivery.service;
 
 import com.suriname.delivery.entity.Delivery;
-import com.suriname.notification.entity.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,7 +18,8 @@ import java.util.Map;
 public class DeliveryNotificationService {
 
     private final RestTemplate restTemplate;
-
+    
+    
     // SMS API 설정 (실제 환경에서는 application.yml에서 관리)
     @Value("${sms.api.url:https://api.coolsms.co.kr/sms/4/send}")
     private String smsApiUrl;

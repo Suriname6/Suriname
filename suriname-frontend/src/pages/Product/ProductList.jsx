@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import styles from "../../css/Customer/CustomerList.module.css";
+import styles from "../../css/Product/ProductList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import CustomerSearch from "../../components/Search/CustomerSearch";
+import ProductSearchBar from "./ProductSearchBar";
 import { useNavigate } from "react-router-dom";
-import { useCallback } from "react";
 
-const CustomerList = () => {
+const ProductList = () => {
   const [data, setData] = useState([]);
   const [searchConditions, setSearchConditions] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -16,10 +15,10 @@ const CustomerList = () => {
   const navigate = useNavigate();
   const itemsPerPage = 10;
 
-  const fetchCustomerData = useCallback(async () => {
+  const fetchProductData = useCallback(async () => {
     try {
       const response = await axios.post(
-        "/api/customers/search",
+        "/api/products/search",
         searchConditions,
         {
           params: {
@@ -36,8 +35,8 @@ const CustomerList = () => {
   }, [currentPage, searchConditions]);
 
   useEffect(() => {
-    fetchCustomerData();
-  }, [fetchCustomerData]);
+    fetchProductData();
+  }, [fetchProductData]);
 
   const handleSearch = (searchData) => {
     setCurrentPage(1);
@@ -47,7 +46,7 @@ const CustomerList = () => {
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
     const newSet = checked
-      ? new Set(data.map((item) => item.customerId))
+      ? new Set(data.map((item) => item.productId))
       : new Set();
     setSelectedItems(newSet);
   };
@@ -72,13 +71,11 @@ const CustomerList = () => {
 
     try {
       if (selectedItems.size === 1) {
-        // 단건 삭제
         const id = Array.from(selectedItems)[0];
-        await axios.delete(`/api/customers/delete/${id}`);
+        await axios.delete(`/api/products/delete/${id}`);
         alert("1개 항목이 삭제되었습니다.");
       } else {
-        // 다건 삭제
-        await axios.post("/api/customers/delete", Array.from(selectedItems), {
+        await axios.post("/api/products/delete", Array.from(selectedItems), {
           headers: {
             "Content-Type": "application/json",
           },
@@ -86,33 +83,25 @@ const CustomerList = () => {
         alert(`${selectedItems.size}개 항목이 삭제되었습니다.`);
       }
       setData((prevData) =>
-        prevData.filter((item) => !selectedItems.has(item.customerId))
+        prevData.filter((item) => !selectedItems.has(item.productId))
       );
       setSelectedItems(new Set());
       setSelectAll(false);
-      fetchCustomerData();
+      fetchProductData();
     } catch (err) {
       console.error("삭제 실패: ", err);
       alert("삭제 중 오류가 발생했습니다.");
     }
   };
 
-  const handleRowClick = (customerId, event) => {
-    // 체크박스 클릭 시에는 네비게이션 방지
-    if (event.target.type === "checkbox") {
-      return;
-    }
-    navigate(`/customer/detail/${customerId}`);
+  const handleRowClick = (productId, event) => {
+    if (event.target.type === "checkbox") return;
+    navigate(`/product/detail/${productId}`);
   };
 
   return (
     <div className={styles.container}>
-      <CustomerSearch 
-        setData={setData} 
-        setTotalPages={setTotalPages}
-        itemsPerPage={itemsPerPage}
-        setCurrentPage={setCurrentPage}
-      />
+      <ProductSearchBar onSearch={handleSearch} />
 
       <div className={styles.tableHeader}>
         <div>
@@ -137,52 +126,43 @@ const CustomerList = () => {
               <th>
                 <input type="checkbox" />
               </th>
-              <th>고객명</th>
-              <th>생년월일</th>
-              <th>연락처</th>
-              <th>이메일</th>
-              <th>주소</th>
+              <th>제조사</th>
               <th>제품분류</th>
               <th>제품명</th>
-              <th>제조사</th>
               <th>모델코드</th>
-              <th>제품고유번호</th>
+              <th>비고</th>
             </tr>
           </thead>
           <tbody>
             {data.length > 0 ? (
               data.map((item) => (
                 <tr
-                  key={item.customerId}
+                  key={item.productId}
                   className={styles.clickableRow}
-                  onClick={(e) => handleRowClick(item.customerId, e)}
+                  onClick={(e) => handleRowClick(item.productId, e)}
                 >
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedItems.has(item.customerId)}
+                      checked={selectedItems.has(item.productId)}
                       onChange={(e) =>
-                        handleSelectItem(item.customerId, e.target.checked)
+                        handleSelectItem(item.productId, e.target.checked)
                       }
                     />
                   </td>
-                  <td>{item.customerName}</td>
-                  <td>{item.birth}</td>
-                  <td>{item.phone}</td>
-                  <td>{item.email}</td>
-                  <td>{item.address}</td>
-                  <td>{item.product?.categoryName || "-"}</td>
-                  <td>{item.product?.productName || "-"}</td>
-                  <td>{item.product?.productBrand || "-"}</td>
-                  <td>{item.product?.modelCode || "-"}</td>
-                  <td>{item.product?.serialNumber || "-"}</td>
+                  <td>{item.productBrand}</td>
+                  <td>{item.categoryName}</td>
+                  <td>{item.productName}</td>
+
+                  <td>{item.modelCode}</td>
+                  <td>{item.memo || "-"}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="11" className={styles.emptyState}>
+                <td colSpan="8" className={styles.emptyState}>
                   <h3>데이터가 없습니다</h3>
-                  <p>검색 조건을 변경하거나 새로운 고객을 등록해보세요.</p>
+                  <p>검색 조건을 변경하거나 새로운 제품을 등록해보세요.</p>
                 </td>
               </tr>
             )}
@@ -217,4 +197,4 @@ const CustomerList = () => {
   );
 };
 
-export default CustomerList;
+export default ProductList;

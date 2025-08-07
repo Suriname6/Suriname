@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import styles from "../../css/Customer/CustomerAdd.module.css";
+import AutoComplete from "../../components/AutoComplete";
 
 const CustomerAdd = () => {
   const [selectedTab, setSelectedTab] = useState("general");
   const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -18,6 +20,7 @@ const CustomerAdd = () => {
     productBrand: "",
     modelCode: "",
     productId: "",
+    serialNumber: "",
   });
 
   const handleTabClick = (tab) => {
@@ -46,9 +49,10 @@ const CustomerAdd = () => {
         categoryName: formData.categoryName,
         productBrand: formData.productBrand,
         modelCode: formData.modelCode,
-        serialNumber: formData.productId,
+        serialNumber: formData.serialNumber,
       },
     };
+    console.log("serial:", formData.serialNumber);
 
     try {
       const response = await axios.post("/api/customers", formDataToSend);
@@ -63,6 +67,23 @@ const CustomerAdd = () => {
   const handleCancel = () => {
     console.log("취소");
   };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/api/categories");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("카테고리 불러오기 실패:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    console.log("FormData 업데이트:", formData);
+  }, [formData]);
 
   return (
     <div className={styles.customerContainer}>
@@ -88,7 +109,7 @@ const CustomerAdd = () => {
               handleTabClick("excel");
             }}
           >
-            액셀 일괄 등록
+            엑셀 일괄 등록
           </button>
         </div>
       </div>
@@ -176,42 +197,52 @@ const CustomerAdd = () => {
           <h2 className={styles.sectionTitle}>제품 정보</h2>
 
           <div className={styles.inputGroup}>
-            <div className={styles.inputField} style={{ flex: 1 }}>
-              <label
-                className={`${styles.inputLabel} ${styles.inputLabelShort}`}
-              >
-                제품분류
-              </label>
-              <input
-                type="text"
+            <div className={styles.inputField} style={{ flex: 0.8 }}>
+              <label className={styles.inputLabel}>제품분류</label>
+              <select
                 className={styles.inputControl}
-                placeholder="예: 노트북, 모니터 등"
                 value={formData.categoryName}
                 onChange={(e) =>
                   handleInputChange("categoryName", e.target.value)
                 }
-              />
-            </div>
-            <div className={styles.inputField} style={{ flex: 1 }}>
-              <label
-                className={`${styles.inputLabel} ${styles.inputLabelLong}`}
               >
-                제품명
-              </label>
-              <input
-                type="text"
-                className={styles.inputControl}
+                <option value="">선택</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.inputField} style={{ flex: 1.2 }}>
+              <AutoComplete
+                label="제품명"
                 placeholder="제품명"
                 value={formData.productName}
-                onChange={(e) =>
-                  handleInputChange("productName", e.target.value)
-                }
+                className={styles.inputControl}
+                onChange={(val) => {
+                  console.log("입력값 변경:", val);
+                  handleInputChange("productName", val);
+                }}
+                onSelect={(product) => {
+                  console.log("제품 선택됨:", product);
+                  setFormData((prev) => ({
+                    ...prev,
+                    productName: product.productName,
+                    modelCode: product.modelCode,
+                    productBrand: product.productBrand,
+                    categoryName: product.categoryName,
+                    productId: product.productId,
+                  }));
+                }}
+                fetchUrl="/api/products/autocomplete"
               />
             </div>
           </div>
 
           <div className={styles.inputGroup}>
-            <div className={styles.inputField}>
+            <div className={styles.inputField} style={{ flex: 0.8 }}>
               <label className={styles.inputLabel}>제조사</label>
               <select
                 className={styles.inputControl}
@@ -227,7 +258,8 @@ const CustomerAdd = () => {
                 <option value="기타">기타</option>
               </select>
             </div>
-            <div className={styles.inputField}>
+
+            <div className={styles.inputField} style={{ flex: 1.2 }}>
               <label className={styles.inputLabel}>모델코드</label>
               <input
                 type="text"
@@ -246,8 +278,10 @@ const CustomerAdd = () => {
                 type="text"
                 className={styles.inputControl}
                 placeholder="제품고유번호"
-                value={formData.productId}
-                onChange={(e) => handleInputChange("productId", e.target.value)}
+                value={formData.serialNumber}
+                onChange={(e) =>
+                  handleInputChange("serialNumber", e.target.value)
+                }
               />
             </div>
           </div>
