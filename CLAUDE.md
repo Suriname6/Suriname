@@ -232,6 +232,42 @@ no_mid_confirmations: true
 - **일괄 정리**: "전체 포트 정리" 요청 시 8080,8081,8082,5173,5174,5175 모든 포트 자동 정리
 - **예외**: 프로덕션 환경 또는 중요 시스템 프로세스는 확인 후 진행
 
+### CSS Scope Protection Protocol v1.0 ⚠️ CRITICAL
+**문제**: 특정 페이지 CSS 수정 시 다른 페이지까지 영향을 줘서 화면비 깨짐 반복
+
+**필수 검증 단계** (절대 생략 금지):
+1. **파일 경로 확인**: `pages/[특정페이지]/[Component].module.css` 인지 전역 CSS인지 반드시 확인
+2. **CSS Modules 확인**: `styles.[className]` 형태인지, 전역 클래스인지 구분
+3. **영향도 분석**: 해당 CSS가 다른 컴포넌트에서도 사용되는지 Grep으로 검색
+4. **스코프 제한**: 오직 해당 페이지/컴포넌트에만 영향을 주도록 CSS 작성
+
+**절대 금지 사항**:
+- ❌ App.css, index.css 같은 전역 CSS 함부로 수정
+- ❌ 공통 컴포넌트 CSS 무단 변경
+- ❌ CSS 클래스명이 겹칠 수 있는 일반적인 이름 사용
+- ❌ 미디어 쿼리나 전역 선택자 무분별 추가
+
+**안전한 CSS 수정 패턴**:
+```css
+/* ✅ 올바른 방법: 컴포넌트별 CSS Modules */
+.specificPageContainer { /* DeliveryList.module.css 내부 */
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* ❌ 잘못된 방법: 전역 영향 */
+.container { /* 다른 페이지 container도 영향받음 */
+  width: 100%;
+}
+```
+
+**검증 명령어**:
+```bash
+# CSS 클래스 사용처 확인 (수정 전 필수 실행)
+grep -r "className" src/ | grep "[수정할클래스명]"
+grep -r "styles\." src/ | grep "[수정할클래스명]"
+```
+
 ---
 
 ## Project Structure
