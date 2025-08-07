@@ -25,19 +25,25 @@ export default function SidebarNavigation() {
     "배송 분석": "/delivery/analytics",
     "완료 처리 목록": "/completion/list",
     "완료 처리 등록": "/completion/register",
-    /* "직원 목록": "/staff/list",
-  "직원 가입 요청 목록": "/staff/requests",*/
-  "통계": "/dashboard/statistics",
-  "담당자별 성과": "/dashboard/performance",
-  "리포트": "/dashboard/report",
+    "직원 목록": "/staff/list",
+    "직원 가입 요청 목록": "/staff/requests",
+    "통계": "/dashboard/statistics",
+    "담당자별 성과": "/dashboard/performance",
+    "리포트": "/dashboard/report",
   };
 
   const [hoveredSection, setHoveredSection] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
   const [selectedSubItem, setSelectedSubItem] = useState(null);
   const [hoveredSubItem, setHoveredSubItem] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const role = getUserRole();
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!accessToken);
+  }, [location.pathname]);
 
   // URL과 메뉴 매핑
   const urlToMenuMapping = {};
@@ -99,6 +105,10 @@ export default function SidebarNavigation() {
     }
   };
 
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
   return (
     <div className="sidebar">
       <div className="logo-container" onClick={() => navigate("/")}>
@@ -146,9 +156,15 @@ export default function SidebarNavigation() {
       </div>
 
       <div className="logout">
-        <div className="logout-button" onClick={handleLogout}>
-          로그아웃
-        </div>
+        {isLoggedIn ? (
+          <div className="logout-button" onClick={handleLogout}>
+            로그아웃
+          </div>
+        ) : (
+          <div className="logout-button" onClick={handleLogin}>
+            로그인
+          </div>
+        )}
       </div>
     </div>
   );
