@@ -455,17 +455,44 @@ const RepairWritePage = () => {
     
     if (files.length === 0) return;
 
-    // 이미지 파일만 처리
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    // 이미지 파일만 처리 및 추가 검증
+    const imageFiles = files.filter(file => {
+      // MIME 타입 확인
+      if (!file.type.startsWith('image/')) {
+        return false;
+      }
+      
+      // 파일 확장자 확인 (추가 검증)
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+      const fileName = file.name.toLowerCase();
+      const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+      
+      if (!hasValidExtension) {
+        console.warn(`잘못된 파일 확장자: ${file.name}`);
+        return false;
+      }
+      
+      return true;
+    });
     
     if (imageFiles.length === 0) {
-      alert('이미지 파일만 업로드 가능합니다.');
+      alert('이미지 파일만 업로드 가능합니다.\n지원 형식: JPG, JPEG, PNG, GIF, BMP, WebP');
       return;
+    }
+    
+    // 필터링된 파일 수와 원본 파일 수가 다르면 알림
+    if (imageFiles.length < files.length) {
+      const skippedCount = files.length - imageFiles.length;
+      alert(`${skippedCount}개의 파일이 이미지 파일이 아니어서 제외되었습니다.\n${imageFiles.length}개의 이미지 파일만 업로드합니다.`);
     }
 
     // Request ID가 있어야만 실제 업로드 가능
     if (editMode && existingQuote?.requestId) {
       // 수정 모드: 실제 업로드
+      console.log('=== 이미지 업로드 시작 ===');
+      console.log('Request ID:', existingQuote.requestId);
+      console.log('Upload files count:', imageFiles.length);
+      
       setUploading(true);
       try {
         const requestId = existingQuote.requestId;
@@ -499,7 +526,25 @@ const RepairWritePage = () => {
             }
           } catch (error) {
             console.error(`파일 업로드 실패: ${file.name}`, error);
-            alert(`${file.name} 업로드에 실패했습니다.`);
+            
+            // 상세한 에러 메시지 표시
+            let errorMessage = `${file.name} 업로드에 실패했습니다.`;
+            
+            if (error.response?.data?.message) {
+              errorMessage += `\n오류: ${error.response.data.message}`;
+            } else if (error.message) {
+              errorMessage += `\n오류: ${error.message}`;
+            }
+            
+            // 일반적인 오류 원인 가이드 추가
+            if (error.response?.status === 400) {
+              errorMessage += `\n\n가능한 원인:`;
+              errorMessage += `\n- 이미지 파일이 아닌 파일을 업로드했습니다`;
+              errorMessage += `\n- 파일 크기가 10MB를 초과했습니다`;
+              errorMessage += `\n- 수리 요청 정보가 올바르지 않습니다`;
+            }
+            
+            alert(errorMessage);
           }
         }
         
@@ -515,6 +560,11 @@ const RepairWritePage = () => {
         setUploading(false);
         event.target.value = '';
       }
+    } else if (editMode && !existingQuote?.requestId) {
+      // 수정 모드이지만 Request ID가 없는 경우
+      console.error('Request ID가 없습니다:', existingQuote);
+      alert('수리 요청 정보가 올바르지 않습니다. Request ID를 찾을 수 없습니다.\n페이지를 새로고침하거나 목록에서 다시 선택해주세요.');
+      return;
     } else {
       // 신규 작성 모드: 임시 저장 (견적서 저장 후 실제 업로드)
       setUploading(true);
