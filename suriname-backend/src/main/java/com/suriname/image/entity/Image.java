@@ -34,7 +34,7 @@ public class Image {
     private String fileUrl;
 
     @Lob
-    @Column(name = "image_data")
+    @Column(name = "image_data", columnDefinition = "LONGBLOB")
     @JsonIgnore
     private byte[] imageData;
 
