@@ -1,5 +1,6 @@
 package com.suriname.product.controller;
 
+import com.suriname.product.repository.CustomerProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ public class ProductController {
 	private final ProductService productService;
 	private final CategoryRepository categoryRepository;
 	private final ProductRepository productRepository;
+	private final CustomerProductRepository customerProductRepository;
 
 	// 전체 조회
 	@GetMapping
@@ -95,7 +97,6 @@ public class ProductController {
 
 	    return ResponseEntity.ok(result);
 	}
-
 
 	// 엑셀
 	@PostMapping("upload/excel")
