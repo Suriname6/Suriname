@@ -3,6 +3,7 @@ package com.suriname.request.entity;
 import com.suriname.customer.entity.Customer;
 import com.suriname.employee.entity.Employee;
 import com.suriname.product.entity.CustomerProduct;
+import com.suriname.payment.Payment;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -53,6 +54,10 @@ public class Request {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+    
+    // Payment와의 역방향 관계 매핑
+    @OneToOne(mappedBy = "request", fetch = FetchType.LAZY)
+    private Payment payment;
 
     public enum Status {
         RECEIVED,    // 접수

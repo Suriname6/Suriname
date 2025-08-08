@@ -44,4 +44,11 @@ public class RepairPresetController {
         repairPresetService.deactivatePreset(id);
         return ResponseEntity.noContent().build();
     }
+
+    // 수리내역 작성용 - 인증 없이 접근 가능
+    @GetMapping("/category/{categoryId}/active")
+    public ResponseEntity<List<PresetResponseDto>> getActivePresetsByCategory(@PathVariable Long categoryId) {
+        List<PresetResponseDto> presets = repairPresetService.getPresetsByCategory(categoryId);
+        return ResponseEntity.ok(presets);
+    }
 }

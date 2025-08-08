@@ -85,4 +85,19 @@ public class EmployeeController {
         EmployeeResponseDto responseDto = employeeService.updateRole(id, requestDto.getRole());
         return ResponseEntity.ok(responseDto);
     }
+
+    @GetMapping("/validate/name/{name}")
+    public ResponseEntity<Boolean> validateEmployeeName(@PathVariable String name) {
+        boolean exists = employeeService.existsByName(name);
+        return ResponseEntity.ok(exists);
+    }
+    
+    @GetMapping("/engineers")
+    public ResponseEntity<Page<EmployeeResponseDto>> getEngineers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        Page<EmployeeResponseDto> engineers = employeeService.getEngineersByRole(PageRequest.of(page, size));
+        return ResponseEntity.ok(engineers);
+    }
 }

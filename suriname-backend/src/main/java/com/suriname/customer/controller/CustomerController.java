@@ -120,5 +120,12 @@ public class CustomerController {
         return ResponseEntity.ok(results);
     }
 
+    // 고객명 검증
+    @GetMapping("/validate/name/{name}")
+    public ResponseEntity<Boolean> validateCustomerName(@PathVariable String name) {
+        boolean exists = customerService.existsByName(name);
+        return ResponseEntity.ok(exists);
+    }
+
 
 }

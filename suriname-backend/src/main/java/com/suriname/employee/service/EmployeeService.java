@@ -24,4 +24,8 @@ public interface EmployeeService {
 
     EmployeeResponseDto updateRole(Long employeeId, String role);
 
+    boolean existsByName(String name);
+    
+    Page<EmployeeResponseDto> getEngineersByRole(Pageable pageable);
+
 }
