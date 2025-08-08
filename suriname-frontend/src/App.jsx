@@ -29,12 +29,6 @@ import SatisfactionSurvey from "./pages/Public/SatisfactionSurvey";
 import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
 import RepairPresetPage from "./pages/Repair/RepairPresetPage";
-import PredictionDashboard from "./pages/Prediction/PredictionDashboard";
-import PredictionHistory from "./pages/Prediction/PredictionHistory";
-import PredictionPerformance from "./pages/Prediction/PredictionPerformance";
-import RepairTimePrediction from "./pages/Prediction/RepairTimePrediction";
-import DeliveryRiskPrediction from "./pages/Prediction/DeliveryRiskPrediction";
-import CustomerRetentionPrediction from "./pages/Prediction/CustomerRetentionPrediction";
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -86,14 +80,6 @@ function App() {
           <Route path="/delivery/satisfaction" element={<SatisfactionDashboard />} />
           <Route path="/completion/list" element={<CompletionList />} />
           <Route path="/completion/register" element={<CompletionRegister />} />
-          {/* Prediction Analysis Routes */}
-          <Route path="/predictions" element={<PredictionDashboard />} />
-          <Route path="/predictions/dashboard" element={<PredictionDashboard />} />
-          <Route path="/predictions/repair-time" element={<RepairTimePrediction />} />
-          <Route path="/predictions/delivery-risk" element={<DeliveryRiskPrediction />} />
-          <Route path="/predictions/customer-retention" element={<CustomerRetentionPrediction />} />
-          <Route path="/predictions/performance" element={<PredictionPerformance />} />
-          <Route path="/predictions/history" element={<PredictionHistory />} />
         </Route>
       </Routes>
     </Router>

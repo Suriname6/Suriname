@@ -28,12 +28,6 @@ export default function SidebarNavigation() {
     "완료 처리 등록": "/completion/register",
     /* "직원 목록": "/staff/list",
   "직원 가입 요청 목록": "/staff/requests",*/
-    "예측 대시보드": "/predictions/dashboard",
-    "A/S 처리시간 예측": "/predictions/repair-time",
-    "배송 지연 예측": "/predictions/delivery-risk",
-    "고객 재방문 예측": "/predictions/customer-retention",
-    "성능 관리": "/predictions/performance",
-    "예측 히스토리": "/predictions/history",
     "통계": "/dashboard/statistics",
     "담당자별 성과": "/dashboard/performance",
     "리포트": "/dashboard/report",
@@ -69,7 +63,6 @@ export default function SidebarNavigation() {
     "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
     "배송 관리": ["배송 목록", "배송 등록", "배송 분석", "만족도 조사"],
     "완료 처리": ["완료 처리 목록", "완료 처리 등록"],
-    "예측 분석": ["예측 대시보드", "A/S 처리시간 예측", "배송 지연 예측", "고객 재방문 예측", "성능 관리", "예측 히스토리"],
   };
 
   if (role === "ADMIN") {
