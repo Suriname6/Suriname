@@ -107,7 +107,8 @@ const CustomerList = () => {
 
   return (
     <div className={styles.container}>
-      <CustomerSearch 
+      <CustomerSearch
+        data={data}
         setData={setData} 
         setTotalPages={setTotalPages}
         itemsPerPage={itemsPerPage}
@@ -171,11 +172,11 @@ const CustomerList = () => {
                   <td>{item.phone}</td>
                   <td>{item.email}</td>
                   <td>{item.address}</td>
-                  <td>{item.product?.categoryName || "-"}</td>
-                  <td>{item.product?.productName || "-"}</td>
-                  <td>{item.product?.productBrand || "-"}</td>
-                  <td>{item.product?.modelCode || "-"}</td>
-                  <td>{item.product?.serialNumber || "-"}</td>
+                  <td>{item.categoryName || "-"}</td>
+                  <td>{item.productName || "-"}</td>
+                  <td>{item.productBrand || "-"}</td>
+                  <td>{item.modelCode || "-"}</td>
+                  <td>{item.serialNumber || "-"}</td>
                 </tr>
               ))
             ) : (

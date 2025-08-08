@@ -4,7 +4,10 @@ import com.algolia.api.SearchClient;
 import com.algolia.model.search.IndexSettings;
 // Ranking enum은 문자열로 직접 사용
 import com.suriname.customer.dto.CustomerListDto;
+import com.suriname.product.dto.ProductListDto;
+import com.suriname.product.dto.ProductSearchDto;
 import com.suriname.product.repository.CustomerProductRepository;
+import com.suriname.product.repository.ProductRepository;
 import io.github.cdimascio.dotenv.Dotenv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +28,11 @@ import java.util.Map;
 public class AlgoliaInitService {
 
     private final CustomerProductRepository customerProductRepository;
+    private final ProductRepository productRepository;
     
     // Algolia 설정
-    private static final String INDEX_NAME = "customers";
+    private static final String CUSTOMER_INDEX_NAME = "customers";
+    private static final String PRODUCT_INDEX_NAME = "products";
     private SearchClient client;
     private String algoliaAppId;
     private String algoliaAdminKey;
@@ -81,35 +86,35 @@ public class AlgoliaInitService {
     }
 
     private void configureIndex() {
+        List<String> COMMON_RANKING = Arrays.asList(
+                "typo", "geo", "words", "filters", "proximity", "attribute", "exact", "custom"
+        );
+
         try {
             // 인덱스 설정
-            IndexSettings settings = new IndexSettings()
+            IndexSettings createCustomerIndexSettings = new IndexSettings()
                     .setSearchableAttributes(Arrays.asList(
-                            "customerName",
-                            "phone",
-                            "email", 
-                            "address",
-                            "productName",
-                            "productBrand",
-                            "modelCode",
-                            "serialNumber"
+                            "customerName", "phone", "email", "address",
+                            "productName", "productBrand", "modelCode", "serialNumber"
                     ))
                     .setAttributesForFaceting(Arrays.asList(
                             "productBrand",
                             "categoryName"
                     ))
-                    .setRanking(Arrays.asList(
-                            "typo",
-                            "geo",
-                            "words",
-                            "filters",
-                            "proximity",
-                            "attribute",
-                            "exact",
-                            "custom"
-                    ));
+                    .setRanking(COMMON_RANKING);
 
-            client.setSettings(INDEX_NAME, settings);
+            IndexSettings createProductIndexSettings = new IndexSettings()
+                    .setSearchableAttributes(Arrays.asList(
+                            "categoryName", "productName", "productBrand", "modelCode"
+                    ))
+                    .setAttributesForFaceting(Arrays.asList(
+                            "productBrand",
+                            "categoryName"
+                    ))
+                    .setRanking(COMMON_RANKING);
+
+            client.setSettings(CUSTOMER_INDEX_NAME, createCustomerIndexSettings);
+            client.setSettings(PRODUCT_INDEX_NAME, createProductIndexSettings);
             log.info("Algolia 인덱스 설정을 완료했습니다.");
         } catch (Exception e) {
             log.error("인덱스 설정 중 오류: {}", e.getMessage());
@@ -142,18 +147,38 @@ public class AlgoliaInitService {
                 return;
             }
 
+            List<ProductListDto> productList = productRepository.findProductWithCategoryInfo()
+                    .stream()
+                    .map(row -> new ProductListDto(
+                            ((Long) row[0]), // productId
+                            (String) row[1], // productName
+                            (String) row[2], // categoryName
+                            (String) row[3], // productBrand
+                            (String) row[4]  // modelCode
+                    ))
+                    .toList();
+
             // DTO를 Algolia 문서 형태로 변환
-            List<Map<String, Object>> algoliaDocuments = customerList.stream()
-                    .map(this::convertToAlgoliaDocument)
+            List<Map<String, Object>> customerDocuments = customerList.stream()
+                    .map(this::convertToCustomerDocument)
+                    .toList();
+
+            List<Map<String, Object>> productDocuments = productList.stream()
+                    .map(this::convertToProductDocument)
                     .toList();
 
             // 기존 인덱스 데이터 삭제 후 새로 추가
-            client.clearObjects(INDEX_NAME);
+            client.clearObjects(CUSTOMER_INDEX_NAME);
+            client.clearObjects(PRODUCT_INDEX_NAME);
             log.info("기존 인덱스 데이터를 삭제했습니다.");
 
             // 새 데이터 배치 인덱싱
-            client.saveObjects(INDEX_NAME, algoliaDocuments);
-            log.info("{}건의 고객 데이터를 Algolia에 인덱싱했습니다.", algoliaDocuments.size());
+            client.saveObjects(CUSTOMER_INDEX_NAME, customerDocuments);
+            log.info("{}건의 고객 데이터를 Algolia에 인덱싱했습니다.", customerDocuments.size());
+            log.info("보낼 customerDocuments 전체 내용:\n{}", customerDocuments);
+            client.saveObjects(PRODUCT_INDEX_NAME, productDocuments);
+            log.info("{}건의 제품 데이터를 Algolia에 인덱싱했습니다.", productDocuments.size());
+            log.info("보낼 productDocuments 전체 내용:\n{}", productDocuments);
 
         } catch (Exception e) {
             log.error("데이터 인덱싱 중 오류: {}", e.getMessage());
@@ -161,11 +186,11 @@ public class AlgoliaInitService {
         }
     }
 
-    private Map<String, Object> convertToAlgoliaDocument(CustomerListDto dto) {
+    private Map<String, Object> convertToCustomerDocument(CustomerListDto dto) {
         Map<String, Object> document = new HashMap<>();
         
         // 고객 정보
-        document.put("objectID", dto.getCustomerId().toString());
+        document.put("objectID", dto.getCustomerId() + "-" + dto.getModelCode());
         document.put("customerId", dto.getCustomerId());
         document.put("customerName", dto.getCustomerName());
         document.put("phone", dto.getPhone());
@@ -180,6 +205,19 @@ public class AlgoliaInitService {
         document.put("modelCode", dto.getModelCode());
         document.put("serialNumber", dto.getSerialNumber());
         
+        return document;
+    }
+
+    private Map<String, Object> convertToProductDocument(ProductListDto dto) {
+        Map<String, Object> document = new HashMap<>();
+
+        document.put("objectID", dto.getProductId().toString());
+        // 제품 정보
+        document.put("productName", dto.getProductName());
+        document.put("categoryName", dto.getCategoryName());
+        document.put("productBrand", dto.getProductBrand());
+        document.put("modelCode", dto.getModelCode());
+
         return document;
     }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import styles from "../../css/Product/ProductList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import ProductSearchBar from "./ProductSearchBar";
+import ProductSearch from "../../components/Search/ProductSearch.jsx";
 import { useNavigate } from "react-router-dom";
 
 const ProductList = () => {
@@ -101,7 +101,13 @@ const ProductList = () => {
 
   return (
     <div className={styles.container}>
-      <ProductSearchBar onSearch={handleSearch} />
+      <ProductSearch
+          data={data}
+          setData={setData}
+          setTotalPages={setTotalPages}
+          itemsPerPage={itemsPerPage}
+          setCurrentPage={setCurrentPage}
+      />
 
       <div className={styles.tableHeader}>
         <div>
