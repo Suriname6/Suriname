@@ -134,8 +134,11 @@ const RepairWritePage = () => {
       console.log('견적서 데이터 로드 완료, 실제 수리비용 자동 동기화는 유지됨');
       
       // 기존 이미지 로드
-      if (existingQuote.request?.requestId) {
-        loadExistingImages(existingQuote.request.requestId);
+      if (existingQuote.requestId) {
+        console.log('기존 이미지 로드 시도:', existingQuote.requestId);
+        loadExistingImages(existingQuote.requestId);
+      } else {
+        console.warn('Quote에서 requestId를 찾을 수 없습니다:', existingQuote);
       }
     }
   }, [editMode, existingQuote]);
@@ -398,18 +401,39 @@ const RepairWritePage = () => {
     }
 
     try {
-      // 먼저 Request ID를 조회
-      const requestResponse = await axios.get(`/api/requests/validate/requestno/${encodeURIComponent(requestNo)}`);
-      if (!requestResponse.data) {
+      // Request ID 조회
+      const requestResponse = await axios.get(`/api/requests/requestid/${encodeURIComponent(requestNo)}`);
+      if (requestResponse.data.status !== 200) {
         throw new Error('Request ID를 찾을 수 없습니다.');
       }
 
-      // Request 엔티티에서 실제 requestId를 가져와야 함 - 다른 API 확인 필요
-      // 임시로 requestNo로 requestId를 추정하는 로직 또는 별도 API 호출 필요
-      console.log('임시 이미지 업로드 처리 필요:', tempImages.length, '개');
+      const requestId = requestResponse.data.data.requestId;
+      console.log('Request ID 조회 성공:', requestId);
       
-      // 실제 구현을 위해서는 Request 엔티티의 ID를 가져올 수 있는 API가 필요함
-      // 현재는 견적서가 성공적으로 저장되었으므로 임시 이미지는 제거
+      const successfulUploads = [];
+      
+      // 각 임시 이미지를 실제로 S3에 업로드
+      for (const tempImage of tempImages) {
+        try {
+          const formData = new FormData();
+          formData.append('file', tempImage.file);
+          
+          const uploadResponse = await axios.post(`/api/images/upload/${requestId}`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          
+          if (uploadResponse.data.status === 201) {
+            successfulUploads.push(uploadResponse.data.data.imageId);
+            console.log('이미지 업로드 성공:', tempImage.fileName, '-> imageId:', uploadResponse.data.data.imageId);
+          }
+        } catch (error) {
+          console.error(`이미지 업로드 실패: ${tempImage.fileName}`, error);
+        }
+      }
+      
+      // 성공적으로 업로드된 이미지들만 제거하고 메모리 정리
       setUploadedImages(prev => prev.filter(img => !img.file));
       
       // 메모리 정리
@@ -418,6 +442,8 @@ const RepairWritePage = () => {
           URL.revokeObjectURL(img.url);
         }
       });
+      
+      console.log('임시 이미지 업로드 완료:', successfulUploads.length, '/', tempImages.length, '성공');
 
     } catch (error) {
       console.error('임시 이미지 업로드 처리 실패:', error);
@@ -437,12 +463,12 @@ const RepairWritePage = () => {
       return;
     }
 
-    // Request ID가 있어야만 실제 S3 업로드 가능
-    if (editMode && existingQuote?.request?.requestId) {
-      // 수정 모드: 실제 S3 업로드
+    // Request ID가 있어야만 실제 업로드 가능
+    if (editMode && existingQuote?.requestId) {
+      // 수정 모드: 실제 업로드
       setUploading(true);
       try {
-        const requestId = existingQuote.request.requestId;
+        const requestId = existingQuote.requestId;
         const successfulUploads = [];
         
         for (const file of imageFiles) {
@@ -1062,20 +1088,43 @@ const RepairWritePage = () => {
             
             {uploadedImages.length > 0 && (
               <div className={styles.uploadedFiles}>
-                <h4>🖼️ 업로드된 이미지:</h4>
-                {uploadedImages.map(image => (
-                  <div key={image.imageId || image.id} className={styles.fileItem}>
-                    <span className={styles.fileName}>
-                      🖼️ {image.fileName || image.name} 
-                    </span>
-                    <button 
-                      className={styles.removeFileBtn}
-                      onClick={() => handleDeleteImage(image.imageId || image.id)}
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                ))}
+                <h4>📷 업로드된 이미지 ({uploadedImages.length}장):</h4>
+                <div className={styles.imageGallery}>
+                  {uploadedImages.map(image => (
+                    <div key={image.imageId || image.id} className={styles.imageItem}>
+                      <div className={styles.imagePreview}>
+                        <img
+                          src={image.url || (image.imageId ? `/api/images/view/${image.imageId}` : '')}
+                          alt={image.fileName || image.name}
+                          className={styles.previewImage}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        <div className={styles.imagePlaceholder} style={{ display: 'none' }}>
+                          <span>이미지를 불러올 수 없습니다</span>
+                        </div>
+                      </div>
+                      <div className={styles.imageInfo}>
+                        <div className={styles.imageName} title={image.fileName || image.name}>
+                          {image.fileName || image.name}
+                        </div>
+                        <div className={styles.imageSize}>
+                          {image.fileSize ? `${(image.fileSize / 1024).toFixed(1)} KB` : 
+                           image.size ? `${(image.size / 1024).toFixed(1)} KB` : ''}
+                        </div>
+                      </div>
+                      <button 
+                        className={styles.removeImageBtn}
+                        onClick={() => handleDeleteImage(image.imageId || image.id)}
+                        title="이미지 삭제"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
