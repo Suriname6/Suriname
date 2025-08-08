@@ -88,7 +88,7 @@ const ProductAdd = () => {
             }`}
             onClick={() => {
               setActiveTab("excel");
-              navigate("/product/upload/excel");
+              navigate("/product/register/excel");
             }}
           >
             엑셀 일괄 등록

@@ -28,7 +28,15 @@ const CustomerList = () => {
           },
         }
       );
-      setData(response.data.data.content);
+
+      const responseData = response.data.data.content;
+
+      const uniqueData = responseData.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t.customerId === item.customerId)
+      );
+
+      setData(uniqueData);
       setTotalPages(response.data.data.totalPages);
     } catch (err) {
       console.error("데이터 불러오기 실패:", err);
@@ -99,6 +107,10 @@ const CustomerList = () => {
     navigate(`/customer/detail/${customerId}`);
   };
 
+  useEffect(() => {
+    window._customers = data;
+  }, [data]);
+
   return (
     <div className={styles.container}>
       <CustomerSearch
@@ -145,9 +157,13 @@ const CustomerList = () => {
           </thead>
           <tbody>
             {data.length > 0 ? (
-              data.map((item) => (
+              data.map((item, index) => (
                 <tr
-                  key={item.customerId}
+                  key={
+                    item.serialNumber
+                      ? `${item.customerId}-${item.serialNumber}`
+                      : `${item.customerId}-index-${index}`
+                  }
                   className={styles.clickableRow}
                   onClick={(e) => handleRowClick(item.customerId, e)}
                 >
@@ -165,11 +181,11 @@ const CustomerList = () => {
                   <td>{item.phone}</td>
                   <td>{item.email}</td>
                   <td>{item.address}</td>
-                  <td>{item.product?.categoryName || "-"}</td>
-                  <td>{item.product?.productName || "-"}</td>
-                  <td>{item.product?.productBrand || "-"}</td>
-                  <td>{item.product?.modelCode || "-"}</td>
-                  <td>{item.product?.serialNumber || "-"}</td>
+                  <td>{item.categoryName || "-"}</td>
+                  <td>{item.productName || "-"}</td>
+                  <td>{item.productBrand || "-"}</td>
+                  <td>{item.modelCode || "-"}</td>
+                  <td>{item.serialNumber || "-"}</td>
                 </tr>
               ))
             ) : (

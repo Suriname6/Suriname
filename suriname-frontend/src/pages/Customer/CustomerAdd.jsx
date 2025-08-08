@@ -25,7 +25,7 @@ const CustomerAdd = () => {
 
   const handleTabClick = (tab) => {
     if (tab === "excel") {
-      navigate("/customer/upload/excel");
+      navigate("/customer/register/excel");
     }
   };
 

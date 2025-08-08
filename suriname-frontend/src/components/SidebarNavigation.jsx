@@ -10,9 +10,11 @@ export default function SidebarNavigation() {
 
   const routeMap = {
     "고객 목록": "/customer/list",
-    "고객 등록": "/customer/upload",
+    "고객 등록": "/customer/register",
     "제품 목록": "/product/list",
-    "제품 등록": "/product/upload",
+    "제품 등록": "/product/register",
+    "접수 목록": "/request/list",
+    "접수 등록": "/request/register",
     "수리 내역": "/repair/list",
     "수리 내역 작성": "/repair/write",
     "프리셋 등록": "/repair/preset",
@@ -43,9 +45,6 @@ export default function SidebarNavigation() {
     setIsLoggedIn(!!accessToken);
   }, [location.pathname]);
 
-  // URL과 메뉴 매핑
-  const urlToMenuMapping = {};
-
   // URL 변경 시 선택된 메뉴 상태 업데이트
   useEffect(() => {
     const currentPath = location.pathname;
@@ -71,6 +70,18 @@ export default function SidebarNavigation() {
     filteredMenu["직원 관리"] = ["직원 목록", "직원 가입 요청 목록"];
     filteredMenu["대시 보드"] = ["통계", "담당자별 성과", "리포트"];
   }
+
+  const urlToMenuMapping = {};
+  Object.entries(routeMap).forEach(([label, path]) => {
+    for (const [parent, subItems] of Object.entries(filteredMenu)) {
+      if (subItems.includes(label)) {
+        urlToMenuMapping[path] = {
+          parentMenu: parent,
+          subItem: label,
+        };
+      }
+    }
+  });
 
   const handleSubItemClick = (subItem, parentMenu) => {
     setSelectedSubItem(subItem);

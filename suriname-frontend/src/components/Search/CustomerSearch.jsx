@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import algoliasearch from 'algoliasearch/lite';
+import algoliasearch from "algoliasearch/lite";
 
 // 환경 변수 값 확인 (개발 중에는 로그 찍어보자)
 console.log(import.meta.env.VITE_ALGOLIA_APP_ID);
@@ -7,30 +7,35 @@ console.log(import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY);
 
 // Algolia 클라이언트 설정
 const searchClient = algoliasearch(
-    import.meta.env.VITE_ALGOLIA_APP_ID,
-    import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY
+  import.meta.env.VITE_ALGOLIA_APP_ID,
+  import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY
 );
 
 // 인덱스 객체 생성
-const index = searchClient.initIndex('customers');
+const index = searchClient.initIndex("customers");
 
 const manufacturers = ["삼성", "LG", "Apple"];
 
-const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }) => {
+const CustomerSearch = ({
+  setData,
+  setTotalPages,
+  itemsPerPage,
+  setCurrentPage,
+}) => {
   const [query, setQuery] = useState({
-    customerName: '',
-    address: '',
-    productName: '',
-    modelCode: '',
-    phone: '',
-    email: '',
+    customerName: "",
+    address: "",
+    productName: "",
+    modelCode: "",
+    phone: "",
+    email: "",
     manufacturers: [],
   });
 
   // 검색 결과 통계
   const [searchStats, setSearchStats] = useState({
     totalHits: 0,
-    processingTime: 0
+    processingTime: 0,
   });
 
   // 디바운스를 위한 타이머
@@ -41,11 +46,13 @@ const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }
     const filters = [];
 
     if (query.manufacturers.length > 0) {
-      const manufacturerFilters = query.manufacturers.map(m => `productBrand:"${m}"`);
-      filters.push(`(${manufacturerFilters.join(' OR ')})`);
+      const manufacturerFilters = query.manufacturers.map(
+        (m) => `productBrand:"${m}"`
+      );
+      filters.push(`(${manufacturerFilters.join(" OR ")})`);
     }
 
-    return filters.join(' AND ');
+    return filters.join(" AND ");
   }, [query.manufacturers]);
 
   // 검색 쿼리 빌드
@@ -56,10 +63,10 @@ const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }
       query.productName,
       query.modelCode,
       query.phone,
-      query.email
+      query.email,
     ].filter(Boolean);
 
-    return searchTerms.join(' ');
+    return searchTerms.join(" ");
   }, [query]);
 
   // Algolia 검색 수행
@@ -72,40 +79,46 @@ const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }
         hitsPerPage: 1000, // 최대 결과 수 (페이지네이션은 클라이언트에서 처리)
         filters: filters || undefined,
         attributesToRetrieve: [
-          'customerId',
-          'customerName', 
-          'birth',
-          'phone',
-          'email',
-          'address',
-          'categoryName',
-          'productName',
-          'productBrand',
-          'modelCode',
-          'serialNumber'
-        ]
+          "customerId",
+          "customerName",
+          "birth",
+          "phone",
+          "email",
+          "address",
+          "categoryName",
+          "productName",
+          "productBrand",
+          "modelCode",
+          "serialNumber",
+        ],
       };
 
       const response = await index.search(searchQuery, searchOptions);
-      
+
       // 검색 결과를 CustomerList에 전달
       setData(response.hits);
       setTotalPages(Math.ceil(response.hits.length / itemsPerPage));
       setCurrentPage(1);
-      
+
       // 검색 통계 업데이트
       setSearchStats({
         totalHits: response.nbHits,
-        processingTime: response.processingTimeMS
+        processingTime: response.processingTimeMS,
       });
-
     } catch (error) {
       console.error("Algolia 검색 실패:", error);
       setData([]);
       setTotalPages(0);
       setSearchStats({ totalHits: 0, processingTime: 0 });
     }
-  }, [buildSearchQuery, buildFilters, setData, setTotalPages, itemsPerPage, setCurrentPage]);
+  }, [
+    buildSearchQuery,
+    buildFilters,
+    setData,
+    setTotalPages,
+    itemsPerPage,
+    setCurrentPage,
+  ]);
 
   // 실시간 검색 (디바운스 적용)
   useEffect(() => {
@@ -132,18 +145,18 @@ const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }
   // 입력 변경 핸들러
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setQuery(prev => ({ ...prev, [name]: value }));
+    setQuery((prev) => ({ ...prev, [name]: value }));
   };
 
   // 제조사 체크박스 변경 핸들러
   const handleManufacturerChange = (manufacturer) => {
-    setQuery(prev => {
+    setQuery((prev) => {
       const exists = prev.manufacturers.includes(manufacturer);
       return {
         ...prev,
         manufacturers: exists
-          ? prev.manufacturers.filter(m => m !== manufacturer)
-          : [...prev.manufacturers, manufacturer]
+          ? prev.manufacturers.filter((m) => m !== manufacturer)
+          : [...prev.manufacturers, manufacturer],
       };
     });
   };
@@ -151,12 +164,12 @@ const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }
   // 검색 초기화
   const handleReset = () => {
     setQuery({
-      customerName: '',
-      address: '',
-      productName: '',
-      modelCode: '',
-      phone: '',
-      email: '',
+      customerName: "",
+      address: "",
+      productName: "",
+      modelCode: "",
+      phone: "",
+      email: "",
       manufacturers: [],
     });
   };
@@ -168,8 +181,8 @@ const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }
         <div className="text-sm text-gray-600">
           {searchStats.totalHits > 0 && (
             <span>
-              {searchStats.totalHits.toLocaleString()}개 결과 
-              ({searchStats.processingTime}ms)
+              {searchStats.totalHits.toLocaleString()}개 결과 (
+              {searchStats.processingTime}ms)
             </span>
           )}
         </div>
@@ -268,9 +281,9 @@ const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }
           제조사
         </label>
         <div className="flex flex-wrap gap-2">
-          {manufacturers.map(manufacturer => (
-            <label 
-              key={manufacturer} 
+          {manufacturers.map((manufacturer) => (
+            <label
+              key={manufacturer}
               className="inline-flex items-center cursor-pointer"
             >
               <input
@@ -293,7 +306,7 @@ const CustomerSearch = ({ setData, setTotalPages, itemsPerPage, setCurrentPage }
         >
           초기화
         </button>
-        
+
         <div className="text-xs text-gray-500">
           🔍 입력하신 내용에 따라 실시간으로 검색됩니다
         </div>
