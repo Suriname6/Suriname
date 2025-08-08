@@ -40,4 +40,30 @@ public class RequestController {
             ));
         }
     }
+
+    @GetMapping("/list")
+    public ResponseEntity<java.util.Map<String, Object>> getRequestList() {
+        try {
+            var requests = requestRepository.findAll();
+            var requestList = requests.stream().map(request -> 
+                java.util.Map.of(
+                    "requestId", request.getRequestId(),
+                    "requestNo", request.getRequestNo(),
+                    "status", request.getStatus(),
+                    "createdAt", request.getCreatedAt()
+                )
+            ).limit(10).toList(); // 최대 10개만 조회
+            
+            return ResponseEntity.ok(java.util.Map.of(
+                "status", 200,
+                "data", requestList,
+                "total", requests.size()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of(
+                "status", 500,
+                "message", "Request 목록 조회 중 오류가 발생했습니다: " + e.getMessage()
+            ));
+        }
+    }
 }

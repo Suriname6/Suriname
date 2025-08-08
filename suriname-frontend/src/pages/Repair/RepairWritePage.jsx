@@ -134,8 +134,11 @@ const RepairWritePage = () => {
       console.log('견적서 데이터 로드 완료, 실제 수리비용 자동 동기화는 유지됨');
       
       // 기존 이미지 로드
-      if (existingQuote.request?.requestId) {
-        loadExistingImages(existingQuote.request.requestId);
+      if (existingQuote.requestId) {
+        console.log('기존 이미지 로드 시도:', existingQuote.requestId);
+        loadExistingImages(existingQuote.requestId);
+      } else {
+        console.warn('Quote에서 requestId를 찾을 수 없습니다:', existingQuote);
       }
     }
   }, [editMode, existingQuote]);
@@ -460,12 +463,12 @@ const RepairWritePage = () => {
       return;
     }
 
-    // Request ID가 있어야만 실제 S3 업로드 가능
-    if (editMode && existingQuote?.request?.requestId) {
-      // 수정 모드: 실제 S3 업로드
+    // Request ID가 있어야만 실제 업로드 가능
+    if (editMode && existingQuote?.requestId) {
+      // 수정 모드: 실제 업로드
       setUploading(true);
       try {
-        const requestId = existingQuote.request.requestId;
+        const requestId = existingQuote.requestId;
         const successfulUploads = [];
         
         for (const file of imageFiles) {
@@ -1085,20 +1088,43 @@ const RepairWritePage = () => {
             
             {uploadedImages.length > 0 && (
               <div className={styles.uploadedFiles}>
-                <h4>🖼️ 업로드된 이미지:</h4>
-                {uploadedImages.map(image => (
-                  <div key={image.imageId || image.id} className={styles.fileItem}>
-                    <span className={styles.fileName}>
-                      🖼️ {image.fileName || image.name} 
-                    </span>
-                    <button 
-                      className={styles.removeFileBtn}
-                      onClick={() => handleDeleteImage(image.imageId || image.id)}
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                ))}
+                <h4>📷 업로드된 이미지 ({uploadedImages.length}장):</h4>
+                <div className={styles.imageGallery}>
+                  {uploadedImages.map(image => (
+                    <div key={image.imageId || image.id} className={styles.imageItem}>
+                      <div className={styles.imagePreview}>
+                        <img
+                          src={image.url || (image.imageId ? `/api/images/view/${image.imageId}` : '')}
+                          alt={image.fileName || image.name}
+                          className={styles.previewImage}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        <div className={styles.imagePlaceholder} style={{ display: 'none' }}>
+                          <span>이미지를 불러올 수 없습니다</span>
+                        </div>
+                      </div>
+                      <div className={styles.imageInfo}>
+                        <div className={styles.imageName} title={image.fileName || image.name}>
+                          {image.fileName || image.name}
+                        </div>
+                        <div className={styles.imageSize}>
+                          {image.fileSize ? `${(image.fileSize / 1024).toFixed(1)} KB` : 
+                           image.size ? `${(image.size / 1024).toFixed(1)} KB` : ''}
+                        </div>
+                      </div>
+                      <button 
+                        className={styles.removeImageBtn}
+                        onClick={() => handleDeleteImage(image.imageId || image.id)}
+                        title="이미지 삭제"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
