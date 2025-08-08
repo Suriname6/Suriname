@@ -1,5 +1,7 @@
 package com.suriname.customer.dto;
 
+
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -12,7 +14,7 @@ public class CustomerListDto {
     private String email;
     private String birth;
     private String address;
-
+    
     private String productName;
     private String categoryName;
     private String productBrand;

@@ -7,6 +7,7 @@ import com.querydsl.core.types.dsl.*;
 import com.querydsl.core.types.PathMetadata;
 import javax.annotation.processing.Generated;
 import com.querydsl.core.types.Path;
+import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
@@ -17,9 +18,11 @@ public class QRepairPreset extends EntityPathBase<RepairPreset> {
 
     private static final long serialVersionUID = -1535453390L;
 
+    private static final PathInits INITS = PathInits.DIRECT2;
+
     public static final QRepairPreset repairPreset = new QRepairPreset("repairPreset");
 
-    public final NumberPath<Long> categoryId = createNumber("categoryId", Long.class);
+    public final com.suriname.category.entity.QCategory category;
 
     public final NumberPath<Integer> cost = createNumber("cost", Integer.class);
 
@@ -32,15 +35,24 @@ public class QRepairPreset extends EntityPathBase<RepairPreset> {
     public final NumberPath<Long> repairPresetsId = createNumber("repairPresetsId", Long.class);
 
     public QRepairPreset(String variable) {
-        super(RepairPreset.class, forVariable(variable));
+        this(RepairPreset.class, forVariable(variable), INITS);
     }
 
     public QRepairPreset(Path<? extends RepairPreset> path) {
-        super(path.getType(), path.getMetadata());
+        this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
     }
 
     public QRepairPreset(PathMetadata metadata) {
-        super(RepairPreset.class, metadata);
+        this(metadata, PathInits.getFor(metadata, INITS));
+    }
+
+    public QRepairPreset(PathMetadata metadata, PathInits inits) {
+        this(RepairPreset.class, metadata, inits);
+    }
+
+    public QRepairPreset(Class<? extends RepairPreset> type, PathMetadata metadata, PathInits inits) {
+        super(type, metadata, inits);
+        this.category = inits.isInitialized("category") ? new com.suriname.category.entity.QCategory(forProperty("category"), inits.get("category")) : null;
     }
 
 }

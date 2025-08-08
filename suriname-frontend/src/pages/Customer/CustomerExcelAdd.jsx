@@ -39,14 +39,6 @@ const CustomerExcelAdd = () => {
     formData.append("file", uploadedFiles[0]);
 
     try {
-<<<<<<< HEAD
-      const response = await axios.post(
-        "/api/customers/upload/excel",
-        formData
-      );
-      alert("업로드 성공!");
-      console.log(response.data);
-=======
       const response = await api.post("/api/customers/upload/excel", formData);
       const { successCount, failures } = response.data.data;
 
@@ -63,7 +55,6 @@ const CustomerExcelAdd = () => {
 
       alert(message);
       setUploadedFiles([]);
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
     } catch (error) {
       console.error("업로드 실패:", error);
       alert(
@@ -97,7 +88,7 @@ const CustomerExcelAdd = () => {
               handleTabClick("excel");
             }}
           >
-            액셀 일괄 등록
+            엑셀 일괄 등록
           </button>
         </div>
       </div>
@@ -130,8 +121,8 @@ const CustomerExcelAdd = () => {
         <div className={styles.uploadSection}>
           <h2 className={styles.sectionTitle}>데이터 삽입</h2>
           <p className={styles.uploadDescription}>
-            Please upload files in pdf, docx or doc format and make sure the
-            file size is under 25 MB.
+            .xlsx 또는 .xls 형식의 파일만 업로드 가능하며, 25MB 이하로
+            제한됩니다.
           </p>
 
           <ExcelUploadBox

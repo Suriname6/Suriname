@@ -1,0 +1,198 @@
+import React, { useState, useEffect } from "react";
+import axios from "../../api/axiosInstance";
+import styles from "../../css/StaffList.module.css";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import StaffSearchBar from "./StaffSearchBar";
+
+const StaffRequestPage = () => { 
+  const [data, setData] = useState([]);
+  const [searchConditions, setSearchConditions] = useState({
+    name: "",
+    loginId: "",
+    email: "",
+    phone: "",
+    address: "",
+    status: "",
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const navigate = useNavigate();
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    fetchPendingStaff(searchConditions);
+  }, [currentPage, searchConditions]);
+
+  const fetchPendingStaff = async (conditions) => {
+    try {
+      const res = await axios.get("/api/users/pending", {
+        params: {
+          ...conditions,
+          page: currentPage - 1,
+          size: itemsPerPage,
+        },
+      });
+
+      setData(res.data.content);
+      setTotalPages(res.data.totalPages);
+      setSelectAll(false);
+      setSelectedItems(new Set());
+    } catch (err) {
+      console.error("승인 대기 직원 목록 불러오기 실패:", err);
+    }
+  };
+
+  const handleSearch = (searchData) => {
+    setSearchConditions(searchData);
+    setCurrentPage(1);
+  };
+
+  const handleSelectAll = (checked) => {
+    setSelectAll(checked);
+    const newSet = checked ? new Set(data.map((item) => item.employeeId)) : new Set();
+    setSelectedItems(newSet);
+  };
+
+  const handleSelectItem = (id, checked) => {
+    const newSet = new Set(selectedItems);
+    checked ? newSet.add(id) : newSet.delete(id);
+    setSelectedItems(newSet);
+    setSelectAll(newSet.size === data.length);
+  };
+
+  const handleRowClick = (employeeId, event) => {
+    if (event.target.type === "checkbox") return;
+    navigate(`/staff/approval/${employeeId}`);
+  };
+
+  const handleApprove = async () => {
+    if (selectedItems.size === 0) {
+      alert("승인할 직원을 선택해주세요.");
+      return;
+    }
+
+    const confirm = window.confirm(`${selectedItems.size}명 직원을 승인 처리하시겠습니까?`);
+    if (!confirm) return;
+
+    try {
+      const ids = Array.from(selectedItems);
+      for (const id of ids) {
+        await axios.put(`/api/users/${id}`, {
+          role: "STAFF",
+        });
+      }
+
+      alert(`${ids.length}명 직원이 승인되었습니다.`);
+      fetchPendingStaff(searchConditions);
+    } catch (err) {
+      console.error("승인 실패:", err);
+      alert("승인 처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  const formatDate = (dateTimeString) => {
+    return dateTimeString?.split("T")[0] ?? "";
+  };
+
+  return (
+    <div className={styles.container}>
+      <h2>승인 대기 직원 목록</h2>
+
+      <StaffSearchBar onSearch={handleSearch} />
+
+      <div className={styles.tableHeader}>
+        <div>
+          <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={(e) => handleSelectAll(e.target.checked)}
+          />
+          <span>전체 선택</span>
+        </div>
+        <div className={styles.deleteButtonWrapper}>
+          <button onClick={handleApprove} className={styles.deleteButton}>
+            승인하기
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th></th>
+              <th>직원명</th>
+              <th>로그인ID</th>
+              <th>이메일</th>
+              <th>연락처</th>
+              <th>생년월일</th>
+              <th>계정생성일</th>
+              <th>계정수정일</th>
+              <th>계정상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.isArray(data) && data.length > 0 ? (
+              data.map((item) => (
+                <tr
+                  key={item.employeeId}
+                  className={styles.clickableRow}
+                  onClick={(e) => handleRowClick(item.employeeId, e)}
+                >
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.has(item.employeeId)}
+                      onChange={(e) => handleSelectItem(item.employeeId, e.target.checked)}
+                    />
+                  </td>
+                  <td>{item.name}</td>
+                  <td>{item.loginId}</td>
+                  <td>{item.email}</td>
+                  <td>{item.phone}</td>
+                  <td>{item.birth}</td>
+                  <td>{formatDate(item.createdAt)}</td>
+                  <td>{formatDate(item.updatedAt)}</td>
+                  <td>{item.status === "ACTIVE" ? "활성" : "비활성"}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="9" className={styles.emptyState}>
+                  <h3>승인 대기 중인 직원이 없습니다</h3>
+                  <p>신규 등록된 직원을 기다려주세요.</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className={styles.pagination}>
+        <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+          <ChevronLeft />
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i + 1}
+            onClick={() => setCurrentPage(i + 1)}
+            className={currentPage === i + 1 ? styles.activePage : ""}
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRight />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default StaffRequestPage;

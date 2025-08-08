@@ -23,26 +23,30 @@ export default function SidebarNavigation() {
     "배송 목록": "/delivery/list",
     "배송 등록": "/delivery/register",
     "배송 분석": "/delivery/analytics",
-    "만족도 조사": "/delivery/satisfaction",
     "완료 처리 목록": "/completion/list",
     "완료 처리 등록": "/completion/register",
-    /* "직원 목록": "/staff/list",
-  "직원 가입 요청 목록": "/staff/requests",*/
-    "통계": "/dashboard/statistics",
+    "직원 목록": "/staff/list",
+    "직원 가입 요청 목록": "/staff/requests",
+    통계: "/dashboard/statistics",
     "담당자별 성과": "/dashboard/performance",
-    "리포트": "/dashboard/report",
+    리포트: "/dashboard/report",
   };
 
   const [hoveredSection, setHoveredSection] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
   const [selectedSubItem, setSelectedSubItem] = useState(null);
   const [hoveredSubItem, setHoveredSubItem] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const role = getUserRole();
 
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!accessToken);
+  }, [location.pathname]);
+
   // URL과 메뉴 매핑
   const urlToMenuMapping = {};
-
 
   // URL 변경 시 선택된 메뉴 상태 업데이트
   useEffect(() => {
@@ -61,7 +65,7 @@ export default function SidebarNavigation() {
     "A/S 접수": ["접수 목록", "접수 등록"],
     "수리 처리": ["수리 내역", "수리 내역 작성", "프리셋 등록"],
     "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
-    "배송 관리": ["배송 목록", "배송 등록", "배송 분석", "만족도 조사"],
+    "배송 관리": ["배송 목록", "배송 등록", "배송 분석"],
     "완료 처리": ["완료 처리 목록", "완료 처리 등록"],
   };
 
@@ -98,6 +102,10 @@ export default function SidebarNavigation() {
     } catch (error) {
       console.error("로그아웃 실패:", error);
     }
+  };
+
+  const handleLogin = () => {
+    navigate("/login");
   };
 
   return (
@@ -147,9 +155,15 @@ export default function SidebarNavigation() {
       </div>
 
       <div className="logout">
-        <div className="logout-button" onClick={handleLogout}>
-          로그아웃
-        </div>
+        {isLoggedIn ? (
+          <div className="logout-button" onClick={handleLogout}>
+            로그아웃
+          </div>
+        ) : (
+          <div className="logout-button" onClick={handleLogin}>
+            로그인
+          </div>
+        )}
       </div>
     </div>
   );

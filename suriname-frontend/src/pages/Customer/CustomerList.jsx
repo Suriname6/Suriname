@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import styles from "../../css/Customer/CustomerList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import CustomerSearchBar from "./CustomerSearchBar";
+import CustomerSearch from "../../components/Search/CustomerSearch";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-=======
 import { useCallback } from "react";
 import api from "../../api/api";
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 
 const CustomerList = () => {
   const [data, setData] = useState([]);
@@ -19,11 +16,7 @@ const CustomerList = () => {
   const navigate = useNavigate();
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchCustomerData();
-  }, [currentPage, searchConditions]);
-
-  const fetchCustomerData = async () => {
+  const fetchCustomerData = useCallback(async () => {
     try {
       const response = await api.post(
         "/api/customers/search",
@@ -40,7 +33,11 @@ const CustomerList = () => {
     } catch (err) {
       console.error("데이터 불러오기 실패:", err);
     }
-  };
+  }, [currentPage, searchConditions]);
+
+  useEffect(() => {
+    fetchCustomerData();
+  }, [fetchCustomerData]);
 
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
@@ -104,9 +101,6 @@ const CustomerList = () => {
 
   return (
     <div className={styles.container}>
-<<<<<<< HEAD
-      <CustomerSearchBar onSearch={handleSearch} />
-=======
       <CustomerSearch
         data={data}
         setData={setData} 
@@ -114,7 +108,6 @@ const CustomerList = () => {
         itemsPerPage={itemsPerPage}
         setCurrentPage={setCurrentPage}
       />
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 
       <div className={styles.tableHeader}>
         <div>
@@ -173,19 +166,11 @@ const CustomerList = () => {
                   <td>{item.phone}</td>
                   <td>{item.email}</td>
                   <td>{item.address}</td>
-<<<<<<< HEAD
-                  <td>{item.categoryName}</td>
-                  <td>{item.productName}</td>
-                  <td>{item.productBrand}</td>
-                  <td>{item.modelCode}</td>
-                  <td>{item.serialNumber}</td>
-=======
                   <td>{item.categoryName || "-"}</td>
                   <td>{item.productName || "-"}</td>
                   <td>{item.productBrand || "-"}</td>
                   <td>{item.modelCode || "-"}</td>
                   <td>{item.serialNumber || "-"}</td>
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
                 </tr>
               ))
             ) : (

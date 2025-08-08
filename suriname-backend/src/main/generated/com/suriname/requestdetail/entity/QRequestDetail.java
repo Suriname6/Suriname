@@ -55,7 +55,7 @@ public class QRequestDetail extends EntityPathBase<RequestDetail> {
     public QRequestDetail(Class<? extends RequestDetail> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.employee = inits.isInitialized("employee") ? new com.suriname.employee.entity.QEmployee(forProperty("employee")) : null;
-        this.repairPreset = inits.isInitialized("repairPreset") ? new com.suriname.repairpreset.entity.QRepairPreset(forProperty("repairPreset")) : null;
+        this.repairPreset = inits.isInitialized("repairPreset") ? new com.suriname.repairpreset.entity.QRepairPreset(forProperty("repairPreset"), inits.get("repairPreset")) : null;
         this.request = inits.isInitialized("request") ? new com.suriname.request.entity.QRequest(forProperty("request"), inits.get("request")) : null;
     }
 

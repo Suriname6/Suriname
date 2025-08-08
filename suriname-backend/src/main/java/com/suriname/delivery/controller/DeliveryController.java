@@ -123,18 +123,6 @@ public class DeliveryController {
                     .body(Map.of("status", 400, "message", e.getMessage()));
         }
     }
-
-    // 배송 분석 데이터 조회
-    @GetMapping("/analytics")
-    public ResponseEntity<?> getDeliveryAnalytics() {
-        try {
-            Map<String, Object> analytics = deliveryService.getDeliveryAnalytics();
-            return ResponseEntity.ok(Map.of("status", 200, "data", analytics));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("status", 500, "message", e.getMessage()));
-        }
-    }
 }
 
 // 고객 공개용 배송 조회 Controller (별도)

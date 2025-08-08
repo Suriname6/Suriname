@@ -19,6 +19,8 @@ public class QEmployee extends EntityPathBase<Employee> {
 
     public static final QEmployee employee = new QEmployee("employee");
 
+    public final StringPath address = createString("address");
+
     public final DatePath<java.time.LocalDate> birth = createDate("birth", java.time.LocalDate.class);
 
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);

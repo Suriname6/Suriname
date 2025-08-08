@@ -30,6 +30,8 @@ public class QCustomerProduct extends EntityPathBase<CustomerProduct> {
 
     public final QProduct product;
 
+    public final StringPath serialNumber = createString("serialNumber");
+
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
     public QCustomerProduct(String variable) {

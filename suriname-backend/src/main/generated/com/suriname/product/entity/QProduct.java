@@ -26,7 +26,11 @@ public class QProduct extends EntityPathBase<Product> {
 
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
 
+    public final BooleanPath isDeleted = createBoolean("isDeleted");
+
     public final BooleanPath isVisible = createBoolean("isVisible");
+
+    public final StringPath memo = createString("memo");
 
     public final StringPath modelCode = createString("modelCode");
 
@@ -35,8 +39,6 @@ public class QProduct extends EntityPathBase<Product> {
     public final NumberPath<Long> productId = createNumber("productId", Long.class);
 
     public final StringPath productName = createString("productName");
-
-    public final StringPath serialNumber = createString("serialNumber");
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 

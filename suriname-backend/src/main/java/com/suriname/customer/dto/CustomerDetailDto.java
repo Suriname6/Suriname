@@ -1,8 +1,7 @@
 package com.suriname.customer.dto;
 
-import java.util.List;
 
-import com.suriname.product.dto.ProductDto;
+import com.suriname.product.dto.CustomerProductDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,5 +22,5 @@ public class CustomerDetailDto {
 	    private String address;
 	    private String birth;
 	    private String status;
-	    private List<ProductDto> products;
+	    private CustomerProductDto product;
 }

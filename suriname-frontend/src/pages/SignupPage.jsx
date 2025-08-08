@@ -36,7 +36,7 @@ function SignupPage() {
     }
 
     try {
-      await axios.post("/employee/signup", formData);
+      await axios.post("/api/users", formData);
       alert("회원가입이 완료되었습니다. 로그인 해주세요!");
       navigate("/login");
       setFormData({
@@ -154,7 +154,7 @@ function SignupPage() {
             value={formData.phone}
             onChange={handleChange}
             required
-            placeholder="- 없이 입력"
+            placeholder="-를 포함해 입력"
           />
         </div>
 
