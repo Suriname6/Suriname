@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import styles from "../../css/Customer/CustomerList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import CustomerSearchBar from "./CustomerSearchBar";
 import { useNavigate } from "react-router-dom";
+<<<<<<< HEAD
+=======
+import { useCallback } from "react";
+import api from "../../api/api";
+>>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 
 const CustomerList = () => {
   const [data, setData] = useState([]);
-  const [searchConditions, setSearchConditions] = useState({});
+  const [searchConditions] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedItems, setSelectedItems] = useState(new Set());
@@ -21,7 +25,7 @@ const CustomerList = () => {
 
   const fetchCustomerData = async () => {
     try {
-      const response = await axios.post(
+      const response = await api.post(
         "/api/customers/search",
         searchConditions,
         {
@@ -36,11 +40,6 @@ const CustomerList = () => {
     } catch (err) {
       console.error("데이터 불러오기 실패:", err);
     }
-  };
-
-  const handleSearch = (searchData) => {
-    setCurrentPage(1);
-    setSearchConditions(searchData);
   };
 
   const handleSelectAll = (checked) => {
@@ -73,11 +72,11 @@ const CustomerList = () => {
       if (selectedItems.size === 1) {
         // 단건 삭제
         const id = Array.from(selectedItems)[0];
-        await axios.delete(`/api/customers/delete/${id}`);
+        await api.delete(`/api/customers/delete/${id}`);
         alert("1개 항목이 삭제되었습니다.");
       } else {
         // 다건 삭제
-        await axios.post("/api/customers/delete", Array.from(selectedItems), {
+        await api.post("/api/customers/delete", Array.from(selectedItems), {
           headers: {
             "Content-Type": "application/json",
           },
@@ -97,7 +96,6 @@ const CustomerList = () => {
   };
 
   const handleRowClick = (customerId, event) => {
-    // 체크박스 클릭 시에는 네비게이션 방지
     if (event.target.type === "checkbox") {
       return;
     }
@@ -106,7 +104,17 @@ const CustomerList = () => {
 
   return (
     <div className={styles.container}>
+<<<<<<< HEAD
       <CustomerSearchBar onSearch={handleSearch} />
+=======
+      <CustomerSearch
+        data={data}
+        setData={setData} 
+        setTotalPages={setTotalPages}
+        itemsPerPage={itemsPerPage}
+        setCurrentPage={setCurrentPage}
+      />
+>>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 
       <div className={styles.tableHeader}>
         <div>
@@ -165,11 +173,19 @@ const CustomerList = () => {
                   <td>{item.phone}</td>
                   <td>{item.email}</td>
                   <td>{item.address}</td>
+<<<<<<< HEAD
                   <td>{item.categoryName}</td>
                   <td>{item.productName}</td>
                   <td>{item.productBrand}</td>
                   <td>{item.modelCode}</td>
                   <td>{item.serialNumber}</td>
+=======
+                  <td>{item.categoryName || "-"}</td>
+                  <td>{item.productName || "-"}</td>
+                  <td>{item.productBrand || "-"}</td>
+                  <td>{item.modelCode || "-"}</td>
+                  <td>{item.serialNumber || "-"}</td>
+>>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
                 </tr>
               ))
             ) : (

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import styles from "../../css/Customer/CustomerDetail.module.css";
+import api from "../../api/api";
 
 const CustomerDetail = () => {
   const { id } = useParams();
@@ -14,7 +14,7 @@ const CustomerDetail = () => {
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
-        const res = await axios.get(`/api/customers/${id}`);
+        const res = await api.get(`/api/customers/${id}`);
         setFormData(res.data.data);
         setOriginalData(res.data.data);
         setProduct(res.data.data.products?.[0] || null);
@@ -63,11 +63,27 @@ const CustomerDetail = () => {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
+<<<<<<< HEAD
+=======
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/api/categories");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("카테고리 불러오기 실패:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+>>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
   // 저장 함수
   const handleSave = async () => {
     try {
       const saveData = { ...formData, product: product };
-      await axios.put(`/api/customers/${id}`, saveData);
+      await api.put(`/api/customers/${id}`, saveData);
       alert("저장되었습니다.");
       setOriginalData(saveData);
       setIsDirty(false);

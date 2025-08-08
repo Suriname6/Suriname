@@ -2,7 +2,7 @@ package com.suriname.payment;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.suriname.request.entity.Request;
-import com.suriname.request.entity.RequestRepository;
+import com.suriname.request.repository.RequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;

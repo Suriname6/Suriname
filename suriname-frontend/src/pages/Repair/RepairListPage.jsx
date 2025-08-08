@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SidebarNavigation from '../../components/SidebarNavigation';
+import { getQuotes, deleteQuotes } from '../../api/quote';
 import styles from '../../css/Repair/RepairList.module.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const RepairListPage = () => {
+  const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
     customerName: '',
-    company: '',
+    requestNo: '',
     productName: '',
-    productSerialNumber: '',
-    receptionCompany: '',
-    receptionStatus: '',
-    receptionTechnician: '',
+    serialNumber: '',
+    isApproved: '',
+    employeeName: '',
     startDate: '',
     endDate: ''
   });
 
-  const [repairs, setRepairs] = useState([]);
+  const [quotes, setQuotes] = useState([]);
   const [pagination, setPagination] = useState({
     currentPage: 0,
     totalPages: 0,
@@ -25,85 +27,77 @@ const RepairListPage = () => {
     first: true,
     last: true
   });
-  const [selectedRepairs, setSelectedRepairs] = useState([]);
+  const [selectedQuotes, setSelectedQuotes] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [searchVisible, setSearchVisible] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // 샘플 데이터 (실제 API 연동 전 테스트용)
-  const sampleRepairs = [
-    {
-      id: 1,
-      serialNumber: 'AWS-250723-001',
-      customerName: '김민수',
-      productName: '아수스 G14',
-      productSerialNumber: 'SN-12345',
-      receptionDate: '2025-07-23',
-      repairStatus: '수리중',
-      repairTechnician: '이기사',
-      paymentStatus: '완료'
-    },
-    // 더미 데이터 생성
-    ...Array.from({ length: 9 }, (_, i) => ({
-      id: i + 2,
-      serialNumber: 'AWS-250723-001',
-      customerName: '김민수',
-      productName: '아수스 G14',
-      productSerialNumber: 'SN-12345',
-      receptionDate: '2025-07-23',
-      repairStatus: '수리중',
-      repairTechnician: '이기사',
-      paymentStatus: '완료'
-    }))
-  ];
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
-    fetchRepairs();
-  }, [pagination.currentPage]);
+    fetchQuotes();
+  }, []);
 
-  // API 호출 함수 (현재 샘플 데이터 사용)
-  const fetchRepairs = async (searchParams = null) => {
+  // API 호출 함수들
+  const fetchQuotes = async (searchParams = null) => {
     setLoading(true);
     try {
-      // 실제 API 호출 시 이 부분을 변경
-      setTimeout(() => {
-        setRepairs(sampleRepairs);
-        setPagination({
-          currentPage: 0,
-          totalPages: 2,
-          totalElements: sampleRepairs.length,
-          size: 10,
-          first: true,
-          last: false
-        });
-        setLoading(false);
-      }, 500);
+      const params = {
+        page: pagination.currentPage,
+        size: pagination.size,
+        ...(searchParams || searchData)
+      };
+
+      // 빈 값 제거
+      Object.keys(params).forEach(key => {
+        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+          delete params[key];
+        }
+      });
+
+      console.log('Fetching quotes with params:', params);
+
+      const data = await getQuotes(params);
+      console.log('Response data:', data);
+      
+      if (!data) {
+              throw new Error('서버에서 데이터를 받지 못했습니다');
+            }
+      
+      setQuotes(data.content || []);
+      setPagination({
+        currentPage: data.currentPage || 0,
+        totalPages: data.totalPages || 0,
+        totalElements: data.totalElements || 0,
+        size: data.size || 10,
+        first: data.first !== false,
+        last: data.last !== false
+      });
     } catch (error) {
-      console.error('Error fetching repairs:', error);
-      alert(`데이터 조회 오류: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
-      setLoading(false);
+      console.error('Error fetching quotes:', error);
+      alert(`데이터 로드 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
+    setLoading(false);
   };
 
-  const deleteSelectedRepairs = async () => {
-    if (selectedRepairs.length === 0) {
-      alert('선택된 항목이 없습니다.');
+  const deleteSelectedQuotes = async () => {
+    if (selectedQuotes.length === 0) {
+      alert('삭제할 항목을 선택해주세요.');
       return;
     }
 
-    if (!confirm(`선택된 ${selectedRepairs.length}개 항목을 삭제하시겠습니까?`)) {
+    if (!confirm(`선택된 ${selectedQuotes.length}개의 항목을 삭제하시겠습니까?`)) {
       return;
     }
 
     try {
-      // 실제 삭제 API 호출
+      await deleteQuotes(selectedQuotes);
       alert('선택된 항목이 삭제되었습니다.');
-      setSelectedRepairs([]);
+      setSelectedQuotes([]);
       setSelectAll(false);
-      fetchRepairs();
+      fetchQuotes();
     } catch (error) {
-      console.error('Error deleting repairs:', error);
+      console.error('Error deleting quotes:', error);
       alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     }
   };
@@ -118,7 +112,7 @@ const RepairListPage = () => {
 
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, currentPage: 0 }));
-    fetchRepairs(searchData);
+    fetchQuotes(searchData);
   };
 
   const handlePageChange = (page) => {
@@ -127,22 +121,22 @@ const RepairListPage = () => {
 
   const handleSelectAll = () => {
     if (selectAll) {
-      setSelectedRepairs([]);
+      setSelectedQuotes([]);
     } else {
-      setSelectedRepairs(repairs.map(repair => repair.id));
+      setSelectedQuotes(quotes.map(quote => quote.quoteId));
     }
     setSelectAll(!selectAll);
   };
 
-  const handleSelectRepair = (repairId) => {
-    setSelectedRepairs(prev => {
-      if (prev.includes(repairId)) {
-        const newSelected = prev.filter(id => id !== repairId);
+  const handleSelectQuote = (quoteId) => {
+    setSelectedQuotes(prev => {
+      if (prev.includes(quoteId)) {
+        const newSelected = prev.filter(id => id !== quoteId);
         setSelectAll(false);
         return newSelected;
       } else {
-        const newSelected = [...prev, repairId];
-        setSelectAll(newSelected.length === repairs.length);
+        const newSelected = [...prev, quoteId];
+        setSelectAll(newSelected.length === quotes.length);
         return newSelected;
       }
     });
@@ -152,9 +146,45 @@ const RepairListPage = () => {
     setSearchVisible(!searchVisible);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return dateString;
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return '-';
+    const date = new Date(dateTime);
+    return date.toLocaleString('ko-KR', {
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(/\./g, '-').replace(/, /g, ' ');
+  };
+
+  const formatCurrency = (amount) => {
+    if (!amount) return '-';
+    return amount.toLocaleString('ko-KR');
+  };
+
+  const formatStatus = (status) => {
+    if (!status) return '수리중';
+    
+    const statusMap = {
+      'IN_PROGRESS': '수리중',
+      'AWAITING_PAYMENT': '입금 대기',
+      'READY_FOR_DELIVERY': '배송 대기',
+      'COMPLETED': '완료'
+    };
+    
+    return statusMap[status] || status;
+  };
+
+  const handleRowClick = (quote) => {
+    // 수리 내역 작성 페이지로 이동하면서 데이터 전달
+    console.log('클릭된 견적:', quote);
+    navigate('/repair/write', { 
+      state: { 
+        quote: quote,
+        mode: 'edit' // 상세보기/편집 모드임을 나타냄
+      } 
+    });
   };
 
   return (
@@ -197,53 +227,53 @@ const RepairListPage = () => {
               </div>
               
               <div className={styles.searchField}>
-                <label>제품 고유번호</label>
+                <label>제품고유번호</label>
                 <input
                   type="text"
                   placeholder="입력"
-                  value={searchData.productSerialNumber}
-                  onChange={(e) => handleInputChange('productSerialNumber', e.target.value)}
+                  value={searchData.serialNumber}
+                  onChange={(e) => handleInputChange('serialNumber', e.target.value)}
                 />
               </div>
               <div className={styles.searchField}>
-                              <label>담당 기사</label>
-                              <input
-                                type="text"
-                                placeholder="입력"
-                                value={searchData.receptionTechnician}
-                                onChange={(e) => handleInputChange('receptionTechnician', e.target.value)}
-                              />
-                            </div>
+                <label>접수기사</label>
+                <input
+                  type="text"
+                  placeholder="입력"
+                  value={searchData.employeeName}
+                  onChange={(e) => handleInputChange('employeeName', e.target.value)}
+                />
+              </div>
             </div>
             
             <div className={styles.searchRow}>
 
               
               <div className={styles.searchField}>
-                <label>접수 상태</label>
-                <input
-                  type="text"
-                  placeholder="입력"
-                  value={searchData.receptionStatus}
-                  onChange={(e) => handleInputChange('receptionStatus', e.target.value)}
-                />
+                <label>승인상태</label>
+                <select
+                  value={searchData.isApproved}
+                  onChange={(e) => handleInputChange('isApproved', e.target.value)}
+                >
+                  <option value="">전체</option>
+                  <option value="승인">승인</option>
+                  <option value="미승인">미승인</option>
+                </select>
               </div>
               
               <div className={styles.searchField}>
-                <label>접수 날짜</label>
+                <label>접수일자</label>
                 <input
                   type="date"
-                  placeholder="yyyy-mm-dd"
                   value={searchData.startDate}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
                 />
               </div>
               
               <div className={styles.searchField}>
-                <label>종료 날짜</label>
+                <label>　</label>
                 <input
                   type="date"
-                  placeholder="yyyy-mm-dd"
                   value={searchData.endDate}
                   onChange={(e) => handleInputChange('endDate', e.target.value)}
                 />
@@ -267,8 +297,8 @@ const RepairListPage = () => {
           <span>전체 선택</span>
         </div>
         <div className={styles.deleteButtonWrapper}>
-          <button onClick={deleteSelectedRepairs} className={styles.deleteButton}>
-            삭제
+          <button onClick={deleteSelectedQuotes} className={styles.deleteButton}>
+            삭제 ({selectedQuotes.length})
           </button>
         </div>
       </div>
@@ -288,39 +318,39 @@ const RepairListPage = () => {
                 <th>접수번호</th>
                 <th>고객명</th>
                 <th>제품명</th>
-                <th>제품 시리얼</th>
+                <th>제품고유번호</th>
                 <th>접수일자</th>
-                <th>수리상태</th>
-                <th>수리기사</th>
-                <th>결제상태</th>
+                <th>진행상태</th>
+                <th>접수기사</th>
+                <th>입금상태</th>
               </tr>
             </thead>
             <tbody>
-              {repairs.length === 0 ? (
+              {quotes.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className={styles.emptyState}>
+                  <td colSpan="10" className={styles.emptyState}>
                     <h3>데이터가 없습니다</h3>
-                    <p>검색 조건에 맞는 수리 내역이 접수되지 않았습니다.</p>
+                    <p>검색 조건에 맞는 견적 데이터가 없습니다.</p>
                   </td>
                 </tr>
               ) : (
-                repairs.map((repair) => (
-                  <tr key={repair.id}>
-                    <td>
+                quotes.map((quote) => (
+                  <tr key={quote.quoteId} onClick={() => handleRowClick(quote)} style={{cursor: 'pointer'}}>
+                    <td onClick={(e) => e.stopPropagation()}>
                       <input 
                         type="checkbox" 
-                        checked={selectedRepairs.includes(repair.id)}
-                        onChange={() => handleSelectRepair(repair.id)}
+                        checked={selectedQuotes.includes(quote.quoteId)}
+                        onChange={() => handleSelectQuote(quote.quoteId)}
                       />
                     </td>
-                    <td>{repair.serialNumber}</td>
-                    <td>{repair.customerName}</td>
-                    <td>{repair.productName}</td>
-                    <td>{repair.productSerialNumber}</td>
-                    <td>{formatDate(repair.receptionDate)}</td>
-                    <td>{repair.repairStatus}</td>
-                    <td>{repair.repairTechnician}</td>
-                    <td>{repair.paymentStatus}</td>
+                    <td>{quote.requestNo}</td>
+                    <td>{quote.customerName}</td>
+                    <td>{quote.productName}</td>
+                    <td>{quote.serialNumber}</td>
+                    <td>{formatDateTime(quote.createdAt)}</td>
+                    <td>{formatStatus(quote.statusChange)}</td>
+                    <td>{quote.employeeName}</td>
+                    <td>{quote.paymentStatus || '-'}</td>
                   </tr>
                 ))
               )}

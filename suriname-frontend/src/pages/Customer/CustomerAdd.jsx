@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import styles from "../../css/Customer/CustomerAdd.module.css";
+<<<<<<< HEAD
+=======
+import AutoComplete from "../../components/AutoComplete";
+import api from "../../api/api";
+>>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 
 const CustomerAdd = () => {
   const [selectedTab, setSelectedTab] = useState("general");
@@ -51,7 +55,7 @@ const CustomerAdd = () => {
     };
 
     try {
-      const response = await axios.post("/api/customers", formDataToSend);
+      const response = await api.post("/api/customers", formDataToSend);
       console.log("등록 성공:", response.data);
       alert("고객 정보가 등록되었습니다!");
     } catch (error) {
@@ -64,6 +68,26 @@ const CustomerAdd = () => {
     console.log("취소");
   };
 
+<<<<<<< HEAD
+=======
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/api/categories");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("카테고리 불러오기 실패:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    console.log("FormData 업데이트:", formData);
+  }, [formData]);
+
+>>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
   return (
     <div className={styles.customerContainer}>
       <div className={styles.tabNavigation}>

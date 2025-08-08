@@ -56,4 +56,43 @@ public class EmployeeController {
         employeeService.deactivateEmployee(id);
         return ResponseEntity.noContent().build();
     }
+<<<<<<< HEAD
+=======
+
+    @GetMapping("/pending")
+    public ResponseEntity<Page<EmployeeResponseDto>> getPendingEmployees(
+            @ModelAttribute EmployeeSearchRequestDto searchDto,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    )
+    {
+        Page<EmployeeResponseDto> result = employeeService.getPendingEmployees(searchDto, PageRequest.of(page, size));
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<EmployeeResponseDto> updateRole(
+            @PathVariable Long id,
+            @RequestBody RoleUpdateRequestDto requestDto
+    )
+    {
+        EmployeeResponseDto responseDto = employeeService.updateRole(id, requestDto.getRole());
+        return ResponseEntity.ok(responseDto);
+    }
+
+    @GetMapping("/validate/name/{name}")
+    public ResponseEntity<Boolean> validateEmployeeName(@PathVariable String name) {
+        boolean exists = employeeService.existsByName(name);
+        return ResponseEntity.ok(exists);
+    }
+    
+    @GetMapping("/engineers")
+    public ResponseEntity<Page<EmployeeResponseDto>> getEngineers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        Page<EmployeeResponseDto> engineers = employeeService.getEngineersByRole(PageRequest.of(page, size));
+        return ResponseEntity.ok(engineers);
+    }
+>>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 }

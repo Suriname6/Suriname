@@ -3,6 +3,7 @@ package com.suriname.customer.controller;
 import java.util.List;
 import java.util.Map;
 
+import com.suriname.product.dto.CustomerProductDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final CustomerExcelService customerExcelService;
+    private final CustomerProductRepository customerProductRepository;
     
     // 등록
     @PostMapping
@@ -100,8 +102,6 @@ public class CustomerController {
         return ResponseEntity.ok(Map.of("status", 200, "message", "고객 정보가 수정되었습니다."));
     }
 
-
-
     // 액셀 일괄 등록
     @PostMapping("/upload/excel")
     public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
@@ -111,6 +111,30 @@ public class CustomerController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
+    }
+    
+    // 자동완성
+    @GetMapping("/autocomplete")
+    public ResponseEntity<List<CustomerDetailDto>> autocompleteCustomers(@RequestParam String keyword) {
+        List<CustomerDetailDto> results = customerService.autocompleteCustomers(keyword);
+        return ResponseEntity.ok(results);
+    }
+
+    // 고객명 검증
+    @GetMapping("/validate/name/{name}")
+    public ResponseEntity<Boolean> validateCustomerName(@PathVariable String name) {
+        boolean exists = customerService.existsByName(name);
+        return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/{customerId}/products")
+    public ResponseEntity<List<CustomerProductDto>> getCustomerProducts(@PathVariable Long customerId) {
+        List<CustomerProductDto> products = customerProductRepository.findByCustomerCustomerId(customerId)
+                .stream()
+                .map(CustomerProductDto::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(products);
     }
 
 

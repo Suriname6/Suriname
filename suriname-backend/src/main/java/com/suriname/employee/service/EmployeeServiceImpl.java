@@ -77,4 +77,44 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 직원이 존재하지 않습니다."));
     }
+<<<<<<< HEAD
+=======
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponseDto> getEmployees(EmployeeSearchRequestDto search, Pageable pageable) {
+        return employeeRepository
+                .findAll(EmployeeSpecification.searchWith(search, false), pageable)
+                .map(employeeMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponseDto> getPendingEmployees(EmployeeSearchRequestDto search, Pageable pageable) {
+        return employeeRepository
+                .findAll(EmployeeSpecification.searchWith(search, true), pageable)
+                .map(employeeMapper::toDto);
+    }
+
+    @Override
+    @Transactional
+    public EmployeeResponseDto updateRole(Long employeeId, String role) {
+        Employee employee = findEmployee(employeeId);
+        employee.changeRole(Employee.Role.valueOf(role));
+        return employeeMapper.toDto(employee);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByName(String name) {
+        return employeeRepository.existsByName(name);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponseDto> getEngineersByRole(Pageable pageable) {
+        return employeeRepository.findByRole(Employee.Role.ENGINEER, pageable)
+                .map(employeeMapper::toDto);
+    }
+>>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 }
