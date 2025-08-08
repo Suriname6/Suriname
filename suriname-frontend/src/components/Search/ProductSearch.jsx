@@ -4,13 +4,13 @@ import * as XLSX from 'xlsx'; // ✨ XLSX 라이브러리 임포트 ✨
 import { saveAs } from 'file-saver'; // ✨ file-saver 임포트 ✨
 
 // 환경 변수 값 확인 (개발 중에는 로그 찍어보자)
-console.log(import.meta.env.VITE_ALGOLIA_APP_ID);
-console.log(import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY);
+console.log(import.meta.env.ALGOLIA_APP_ID);
+console.log(import.meta.env.ALGOLIA_SEARCH_API_KEY);
 
 // Algolia 클라이언트 설정c
 const searchClient = algoliasearch(
-    import.meta.env.VITE_ALGOLIA_APP_ID,
-    import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY
+    import.meta.env.ALGOLIA_APP_ID,
+    import.meta.env.ALGOLIA_SEARCH_API_KEY
 );
 
 // 인덱스 객체 생성
@@ -270,40 +270,54 @@ const ProductSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrentP
                     제조사
                 </label>
                 <div className="flex flex-wrap gap-2">
-                    {manufacturers.map(manufacturer => (
-                        <label
-                            key={manufacturer}
-                            className="inline-flex items-center cursor-pointer"
-                        >
-                            <input
-                                type="checkbox"
-                                checked={query.manufacturers.includes(manufacturer)}
-                                onChange={() => handleManufacturerChange(manufacturer)}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">{manufacturer}</span>
-                        </label>
-                    ))}
+                    {manufacturers.map(manufacturer => {
+                        const isSelected = query.manufacturers.includes(manufacturer);
+                        return (
+                            <button
+                                key={manufacturer}
+                                type="button"
+                                onClick={() => handleManufacturerChange(manufacturer)}
+                                className={`
+                                    px-4 py-2 rounded-full text-sm font-medium 
+                                    transition-colors duration-200 ease-in-out
+                                    ${isSelected
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                                }
+                                `}
+                            >
+                                {manufacturer}
+                            </button>
+                        );
+                    })}
                 </div>
-                <br/>
+            </div>
+            <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     제품분류
                 </label>
                 <div className="flex flex-wrap gap-2">
-                    {categories.map(category => (
-                        <label
-                            key={category}
-                            className="inline-flex items-center cursor-pointer"
-                        >
-                            <input
-                                type="checkbox"
-                                checked={query.categories.includes(category)}
-                                onChange={() => handleCategoryChange(category)}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">{category}</span>
-                        </label>
-                    ))}
+                    {categories.map(category => { // category map
+                        // 해당 카테고리가 현재 선택된 상태인지 확인
+                        const isSelected = query.categories.includes(category); // query.categories
+                        return (
+                            <button
+                                key={category} // category key
+                                type="button"
+                                onClick={() => handleCategoryChange(category)} // handleCategoryChange
+                                className={`
+                                    px-4 py-2 rounded-full text-sm font-medium 
+                                    transition-colors duration-200 ease-in-out
+                                    ${isSelected
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                                }
+                                `}
+                            >
+                                {category} {/* category 텍스트 */}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
