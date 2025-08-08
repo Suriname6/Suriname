@@ -34,7 +34,7 @@ public class QRequest extends EntityPathBase<Request> {
 
     public final com.suriname.employee.entity.QEmployee employee;
 
-    public final com.suriname.payment.QPayment payment;
+    public final ListPath<com.suriname.payment.Payment, com.suriname.payment.QPayment> payments = this.<com.suriname.payment.Payment, com.suriname.payment.QPayment>createList("payments", com.suriname.payment.Payment.class, com.suriname.payment.QPayment.class, PathInits.DIRECT2);
 
     public final com.suriname.employee.entity.QEmployee receiver;
 
@@ -67,7 +67,6 @@ public class QRequest extends EntityPathBase<Request> {
         this.customer = inits.isInitialized("customer") ? new com.suriname.customer.entity.QCustomer(forProperty("customer")) : null;
         this.customerProduct = inits.isInitialized("customerProduct") ? new com.suriname.product.entity.QCustomerProduct(forProperty("customerProduct"), inits.get("customerProduct")) : null;
         this.employee = inits.isInitialized("employee") ? new com.suriname.employee.entity.QEmployee(forProperty("employee")) : null;
-        this.payment = inits.isInitialized("payment") ? new com.suriname.payment.QPayment(forProperty("payment"), inits.get("payment")) : null;
         this.receiver = inits.isInitialized("receiver") ? new com.suriname.employee.entity.QEmployee(forProperty("receiver")) : null;
     }
 
