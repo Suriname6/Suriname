@@ -5,7 +5,7 @@ import com.suriname.delivery.entity.Delivery;
 import com.suriname.delivery.repository.DeliveryRepository;
 import com.suriname.delivery.service.DeliveryService;
 import com.suriname.request.entity.Request;
-import com.suriname.request.entity.RequestRepository;
+import com.suriname.request.repository.RequestRepository;
 import com.suriname.customer.entity.Customer;
 import com.suriname.customer.repository.CustomerRepository;
 import org.junit.jupiter.api.Test;

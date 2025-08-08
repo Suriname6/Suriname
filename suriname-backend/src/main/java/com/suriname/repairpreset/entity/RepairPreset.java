@@ -51,4 +51,16 @@ public class RepairPreset {
     public void inactive() {
         this.isActive = false;
     }
+    
+    // 직접 입력된 수리항목용 생성자 (isActive = false, ID >= 10000)
+    public static RepairPreset createDirectInput(Category category, String name, Integer cost, Long customId) {
+        RepairPreset preset = new RepairPreset();
+        preset.repairPresetsId = customId; // 10000 이상의 ID 직접 할당
+        preset.category = category;
+        preset.name = name;
+        preset.cost = cost;
+        preset.isActive = false; // 비활성화 상태로 생성
+        preset.createdAt = java.time.LocalDateTime.now();
+        return preset;
+    }
 }

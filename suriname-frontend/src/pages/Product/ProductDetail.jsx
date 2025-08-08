@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import styles from "../../css/Product/ProductDetail.module.css";
+import api from "../../api/api";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -14,7 +14,7 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`/api/products/${id}`);
+        const res = await api.get(`/api/products/${id}`);
         setFormData(res.data.data);
         setOriginalData(res.data.data);
       } catch (error) {
@@ -24,7 +24,7 @@ const ProductDetail = () => {
 
     const fetchCategories = async () => {
       try {
-        const res = await axios.get("/api/categories");
+        const res = await api.get("/api/categories");
         setCategories(res.data); // ["노트북", "태블릿", ...]
       } catch (error) {
         console.error("카테고리 목록 불러오기 실패:", error);
@@ -72,7 +72,7 @@ const ProductDetail = () => {
         return;
       }
 
-      await axios.put(`/api/products/${id}`, formData);
+      await api.put(`/api/products/${id}`, formData);
       alert("저장되었습니다.");
       setOriginalData(formData);
       setIsDirty(false);

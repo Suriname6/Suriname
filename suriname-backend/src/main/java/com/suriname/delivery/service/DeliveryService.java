@@ -7,7 +7,7 @@ import com.suriname.delivery.dto.DeliveryStatusUpdateDto;
 import com.suriname.delivery.entity.Delivery;
 import com.suriname.delivery.repository.DeliveryRepository;
 import com.suriname.request.entity.Request;
-import com.suriname.request.entity.RequestRepository;
+import com.suriname.request.repository.RequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

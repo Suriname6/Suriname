@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ExcelUploadBox from "../../components/ExcelUploadBox";
-import axios from "axios";
 import styles from "../../css/Customer/CustomerExcelAdd.module.css";
+import api from "../../api/api";
 
 const ProductExcelAdd = () => {
   const [selectedTab, setSelectedTab] = useState("excel");
@@ -38,7 +38,7 @@ const ProductExcelAdd = () => {
     formData.append("file", uploadedFiles[0]);
 
     try {
-      const response = await axios.post("/api/products/upload/excel", formData);
+      const response = await api.post("/api/products/upload/excel", formData);
       alert("업로드 성공!");
       console.log(response.data);
     } catch (error) {

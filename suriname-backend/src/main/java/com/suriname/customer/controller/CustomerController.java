@@ -112,6 +112,20 @@ public class CustomerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
     }
+    
+    // 자동완성
+    @GetMapping("/autocomplete")
+    public ResponseEntity<List<CustomerDetailDto>> autocompleteCustomers(@RequestParam String keyword) {
+        List<CustomerDetailDto> results = customerService.autocompleteCustomers(keyword);
+        return ResponseEntity.ok(results);
+    }
+
+    // 고객명 검증
+    @GetMapping("/validate/name/{name}")
+    public ResponseEntity<Boolean> validateCustomerName(@PathVariable String name) {
+        boolean exists = customerService.existsByName(name);
+        return ResponseEntity.ok(exists);
+    }
 
 
 }
