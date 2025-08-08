@@ -926,7 +926,7 @@ const RepairWritePage = () => {
               <div className={styles.headerCell}>수리 항목명</div>
               <div className={styles.headerCell}>설명</div>
               <div className={styles.headerCell}>비용</div>
-              <div className={styles.headerCell}>삭제</div>
+              <div className={styles.headerCell}>+/-</div>
             </div>
             
             {/* 프리셋으로 추가된 항목들 */}
