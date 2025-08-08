@@ -176,7 +176,12 @@ const CustomerDetail = () => {
               <label className={styles.inputLabel}>제품분류</label>
               <select
                 className={styles.inputControl}
-                value={product?.categoryId || ""}
+                value={
+                  product?.categoryId ||
+                  categories.find((c) => c.name === product?.categoryName)
+                    ?.id ||
+                  ""
+                }
                 onChange={(e) =>
                   handleProductChange("categoryId", parseInt(e.target.value))
                 }

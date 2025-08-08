@@ -7,10 +7,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.suriname.product.entity.Product;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ProductRepository extends JpaRepository<Product, Long>,
 JpaSpecificationExecutor<Product> {
     
     List<Product> findByProductNameContainingIgnoreCase(String keyword);
 
+    @Query(value = """
+        SELECT 
+            p.product_id AS productID,
+            p.product_name AS productName, 
+            c.name AS categoryName, 
+            p.product_brand AS productBrand, 
+            p.model_code AS modelCode
+        FROM product p
+        JOIN category c ON p.category_id = c.category_id
+    """, nativeQuery = true)
+    List<Object[]> findProductWithCategoryInfo();
 }

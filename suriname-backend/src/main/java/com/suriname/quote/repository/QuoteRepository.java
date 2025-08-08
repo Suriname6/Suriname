@@ -24,9 +24,11 @@ public interface QuoteRepository extends JpaRepository<Quote, Long> {
            "JOIN q.request r " +
            "JOIN r.customer c " +
            "LEFT JOIN q.employee e " +
-           "WHERE (:customerName IS NULL OR :customerName = '' OR c.name LIKE CONCAT('%', :customerName, '%')) " +
+            "JOIN r.customerProduct cp " +
+            "JOIN cp.product p " +
+            "WHERE (:customerName IS NULL OR :customerName = '' OR c.name LIKE CONCAT('%', :customerName, '%')) " +
            "AND (:requestNo IS NULL OR :requestNo = '' OR r.requestNo LIKE CONCAT('%', :requestNo, '%')) " +
-           "AND (:productName IS NULL OR :productName = '' OR r.inputProductName LIKE CONCAT('%', :productName, '%')) " +
+           "AND (:productName IS NULL OR :productName = '' OR p.productName LIKE CONCAT('%', :productName, '%')) " +
            "AND (:serialNumber IS NULL OR :serialNumber = '') " +
            "AND (:isApproved IS NULL OR q.isApproved = :isApproved) " +
            "AND (:employeeName IS NULL OR :employeeName = '' OR e.name LIKE CONCAT('%', :employeeName, '%')) " +

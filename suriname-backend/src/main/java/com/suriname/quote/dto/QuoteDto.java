@@ -51,10 +51,6 @@ public class QuoteDto {
                 quote.getRequest().getCustomerProduct().getProduct() != null) {
                 this.productName = quote.getRequest().getCustomerProduct().getProduct().getProductName();
                 this.serialNumber = quote.getRequest().getCustomerProduct().getProduct().getModelCode();
-            } else if (quote.getRequest().getInputProductName() != null) {
-                // CustomerProduct가 없으면 입력된 제품명 사용
-                this.productName = quote.getRequest().getInputProductName();
-                this.serialNumber = "시리얼번호 없음";
             } else {
                 this.productName = "제품 정보 없음";
                 this.serialNumber = "시리얼번호 없음";

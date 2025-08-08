@@ -89,8 +89,11 @@ const CustomerList = () => {
         alert(`${selectedItems.size}개 항목이 삭제되었습니다.`);
       }
       setData((prevData) =>
-        prevData.filter((item) => !selectedItems.has(item.customerId))
+        prevData.filter(
+          (item) => !selectedItems.has(item.productId || item.objectID)
+        )
       );
+
       setSelectedItems(new Set());
       setSelectAll(false);
       fetchCustomerData();
@@ -114,6 +117,7 @@ const CustomerList = () => {
   return (
     <div className={styles.container}>
       <CustomerSearch
+        data={data}
         setData={setData}
         setTotalPages={setTotalPages}
         itemsPerPage={itemsPerPage}

@@ -48,6 +48,11 @@ import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
 import RepairPresetPage from "./pages/Repair/RepairPresetPage";
 
+import RequestList from "./pages/Request/RequestList.jsx"
+import RequestDetail from "./pages/Request/RequestDetail.jsx"
+import RequestForm from "./pages/Request/RequestForm.jsx"
+import RequestEdit from "./pages/Request/RequestEdit.jsx"
+
 function LayoutWithSidebar() {
   const location = useLocation();
   const hideSidebarPaths = ["/login", "/signup"];
@@ -115,6 +120,12 @@ function App() {
           <Route path="/delivery/analytics" element={<DeliveryAnalytics />} />
           <Route path="/completion/list" element={<CompletionList />} />
           <Route path="/completion/register" element={<CompletionRegister />} />
+
+          <Route path="/request/list" element={<RequestList />} />
+          <Route path="/request/register" element={<RequestForm />} />
+          <Route path="/request/:id" element={<RequestDetail />} />
+          <Route path="/request/edit/:id" element={<RequestEdit />} />
+
         </Route>
       </Routes>
     </Router>

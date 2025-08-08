@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from "react";
 import algoliasearch from "algoliasearch/lite";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 // 환경 변수 값 확인 (개발 중에는 로그 찍어보자)
-console.log(import.meta.env.VITE_ALGOLIA_APP_ID);
-console.log(import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY);
+console.log(import.meta.env.ALGOLIA_APP_ID);
+console.log(import.meta.env.ALGOLIA_SEARCH_API_KEY);
 
 // Algolia 클라이언트 설정
 const searchClient = algoliasearch(
-  import.meta.env.VITE_ALGOLIA_APP_ID,
-  import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY
+  import.meta.env.ALGOLIA_APP_ID,
+  import.meta.env.ALGOLIA_SEARCH_API_KEY
 );
 
 // 인덱스 객체 생성
@@ -17,6 +19,7 @@ const index = searchClient.initIndex("customers");
 const manufacturers = ["삼성", "LG", "Apple"];
 
 const CustomerSearch = ({
+  data,
   setData,
   setTotalPages,
   itemsPerPage,
@@ -174,6 +177,72 @@ const CustomerSearch = ({
     });
   };
 
+  // 엑셀 다운로드
+  const handleDownloadExcel = useCallback(() => {
+    console.log("엑셀 다운로드할 데이터:", data);
+
+    if (!data || data.length === 0) {
+      alert("다운로드할 데이터가 없습니다!");
+      return;
+    }
+
+    const excelHeaders = [
+      "고객 ID",
+      "이름",
+      "생년월일",
+      "연락처",
+      "이메일",
+      "주소",
+      "제품분류",
+      "제품명",
+      "제조사",
+      "모델코드",
+      "제품고유번호",
+    ];
+
+    const excelData = data.map((item) => [
+      item.objectID || "", // objectID를 고객 ID로 사용
+      item.customerName || "",
+      item.birth || "",
+      item.phone || "",
+      item.email || "",
+      item.address || "",
+      item.categoryName || "",
+      item.productName || "",
+      item.productBrand || "",
+      item.modelCode || "",
+      item.serialNumber || "",
+    ]);
+
+    // 워크북 생성 (빈 엑셀 파일 생성)
+    const workbook = XLSX.utils.book_new();
+
+    // 헤더와 데이터를 합쳐서 워크시트 생성
+    // XLSX.utils.aoa_to_sheet: 배열의 배열(Array of Arrays)을 시트로 변환
+    const worksheet = XLSX.utils.aoa_to_sheet([excelHeaders, ...excelData]);
+
+    // 워크시트를 워크북에 추가
+    XLSX.utils.book_append_sheet(workbook, worksheet, "제품 목록"); // 시트 이름은 '제품 목록'
+
+    // 엑셀 파일 저장
+    // XLSX.write: 워크북을 바이너리 데이터로 변환
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    // Blob (Binary Large Object) 생성
+    const dataBlob = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
+
+    // 파일 다운로드
+    // saveAs(데이터, '파일이름.확장자')
+    saveAs(dataBlob, `제품목록_${new Date().toLocaleDateString("ko-KR")}.xlsx`);
+
+    alert("엑셀 파일을 생성하고 다운로드를 시작합니다!");
+  }, [data]);
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
       <div className="flex justify-between items-center mb-4">
@@ -281,20 +350,29 @@ const CustomerSearch = ({
           제조사
         </label>
         <div className="flex flex-wrap gap-2">
-          {manufacturers.map((manufacturer) => (
-            <label
-              key={manufacturer}
-              className="inline-flex items-center cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={query.manufacturers.includes(manufacturer)}
-                onChange={() => handleManufacturerChange(manufacturer)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span className="ml-2 text-sm text-gray-700">{manufacturer}</span>
-            </label>
-          ))}
+          {manufacturers.map((manufacturer) => {
+            // 해당 제조사가 현재 선택된 상태인지 확인
+            const isSelected = query.manufacturers.includes(manufacturer);
+            return (
+              <button
+                key={manufacturer}
+                type="button" // 폼 제출 방지
+                onClick={() => handleManufacturerChange(manufacturer)}
+                // Tailwind CSS를 이용한 조건부 스타일링!
+                className={`
+                        px-4 py-2 rounded-full text-sm font-medium 
+                        transition-colors duration-200 ease-in-out
+                        ${
+                          isSelected
+                            ? "bg-blue-600 text-white shadow-md" // 선택되었을 때 스타일
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300" // 선택되지 않았을 때 스타일
+                        }
+                    `}
+              >
+                {manufacturer}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -305,6 +383,14 @@ const CustomerSearch = ({
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
           초기화
+        </button>
+
+        {/* 엑셀 다운로드 버튼 */}
+        <button
+          onClick={handleDownloadExcel}
+          className="px-4 py-2 text-sm font-medium text-white bg-green-500 border border-green-600 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          엑셀 다운로드
         </button>
 
         <div className="text-xs text-gray-500">

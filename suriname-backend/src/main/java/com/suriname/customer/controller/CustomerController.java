@@ -3,6 +3,7 @@ package com.suriname.customer.controller;
 import java.util.List;
 import java.util.Map;
 
+import com.suriname.product.dto.CustomerProductDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final CustomerExcelService customerExcelService;
+    private final CustomerProductRepository customerProductRepository;
     
     // 등록
     @PostMapping
@@ -100,8 +102,6 @@ public class CustomerController {
         return ResponseEntity.ok(Map.of("status", 200, "message", "고객 정보가 수정되었습니다."));
     }
 
-
-
     // 액셀 일괄 등록
     @PostMapping("/upload/excel")
     public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
@@ -125,6 +125,16 @@ public class CustomerController {
     public ResponseEntity<Boolean> validateCustomerName(@PathVariable String name) {
         boolean exists = customerService.existsByName(name);
         return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/{customerId}/products")
+    public ResponseEntity<List<CustomerProductDto>> getCustomerProducts(@PathVariable Long customerId) {
+        List<CustomerProductDto> products = customerProductRepository.findByCustomerCustomerId(customerId)
+                .stream()
+                .map(CustomerProductDto::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(products);
     }
 
 

@@ -38,7 +38,12 @@ const AutoComplete = ({
     const timer = setTimeout(() => {
       if (inputValue && inputValue.trim() !== "" && isOpen) {
         axios
-          .get(fetchUrl, { params: { keyword: inputValue } })
+          .get(fetchUrl, {
+            params: { keyword: inputValue },
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          })
           .then((res) => setSuggestions(res.data))
           .catch((err) => console.error("자동완성 실패:", err));
       } else {
