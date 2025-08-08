@@ -18,7 +18,7 @@ public class Quote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "quote_id", columnDefinition = "BIGINT AUTO_INCREMENT")
+    @Column(name = "quote_id")
     private Long quoteId;
 
     @OneToOne(fetch = FetchType.LAZY)
