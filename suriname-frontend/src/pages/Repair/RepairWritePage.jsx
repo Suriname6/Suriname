@@ -398,18 +398,39 @@ const RepairWritePage = () => {
     }
 
     try {
-      // 먼저 Request ID를 조회
-      const requestResponse = await axios.get(`/api/requests/validate/requestno/${encodeURIComponent(requestNo)}`);
-      if (!requestResponse.data) {
+      // Request ID 조회
+      const requestResponse = await axios.get(`/api/requests/requestid/${encodeURIComponent(requestNo)}`);
+      if (requestResponse.data.status !== 200) {
         throw new Error('Request ID를 찾을 수 없습니다.');
       }
 
-      // Request 엔티티에서 실제 requestId를 가져와야 함 - 다른 API 확인 필요
-      // 임시로 requestNo로 requestId를 추정하는 로직 또는 별도 API 호출 필요
-      console.log('임시 이미지 업로드 처리 필요:', tempImages.length, '개');
+      const requestId = requestResponse.data.data.requestId;
+      console.log('Request ID 조회 성공:', requestId);
       
-      // 실제 구현을 위해서는 Request 엔티티의 ID를 가져올 수 있는 API가 필요함
-      // 현재는 견적서가 성공적으로 저장되었으므로 임시 이미지는 제거
+      const successfulUploads = [];
+      
+      // 각 임시 이미지를 실제로 S3에 업로드
+      for (const tempImage of tempImages) {
+        try {
+          const formData = new FormData();
+          formData.append('file', tempImage.file);
+          
+          const uploadResponse = await axios.post(`/api/images/upload/${requestId}`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          
+          if (uploadResponse.data.status === 201) {
+            successfulUploads.push(uploadResponse.data.data.imageId);
+            console.log('이미지 업로드 성공:', tempImage.fileName, '-> imageId:', uploadResponse.data.data.imageId);
+          }
+        } catch (error) {
+          console.error(`이미지 업로드 실패: ${tempImage.fileName}`, error);
+        }
+      }
+      
+      // 성공적으로 업로드된 이미지들만 제거하고 메모리 정리
       setUploadedImages(prev => prev.filter(img => !img.file));
       
       // 메모리 정리
@@ -418,6 +439,8 @@ const RepairWritePage = () => {
           URL.revokeObjectURL(img.url);
         }
       });
+      
+      console.log('임시 이미지 업로드 완료:', successfulUploads.length, '/', tempImages.length, '성공');
 
     } catch (error) {
       console.error('임시 이미지 업로드 처리 실패:', error);
