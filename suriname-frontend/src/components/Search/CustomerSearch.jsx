@@ -3,13 +3,13 @@ import algoliasearch from 'algoliasearch/lite';
 import * as XLSX from "xlsx";
 
 // 환경 변수 값 확인 (개발 중에는 로그 찍어보자)
-console.log(import.meta.env.VITE_ALGOLIA_APP_ID);
-console.log(import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY);
+console.log(import.meta.env.ALGOLIA_APP_ID);
+console.log(import.meta.env.ALGOLIA_SEARCH_API_KEY);
 
-// Algolia 클라이언트 설정c
+// Algolia 클라이언트 설정
 const searchClient = algoliasearch(
-    import.meta.env.VITE_ALGOLIA_APP_ID,
-    import.meta.env.VITE_ALGOLIA_SEARCH_API_KEY
+    import.meta.env.ALGOLIA_APP_ID,
+    import.meta.env.ALGOLIA_SEARCH_API_KEY
 );
 
 // 인덱스 객체 생성
@@ -330,20 +330,28 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
           제조사
         </label>
         <div className="flex flex-wrap gap-2">
-          {manufacturers.map(manufacturer => (
-            <label 
-              key={manufacturer} 
-              className="inline-flex items-center cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={query.manufacturers.includes(manufacturer)}
-                onChange={() => handleManufacturerChange(manufacturer)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span className="ml-2 text-sm text-gray-700">{manufacturer}</span>
-            </label>
-          ))}
+          {manufacturers.map(manufacturer => {
+            // 해당 제조사가 현재 선택된 상태인지 확인
+            const isSelected = query.manufacturers.includes(manufacturer);
+            return (
+                <button
+                    key={manufacturer}
+                    type="button" // 폼 제출 방지
+                    onClick={() => handleManufacturerChange(manufacturer)}
+                    // Tailwind CSS를 이용한 조건부 스타일링!
+                    className={`
+                        px-4 py-2 rounded-full text-sm font-medium 
+                        transition-colors duration-200 ease-in-out
+                        ${isSelected
+                        ? 'bg-blue-600 text-white shadow-md' // 선택되었을 때 스타일
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' // 선택되지 않았을 때 스타일
+                    }
+                    `}
+                >
+                  {manufacturer}
+                </button>
+            );
+          })}
         </div>
       </div>
 
