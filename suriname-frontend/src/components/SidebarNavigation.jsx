@@ -13,6 +13,8 @@ export default function SidebarNavigation() {
     "고객 등록": "/customer/upload",
     "제품 목록": "/product/list",
     "제품 등록": "/product/upload",
+    "접수 목록": "/request/list",
+    "접수 등록": "/request/register",
     "수리 내역": "/repair/list",
     "수리 내역 작성": "/repair/write",
     "프리셋 등록": "/repair/preset",

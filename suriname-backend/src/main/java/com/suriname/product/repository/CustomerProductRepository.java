@@ -1,5 +1,6 @@
 package com.suriname.product.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,4 +33,6 @@ public interface CustomerProductRepository extends JpaRepository<CustomerProduct
 		WHERE c.is_deleted = FALSE
 	""", nativeQuery = true)
 	List<Object[]> findCustomerRaw();
+
+	List<CustomerProduct> findByCustomerCustomerId(Long customerId);
 }
