@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
 import styles from "../../css/Product/ProductList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductSearchBar from "./ProductSearchBar";
 import { useNavigate } from "react-router-dom";
+import api from "../../api/api";
 
 const ProductList = () => {
   const [data, setData] = useState([]);
@@ -17,7 +17,7 @@ const ProductList = () => {
 
   const fetchProductData = useCallback(async () => {
     try {
-      const response = await axios.post(
+      const response = await api.post(
         "/api/products/search",
         searchConditions,
         {
@@ -72,10 +72,10 @@ const ProductList = () => {
     try {
       if (selectedItems.size === 1) {
         const id = Array.from(selectedItems)[0];
-        await axios.delete(`/api/products/delete/${id}`);
+        await api.delete(`/api/products/delete/${id}`);
         alert("1개 항목이 삭제되었습니다.");
       } else {
-        await axios.post("/api/products/delete", Array.from(selectedItems), {
+        await api.post("/api/products/delete", Array.from(selectedItems), {
           headers: {
             "Content-Type": "application/json",
           },

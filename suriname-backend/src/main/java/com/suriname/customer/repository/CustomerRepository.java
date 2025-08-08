@@ -1,5 +1,7 @@
 package com.suriname.customer.repository;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,5 +20,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSp
 	
 	// 고객명으로 검색
 	Optional<Customer> findByName(String name);
+
+
+	@Query("SELECT c FROM Customer c " +
+		       "WHERE c.isDeleted = false " +
+		       "AND c.status = :status " +
+		       "AND LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+		List<Customer> searchAutoComplete(String keyword, Status status);
 
 }
