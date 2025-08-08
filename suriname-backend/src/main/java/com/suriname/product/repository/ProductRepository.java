@@ -1,16 +1,14 @@
 package com.suriname.product.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.suriname.product.entity.Product;
 import org.springframework.data.jpa.repository.Query;
 
-<<<<<<< HEAD
-public interface ProductRepository extends JpaRepository<Product, Long> {
-    Optional<Product> findByModelCodeAndSerialNumber(String modelCode, String serialNumber);
-=======
 public interface ProductRepository extends JpaRepository<Product, Long>,
 JpaSpecificationExecutor<Product> {
     
@@ -27,5 +25,4 @@ JpaSpecificationExecutor<Product> {
         JOIN category c ON p.category_id = c.category_id
     """, nativeQuery = true)
     List<Object[]> findProductWithCategoryInfo();
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 }

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.suriname.category.entity.Category;
-import com.suriname.category.entity.CategoryRepository;
+import com.suriname.category.repository.CategoryRepository;
 import com.suriname.customer.dto.CustomerDetailDto;
 import com.suriname.customer.dto.CustomerListDto;
 import com.suriname.customer.dto.CustomerRegisterDto;
@@ -18,7 +18,7 @@ import com.suriname.customer.dto.CustomerSearchDto;
 import com.suriname.customer.entity.Customer;
 import com.suriname.customer.entity.CustomerSpecification;
 import com.suriname.customer.repository.CustomerRepository;
-import com.suriname.product.dto.ProductDto;
+import com.suriname.product.dto.CustomerProductDto;
 import com.suriname.product.entity.CustomerProduct;
 import com.suriname.product.entity.Product;
 import com.suriname.product.repository.CustomerProductRepository;
@@ -65,15 +65,7 @@ public class CustomerService {
             productRepository.save(product);
         }
 
-<<<<<<< HEAD
-        // 고객 보유 제품 연결
-        CustomerProduct cp = CustomerProduct.builder()
-                .customer(customer)
-                .product(product)
-                .build();
-=======
         CustomerProduct cp = new CustomerProduct(customer, product, dto.getProduct().getSerialNumber());
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
         customerProductRepository.save(cp);
 
         return Map.of(
@@ -86,26 +78,6 @@ public class CustomerService {
         Page<Customer> customers = customerRepository.findAllByStatus(Customer.Status.ACTIVE, pageable);
 
         return customers.map(customer -> {
-<<<<<<< HEAD
-            CustomerProduct cp = customerProductRepository
-                    .findTopByCustomerOrderByCreatedAtDesc(customer)
-                    .orElse(null);
-            Product product = (cp != null) ? cp.getProduct() : null;
-
-            return new CustomerListDto(
-                customer.getCustomerId(),
-                customer.getName(),
-                customer.getPhone(),
-                customer.getEmail(),
-                customer.getBirth() != null ? customer.getBirth().toString() : null,
-                customer.getAddress(),
-
-                (product != null) ? product.getProductName() : null,
-                (product != null && product.getCategory() != null) ? product.getCategory().getName() : null,
-                (product != null) ? product.getProductBrand() : null,
-                (product != null) ? product.getModelCode() : null,
-                (product != null) ? product.getSerialNumber() : null
-=======
             CustomerProduct cp = customerProductRepository.findTopByCustomerOrderByCreatedAtDesc(customer).orElse(null);
             return new CustomerListDto(
                     customer.getCustomerId(),
@@ -119,7 +91,6 @@ public class CustomerService {
                     cp != null ? cp.getProduct().getProductBrand() : null,
                     cp != null ? cp.getProduct().getModelCode() : null,
                     cp != null ? cp.getSerialNumber() : null
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
             );
         });
     }
@@ -128,44 +99,6 @@ public class CustomerService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("고객을 찾을 수 없습니다."));
 
-<<<<<<< HEAD
-        List<ProductDto> products = customer.getCustomerProducts().stream()
-            .map(cp -> {
-                Product p = cp.getProduct();
-                return new ProductDto(
-                    p.getProductId(),
-                    p.getProductName(),
-                    p.getCategory().getName(),
-                    p.getProductBrand(),
-                    p.getModelCode(),
-                    p.getSerialNumber()
-                );
-            }).toList();
-
-        CustomerDetailDto dto = new CustomerDetailDto();
-        dto.setCustomerId(customer.getCustomerId());
-        dto.setName(customer.getName());
-        dto.setEmail(customer.getEmail());
-        dto.setPhone(customer.getPhone());
-        dto.setAddress(customer.getAddress());
-        dto.setBirth(customer.getBirth().toString());
-        dto.setStatus(customer.getStatus().name());
-        dto.setProducts(products);
-
-        return dto;
-    }
-
-
-
-    // 수정
-    @Transactional
-    public void updateCustomer(Long customerId, CustomerRegisterDto dto) {
-    	// 1. 기존 고객 찾기
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다."));
-        
-        // 2. 고객 기본 정보 수정
-=======
         CustomerProductDto productDto = customerProductRepository.findTopByCustomerOrderByCreatedAtDesc(customer).stream()
                 .findFirst()
                 .map(CustomerProductDto::fromEntity)
@@ -188,7 +121,6 @@ public class CustomerService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다."));
 
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
         customer.update(
                 dto.getName(),
                 dto.getEmail(),
@@ -197,61 +129,27 @@ public class CustomerService {
                 dto.getBirth()
         );
 
-<<<<<<< HEAD
-        // 3. 제품 정보가 있을 경우에만 수정
-        ProductDto productDto = dto.getProduct();
-
-        if (productDto != null) {
-            boolean isValidProduct =
-                    (productDto.getProductName() != null && !productDto.getProductName().isBlank()) ||
-                    (productDto.getModelCode() != null && !productDto.getModelCode().isBlank());
-=======
         CustomerProductDto productDto = dto.getProduct();
         if (productDto != null) {
             boolean isValidProduct = productDto.getProductId() != null &&
                     productDto.getSerialNumber() != null && !productDto.getSerialNumber().isBlank();
 
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
             if (isValidProduct) {
                 CustomerProduct customerProduct = customerProductRepository
                         .findTopByCustomerOrderByCreatedAtDesc(customer)
                         .orElseThrow(() -> new RuntimeException("고객의 제품 정보가 없습니다."));
-                Product product = customerProduct.getProduct();
 
-<<<<<<< HEAD
-                Category category = product.getCategory(); // 기본 유지
-                if (productDto.getCategoryName() != null && !productDto.getCategoryName().isBlank()) {
-                    category = categoryRepository.findByName(productDto.getCategoryName())
-                            .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
-                }
-
-                product.updateProduct(
-                        productDto.getProductName(),
-                        productDto.getProductBrand(),
-                        productDto.getModelCode(),
-                        productDto.getSerialNumber(),
-                        category 
-                        );
-                productRepository.save(product);
-=======
                 Product product = productRepository.findById(productDto.getProductId())
                         .orElseThrow(() -> new RuntimeException("제품을 찾을 수 없습니다."));
 
                 customerProduct.updateCustomerAndProduct(customer, product, productDto.getSerialNumber());
                 customerProductRepository.save(customerProduct);
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
             }
         }
+
         customerRepository.save(customer);
     }
 
-<<<<<<< HEAD
-
-
-
-    // 삭제
-=======
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
     @Transactional
     public void softDelete(Long customerId) {
         Customer customer = customerRepository.findById(customerId)
@@ -259,8 +157,6 @@ public class CustomerService {
         customer.markAsDeleted();
         customerRepository.save(customer);
     }
-<<<<<<< HEAD
-=======
 
     @Transactional
     public void softDelete(List<Long> customerIds) {
@@ -271,21 +167,12 @@ public class CustomerService {
             customerRepository.save(customer);
         }
     }
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 
     public Page<CustomerListDto> searchCustomerDtos(CustomerSearchDto dto, Pageable pageable) {
         Page<Customer> result = customerRepository.findAll(CustomerSpecification.searchWith(dto), pageable);
 
         return result.map(customer -> {
-<<<<<<< HEAD
-            CustomerProduct cp = customerProductRepository
-                    .findTopByCustomerOrderByCreatedAtDesc(customer)
-                    .orElse(null);
-            Product product = (cp != null) ? cp.getProduct() : null;
-
-=======
             CustomerProduct cp = customerProductRepository.findTopByCustomerOrderByCreatedAtDesc(customer).orElse(null);
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
             return new CustomerListDto(
                     customer.getCustomerId(),
                     customer.getName(),
@@ -293,27 +180,15 @@ public class CustomerService {
                     customer.getEmail(),
                     customer.getBirth() != null ? customer.getBirth().toString() : null,
                     customer.getAddress(),
-<<<<<<< HEAD
-
-                    (product != null) ? product.getProductName() : null,
-                    (product != null && product.getCategory() != null) ? product.getCategory().getName() : null,
-                    (product != null) ? product.getProductBrand() : null,
-                    (product != null) ? product.getModelCode() : null,
-                    (product != null) ? product.getSerialNumber() : null
-=======
                     cp != null ? cp.getProduct().getProductName() : null,
                     cp != null ? cp.getProduct().getCategory().getName() : null,
                     cp != null ? cp.getProduct().getProductBrand() : null,
                     cp != null ? cp.getProduct().getModelCode() : null,
                     cp != null ? cp.getSerialNumber() : null
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
             );
         });
     }
 
-<<<<<<< HEAD
-} 
-=======
     public List<CustomerDetailDto> autocompleteCustomers(String keyword) {
         List<Customer> matched = customerRepository.searchAutoComplete(keyword, Customer.Status.ACTIVE);
         return matched.stream()
@@ -340,4 +215,3 @@ public class CustomerService {
         return customerRepository.findByName(name).isPresent();
     }
 } 
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963

@@ -1,37 +1,45 @@
 package com.suriname.employee.controller;
 
-import com.suriname.employee.dto.SignupRequestDto;
-import com.suriname.employee.dto.EmployeeResponseDto;
-import com.suriname.employee.dto.EmployeeUpdateRequestDto;
+import com.suriname.employee.dto.*;
+import com.suriname.employee.entity.Employee;
 import com.suriname.employee.service.EmployeeService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
-@RequestMapping("/employee")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    @PostMapping("/signup")
+    @PostMapping()
     public ResponseEntity<EmployeeResponseDto> signup(
             @RequestBody @Valid SignupRequestDto requestDto
-            )
+    )
     {
         EmployeeResponseDto responseDto = employeeService.signup(requestDto);
-        URI location = URI.create("/employee/" + responseDto.getEmployeeId());
+        URI location = URI.create("/api/users/" + responseDto.getEmployeeId());
         return ResponseEntity.created(location).body(responseDto);
     }
 
     @GetMapping
-    public ResponseEntity<List<EmployeeResponseDto>> getAllEmployees() {
-        List<EmployeeResponseDto> responseDtos = employeeService.getAllEmployees();
+    public ResponseEntity<Page<EmployeeResponseDto>> getAllEmployees(
+            @ModelAttribute EmployeeSearchRequestDto search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    )
+    {
+        Page<EmployeeResponseDto> responseDtos =
+                employeeService.getEmployees(search, PageRequest.of(page, size));
         return ResponseEntity.ok(responseDtos);
     }
 
@@ -56,8 +64,6 @@ public class EmployeeController {
         employeeService.deactivateEmployee(id);
         return ResponseEntity.noContent().build();
     }
-<<<<<<< HEAD
-=======
 
     @GetMapping("/pending")
     public ResponseEntity<Page<EmployeeResponseDto>> getPendingEmployees(
@@ -94,5 +100,4 @@ public class EmployeeController {
         Page<EmployeeResponseDto> engineers = employeeService.getEngineersByRole(PageRequest.of(page, size));
         return ResponseEntity.ok(engineers);
     }
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 }

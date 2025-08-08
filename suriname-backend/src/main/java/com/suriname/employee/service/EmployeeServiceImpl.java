@@ -1,19 +1,20 @@
 package com.suriname.employee.service;
 
+import com.suriname.employee.dto.EmployeeSearchRequestDto;
 import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.dto.EmployeeUpdateRequestDto;
-import com.suriname.employee.dto.EmployeeRequestDto;
 import com.suriname.employee.entity.Employee;
 import com.suriname.employee.repository.EmployeeRepository;
+import com.suriname.employee.repository.EmployeeSpecification;
 import com.suriname.employee.service.mapper.EmployeeMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,13 +22,18 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public EmployeeResponseDto signup(SignupRequestDto requestDto) {
         validateDuplicateLoginId(requestDto.getLoginId());
 
+        String encodePassword = passwordEncoder.encode(requestDto.getPassword());
+
         Employee employee = employeeMapper.toEntity(requestDto);
+        employee.changePassword(encodePassword);
+
         employeeRepository.save(employee);
 
         return employeeMapper.toDto(employee);
@@ -40,20 +46,20 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeMapper.toDto(employee);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<EmployeeResponseDto> getAllEmployees() {
-        return employeeRepository.findAll().stream()
-                .map(employeeMapper::toDto)
-                .collect(Collectors.toList());
-    }
+//    @Override
+//    @Transactional(readOnly = true)
+//    public List<EmployeeResponseDto> getAllEmployees() {
+//        return employeeRepository.findAll().stream()
+//                .map(employeeMapper::toDto)
+//                .collect(Collectors.toList());
+//    }
 
     @Override
     @Transactional
     public EmployeeResponseDto updateEmployee(Long employeeId, EmployeeUpdateRequestDto requestDto) {
         Employee employee = findEmployee(employeeId);
 
-        employee.changePassword(requestDto.getNewPassword());
+        employee.changePassword(passwordEncoder.encode(requestDto.getNewPassword()));
         employee.changeEmail(requestDto.getEmail());
         employee.changePhone(requestDto.getPhone());
 
@@ -77,8 +83,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 직원이 존재하지 않습니다."));
     }
-<<<<<<< HEAD
-=======
 
     @Override
     @Transactional(readOnly = true)
@@ -116,5 +120,4 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.findByRole(Employee.Role.ENGINEER, pageable)
                 .map(employeeMapper::toDto);
     }
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 }

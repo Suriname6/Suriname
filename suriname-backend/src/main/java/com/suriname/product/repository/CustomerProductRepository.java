@@ -1,22 +1,18 @@
 package com.suriname.product.repository;
 
-<<<<<<< HEAD
-=======
 import java.util.Collection;
 import java.util.List;
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.suriname.customer.entity.Customer;
 import com.suriname.product.entity.CustomerProduct;
+import org.springframework.data.jpa.repository.Query;
 
 public interface CustomerProductRepository extends JpaRepository<CustomerProduct, Long> {
 	Optional<CustomerProduct> findTopByCustomerOrderByCreatedAtDesc(Customer customer);
 
-<<<<<<< HEAD
-=======
 	@Query(value = """
 		SELECT 
 		  c.customer_id AS customerId,
@@ -39,5 +35,4 @@ public interface CustomerProductRepository extends JpaRepository<CustomerProduct
 	List<Object[]> findCustomerRaw();
 
 	List<CustomerProduct> findByCustomerCustomerId(Long customerId);
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 }

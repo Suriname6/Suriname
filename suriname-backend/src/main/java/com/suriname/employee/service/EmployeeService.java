@@ -1,23 +1,22 @@
 package com.suriname.employee.service;
 
+import com.suriname.employee.dto.EmployeeSearchRequestDto;
 import com.suriname.employee.dto.SignupRequestDto;
 import com.suriname.employee.dto.EmployeeResponseDto;
 import com.suriname.employee.dto.EmployeeUpdateRequestDto;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface EmployeeService {
     EmployeeResponseDto signup(SignupRequestDto requestDto);
 
     EmployeeResponseDto getEmployeeById(Long employeeId);
 
-    List<EmployeeResponseDto> getAllEmployees();
+    //List<EmployeeResponseDto> getAllEmployees();
 
     EmployeeResponseDto updateEmployee(Long employeeId, EmployeeUpdateRequestDto requestDto);
 
     void deactivateEmployee(Long employeeId);
-<<<<<<< HEAD
-=======
 
     Page<EmployeeResponseDto> getEmployees(EmployeeSearchRequestDto search, Pageable pageable);
 
@@ -29,5 +28,4 @@ public interface EmployeeService {
     
     Page<EmployeeResponseDto> getEngineersByRole(Pageable pageable);
 
->>>>>>> 4061aef18b1e5b63022891ef5b6e82873081e963
 }
