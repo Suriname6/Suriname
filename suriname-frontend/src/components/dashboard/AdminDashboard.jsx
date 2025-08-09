@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
+import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import {TrendingUp, TrendingDown, Users, Clock, DollarSign, AlertCircle, CheckCircle, Target} from 'lucide-react';
 import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
@@ -93,11 +94,11 @@ const monthlyTrendData = [
 ];
 
 const statusDistributionData = [
-  { name: '접수', value: 45, count: 45, color: '#3B82F6' },
-  { name: '수리중', value: 35, count: 35, color: '#F59E0B' },
-  { name: '입금대기', value: 25, count: 25, color: '#EF4444' },
-  { name: '배송대기', value: 15, count: 15, color: '#8B5CF6' },
-  { name: '완료', value: 280, count: 280, color: '#10B981' }
+  { name: '접수', key: 'receivedCount', value: 0, count: 0, color: '#3B82F6' },
+  { name: '수리중', key: 'repairingCount', value: 0, count: 0, color: '#F59E0B' },
+  { name: '입금대기', key: 'waitingForPaymentCount', value: 0, count: 0, color: '#EF4444' },
+  { name: '배송대기', key: 'waitingForDeliveryCount', value: 0, count: 0, color: '#8B5CF6' },
+  { name: '완료', key: 'completedCount', value: 0, count: 0, color: '#10B981' }
 ];
 
 const productRankingData = [
@@ -109,97 +110,204 @@ const productRankingData = [
   { product: 'LG 에어컨', count: 22, trend: 'up' },
 ];
 
-// const performanceData = [
-//     { name: '처리 속도', current: 85, target: 90 },
-//     { name: '고객 만족도', current: 92, target: 95 },
-//     { name: '완료율', current: 78, target: 85 },
-//     { name: '재수리율', current: 12, target: 8 },
-// ];
-// <PerformanceRing
-//     data={performanceData}
-//     title="성과 지표"
-// />
-
 const statisticsData = [
   {
-    icon: Users,
+    icon: Users, // 이 부분은 백엔드에서 안 주니까 그대로 유지
     title: 'A/S 접수 건수',
-    value: '1,247',
-    change: '+12.5%',
+    key: 'totalRequestCount', // DTO에서 어떤 필드랑 매칭되는지 키를 추가하자
+    value: '0', // 초기값, 나중에 백엔드 데이터로 채워짐
+    change: '+12.5%', // 이것도 백엔드에서 안 주면 유지하거나, 아니면 빼야 해
     description: '총 건수, 전월 대비 증감율'
   },
   {
     icon: Clock,
     title: '오늘 접수 건수',
-    value: '28',
+    key: 'todayRequestCount',
+    value: '0',
     change: '+5.2%',
     description: '당일 접수, 어제 대비 증감'
   },
   {
     icon: AlertCircle,
     title: '미완료 건수',
-    value: '186',
+    key: 'uncompletedCount', // 이 값은 totalRequestCount - completedCount 로 계산해야 함
+    value: '0',
     change: '-3.1%',
     description: '진행중 + 대기중 건수'
   },
   {
     icon: CheckCircle,
     title: '전체 완료율',
-    value: '85.1%',
+    key: 'completedRatio',
+    value: '0%',
     change: '+2.3%',
     description: '완료율 %, 목표 대비 달성률'
   },
   {
     icon: DollarSign,
     title: '총 매출액',
-    value: '₩24.5M',
+    key: 'totalRevenue',
+    value: '₩0',
     change: '+15.2%',
     description: '월 매출, 전월 대비 증감'
   },
   {
     icon: DollarSign,
     title: '평균 수리비',
-    value: '₩185K',
+    key: 'averageRepairCost',
+    value: '₩0',
     change: '-4.8%',
     description: '평균 수리비, 전월 대비 변화'
   }
 ];
 
+// 숫자를 한국 화폐 형식으로 포맷하는 함수 (예: 1234567 -> 1,234,567)
+const formatNumberWithCommas = (num) => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+// 숫자를 화폐 단위로 포맷하는 함수 (예: 24500000 -> ₩24.5M, 185000 -> ₩185K)
+const formatKoreanCurrency = (amount) => {
+  if (amount >= 1_000_000) {
+    return `₩${(amount / 1_000_000).toFixed(1)}M`;
+  }
+  if (amount >= 1_000) {
+    return `₩${(amount / 1_000).toFixed(0)}K`; // 천원 단위는 소수점 없이 K 붙이는게 일반적
+  }
+  return `₩${amount}`;
+};
+
 // 기존 구조와 동일한 전체 대시보드
 export default function AdminDashboard() {
   // 상태 관리: 현재 선택된 기간
   const [period, setPeriod] = useState('monthly'); // 기본값은 월별로
-  // 상태 관리: 그래프 데이터
+  // 상태 관리: 카드 데이터
+  const [cardData, setCardData] = useState([statisticsData]);
+  // 상태 관리: 처리 단계별 현황
+  const [statusData, setStatusData] = useState(statusDistributionData);
+  // 상태 관리: 매출 그래프 데이터
   const [chartData, setChartData] = useState([]);
 
-  const fetchSalesTrendData = useCallback(async () => {
+  const fetchCardData = useCallback(async () => {
     try {
-      // ⭐ 중요: 이 API 엔드포인트는 백엔드에서 period에 따라 데이터를 다르게 주는 엔드포인트여야 해!
-      // 지금은 임시로 '/api/sales-trend'라고 할게.
-      // 네 `analyticsService.getSummary`가 만약 이런 트렌드 데이터를 준다면 그걸 쓰면 돼!
-      const response = await fetch(`/api/sales-trend?period=${period}`);
-      // `analyticsService.getSummary`가 summary 데이터를 줄 거니까
-      // 그 서비스에 `getTrendData(period)` 같은 메서드를 추가해야 할 거야!
+      const response = await axios.get(`/api/analytics/statistics`);
+      const backendData = response.data; // 백엔드에서 온 DTO 데이터
 
-      if (!response.ok) {
-        throw new Error('매출 추이 데이터를 불러오는데 실패했습니다.');
-      }
-      const data = await response.json();
-
-      // 데이터 형태를 그래프에 맞게 변환해야 할 수도 있어.
-      // 예를 들어, 백엔드에서 받아온 데이터가 [{date: '2025-01-01', revenue: 100}, ...] 형태라면 그대로 사용.
-      // 만약 형태가 다르다면 여기에 매핑 로직 필요.
-      setChartData(data); // 데이터를 상태에 저장
+      // DTO 데이터를 받아서 기존 StatisticsData의 value만 업데이트!
+      const updatedCardData = statisticsData.map(stat => {
+        let newValue = stat.value; // 기본값은 기존 value로
+        if (stat.key) { // DTO에서 해당하는 키가 있다면
+          // 백엔드 데이터에 있는 필드 매핑
+          if (backendData.hasOwnProperty(stat.key)) {
+            const dataValue = backendData[stat.key];
+            if (stat.key === 'totalRequestCount' || stat.key === 'todayRequestCount' || stat.key === 'uncompletedCount') {
+              newValue = formatNumberWithCommas(dataValue); // 숫자 포맷팅
+            } else if (stat.key === 'completedRatio') {
+              newValue = `${(dataValue).toFixed(1)}%`; // 소수점 한자리 백분율로
+            } else if (stat.key === 'totalRevenue' || stat.key === 'averageRepairCost') {
+              newValue = formatKoreanCurrency(dataValue); // 한국 화폐 포맷팅
+            } else {
+              newValue = dataValue.toString(); // 그 외 일반적인 경우
+            }
+          }
+        }
+        return {
+          ...stat, // 기존 아이콘, 제목 등은 그대로 유지
+          value: newValue // 값만 백엔드 데이터로 업데이트
+        };
+      });
+      console.log("updatedCardData: ", updatedCardData);
+      setCardData(updatedCardData); // 업데이트된 데이터로 state 변경
     } catch (error) {
-      console.error("매출 추이 데이터 로드 에러:", error);
-      setChartData([]); // 에러 발생 시 데이터 비우기
+      console.error("통계 데이터 로드 에러:", error);
+      // axios 에러 처리: error.response.status 등으로 상태 코드 접근 가능
+      if (error.response) {
+        console.error("응답 에러:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("요청 에러:", error.request);
+      } else {
+        console.error("알 수 없는 에러:", error.message);
+      }
+      setCardData([]);
     }
-  }, [period]); // period가 바뀔 때마다 fetch 함수 재생성
+  }, [])
+
+  const fetchStatusData = useCallback(async () => {
+    try {
+      const response = await axios.get(`/api/analytics/status-count`);
+      const backendData = response.data; // 백엔드에서 온 DTO 데이터
+      console.log("DTO data: ", response.data);
+
+      // DTO 데이터를 받아서 기존 StatusData의 value만 업데이트!
+      const updatedStatusData = statusDistributionData.map(stat => {
+        let newValue = stat.value; // 기본값은 기존 value로
+        let newCount = stat.count;
+        console.log("newValue: ", newValue);
+        console.log("newCount: ", newCount);
+
+        if (stat.key && backendData.hasOwnProperty(stat.key)) { // stat.key가 있고, backendData에 해당 키가 존재하면
+          newValue = backendData[stat.key]
+          newCount = formatNumberWithCommas(backendData[stat.key])// 해당하는 값을 가져와서 포맷
+        } else {
+          // 만약 DTO에 해당 키가 없거나 데이터가 비어있으면 기본값 0 유지 (혹은 다른 기본값 설정)
+          newValue = 0; // 명시적으로 0으로 설정
+        }
+
+        return {
+          ...stat, // 기존 아이콘, 제목 등은 그대로 유지
+          value: newValue, // 값만 백엔드 데이터로 업데이트
+          count: newCount
+        };
+      });
+      console.log("updatedStatusData: ", updatedStatusData);
+      setStatusData(updatedStatusData); // 업데이트된 데이터로 state 변경
+    } catch (error) {
+      console.error("통계 데이터 로드 에러:", error);
+      // axios 에러 처리: error.response.status 등으로 상태 코드 접근 가능
+      if (error.response) {
+        console.error("응답 에러:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("요청 에러:", error.request);
+      } else {
+        console.error("알 수 없는 에러:", error.message);
+      }
+      setStatusData([]);
+    }
+  }, [])
+
+  // const fetchSalesTrendData = useCallback(async () => {
+  //   try {
+  //     const response = await axios.get(`/api/sales-trend?period=${period}`);
+  //
+  //     // response.data에 바로 JSON 파싱된 데이터가 들어있음!
+  //     setChartData(response.data);
+  //
+  //   } catch (error) {
+  //     console.error("매출 추이 데이터 로드 에러:", error);
+  //     // axios 에러 처리: error.response.status 등으로 상태 코드 접근 가능
+  //     if (error.response) {
+  //       console.error("응답 에러:", error.response.status, error.response.data);
+  //     } else if (error.request) {
+  //       console.error("요청 에러:", error.request);
+  //     } else {
+  //       console.error("알 수 없는 에러:", error.message);
+  //     }
+  //     setChartData([]);
+  //   }
+  // }, [period]);
+
+  useEffect(() => {
+    fetchCardData(); // 컴포넌트 마운트 시 데이터 불러오기
+  }, [fetchCardData]);
+
+  useEffect(() => {
+    fetchStatusData(); // 컴포넌트 마운트 시 데이터 불러오기
+  }, [fetchStatusData]);
 
   // 컴포넌트 마운트 시, 또는 period가 변경될 때 데이터 다시 불러오기
-  useEffect(() => {
-    fetchSalesTrendData();
-  }, [fetchSalesTrendData]);
+  // useEffect(() => {
+  //   fetchSalesTrendData();
+  // }, [fetchSalesTrendData]);
 
   // 드롭다운 변경 핸들러
   const handleChangePeriod = (event) => {
@@ -364,63 +472,35 @@ export default function AdminDashboard() {
       </Card>
   );
 
-// Performance Ring Chart
-  const PerformanceRing = ({ data, title }) => (
-      <Card className="p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">{title}</h3>
-        <div className="grid grid-cols-2 gap-6">
-          {data.map((item, index) => (
-              <div key={index} className="text-center">
-                <div className="relative w-20 h-20 mx-auto mb-3">
-                  <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
-                    <path
-                        d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
-                        fill="none"
-                        stroke="#E5E7EB"
-                        strokeWidth="3"
-                    />
-                    <path
-                        d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
-                        fill="none"
-                        stroke="#3B82F6"
-                        strokeWidth="3"
-                        strokeDasharray={`${item.current}, 100`}
-                        className="transition-all duration-1000 ease-out"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-bold text-gray-900">{item.current}%</span>
-                  </div>
-                </div>
-                <p className="text-sm font-medium text-gray-600">{item.name}</p>
-                <p className="text-xs text-gray-400">목표: {item.target}%</p>
-              </div>
-          ))}
-        </div>
-      </Card>
-  );
-
-// StatisticsSection 컴포넌트
+  // StatisticsSection 컴포넌트
   const StatisticsSection = () => {
     return (
         <div className="space-y-8">
           {/* 핵심 지표 카드들 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {statisticsData.map((stat, index) => (
+            {cardData.map((stat, index) => {
+              const IconComponent = stat.icon;
+              if (!IconComponent) { // 만약을 대비해서 아이콘이 없는 경우 처리
+                console.warn(`아이콘 컴포넌트가 없어! stat: ${stat.title}`);
+                return null; // 렌더링 안 함
+              }
+              return (
                 <Card key={index} hover className="p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600">
-                      <stat.icon className="w-6 h-6 text-white" />
+                      <IconComponent className="w-6 h-6 text-white"/>
                     </div>
-                    <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
-                      <TrendingUp className="w-4 h-4" />
-                      {stat.change}
-                    </div>
+                    {/*<div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">*/}
+                    {/*  <TrendingUp className="w-4 h-4" />*/}
+                    {/*  {stat.change}*/}
+                    {/*</div>*/}
+
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 pl-2">{stat.title}</h3>
                   </div>
-                  <h3 className="text-gray-600 text-sm font-medium mb-2">{stat.title}</h3>
                   <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
                 </Card>
-            ))}
+              );
+            })}
           </div>
         </div>
     );
@@ -432,7 +512,7 @@ export default function AdminDashboard() {
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <ModernDonutChart
-                data={statusDistributionData}
+                data={statusData}
                 title="처리 단계별 현황"
             />
             <ModernBarChart

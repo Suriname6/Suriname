@@ -1,18 +1,11 @@
 package com.suriname.analytics.service;
 
-import com.suriname.analytics.dto.CategoryCountDTO;
-import com.suriname.analytics.dto.EmployeeStatsDTO;
-import com.suriname.analytics.dto.RequestTrendDTO;
-import com.suriname.analytics.dto.SummaryResponseDTO;
-import com.suriname.analytics.entity.RequestStatus;
+import com.suriname.analytics.dto.*;
 import com.suriname.analytics.repository.CustomAnalyticsRepository;
 import com.suriname.request.entity.Request;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,44 +13,70 @@ import java.util.List;
 public class AnalyticsService {
     private final CustomAnalyticsRepository customAnalyticsRepository;
 
-    public SummaryResponseDTO getSummary(String period) {
-        LocalDateTime startDate = switch (period.toUpperCase()) {
-            case "WEEK" -> LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay();
-            case "MONTH" -> LocalDate.now().withDayOfMonth(1).atStartOfDay();
-            default -> LocalDate.now().atStartOfDay(); // TODAY
-        };
+    // 카드형 통계
+    public StatisticResponseDTO getStatistic() {
+        long totalRequestCount = customAnalyticsRepository.countAll();
+        long todayRequestCount = customAnalyticsRepository.countTodayRequests();
+        long uncompletedCount = customAnalyticsRepository.countUncompleteRequests();
+        double completedRatio = customAnalyticsRepository.getOverallCompletionRate();
+        long totalRevenue = customAnalyticsRepository.getTotalRevenue();
+        double averageRepairCost = customAnalyticsRepository.getAverageRepairCost();
 
-        int newRequestCount = customAnalyticsRepository.countByCreatedAtAfter(startDate);
-        int inProgressCount = customAnalyticsRepository.countByStatusIn(List.of(Request.Status.REPAIRING, Request.Status.WAITING_FOR_PAYMENT));
-        int completedCount = customAnalyticsRepository.countByStatus(Request.Status.COMPLETED);
-        int totalRequestCount = customAnalyticsRepository.countAll();
-
-
-        return new SummaryResponseDTO(
-                newRequestCount, inProgressCount, completedCount, totalRequestCount
+        return new StatisticResponseDTO(
+                totalRequestCount, todayRequestCount, uncompletedCount, completedRatio,
+                totalRevenue, averageRepairCost
         );
     }
 
-    public List<RequestTrendDTO> getRequestTrend(String groupBy) {
-        String format = switch (groupBy) {
-            case "daily" -> "%Y-%m-%d";
-            case "weekly" -> "%Y-%u";
-            case "monthly" -> "%Y-%m";
-            case "yearly" -> "%Y";
-            default -> throw new IllegalArgumentException("Invalid groupBy: " + groupBy);
-        };
+    // 도넛형 그래프(처리 단계별 현황)
+    public StatusCountDTO getStatusCount() {
+        List<StatusCountResultDTO> statusResults = customAnalyticsRepository.getStatusDistribution();
+        System.out.println("📊 getStatusDistribution() 결과: " + statusResults);
+        System.out.println("📊 결과 리스트가 비어있나요? " + statusResults.isEmpty());
+        System.out.println("📊 결과 리스트의 사이즈: " + statusResults.size());
 
-        List<Object[]> result = customAnalyticsRepository.findRequestTrend(format);
-        return result.stream()
-                .map(row -> new RequestTrendDTO((String) row[0], ((Number) row[1]).longValue()))
-                .toList();
-    }
+        long receivedCount = 0;
+        long repairingCount = 0;
+        long waitingForPaymentCount = 0;
+        long waitingForDeliveryCount = 0;
+        long completedCount = 0;
 
-    public List<CategoryCountDTO> getAsCountByCategory() {
-        List<Object[]> results = customAnalyticsRepository.countRequestsByCategory();
-        return results.stream()
-                .map(row -> new CategoryCountDTO((String) row[0], (String) row[1], ((Number) row[2]).longValue()))
-                .toList();
+        for (StatusCountResultDTO result : statusResults) {
+            System.out.println("   -> Status: " + result.status() + ", Count: " + result.count());
+            switch (result.status()) {
+                case "RECEIVED":
+                    receivedCount = result.count();
+                    break;
+                case "REPAIRING":
+                    repairingCount = result.count();
+                    break;
+                case "WAITING_FOR_PAYMENT":
+                    waitingForPaymentCount = result.count();
+                    break;
+                case "WAITING_FOR_DELIVERY":
+                    waitingForDeliveryCount = result.count();
+                    break;
+                case "COMPLETED":
+                    completedCount = result.count();
+                    break;
+                // 다른 status가 있다면 여기에 추가적으로 처리 가능
+            }
+        }
+        System.out.println(
+                "receivedCount: " + receivedCount + ", " +
+                "repairingCount: " + repairingCount + ", " +
+                "waitingForPaymentCount: " + waitingForPaymentCount + ", " +
+                "waitingForDeliveryCount: " + waitingForDeliveryCount + ", " +
+                "completedCount: " + completedCount
+        );
+        // 최종 DTO 생성
+        return new StatusCountDTO(
+                receivedCount,
+                repairingCount,
+                waitingForPaymentCount,
+                waitingForDeliveryCount,
+                completedCount
+        );
     }
 
     public List<EmployeeStatsDTO> getEmployeeStats() {
