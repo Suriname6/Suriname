@@ -19,4 +19,6 @@ public interface RepairPresetRepository extends JpaRepository<RepairPreset, Long
 
     //프리셋 중복 생성 방지 (카테고리+이름)
     boolean existsByCategory_CategoryIdAndNameIgnoreCase(Long categoryId, String name);
+
+    List<RepairPreset> findByCategory_CategoryIdAndIsActiveTrueOrderByNameAsc(Long categoryId);
 }

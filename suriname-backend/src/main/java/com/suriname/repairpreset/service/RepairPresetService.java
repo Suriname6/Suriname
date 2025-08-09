@@ -75,6 +75,15 @@ public class RepairPresetService {
         preset.inactive();
     }
 
+    @Transactional(readOnly = true)
+    public List<PresetResponseDto> getActivePresetsByCategory(Long categoryId) {
+        return repairPresetRepository
+                .findByCategory_CategoryIdAndIsActiveTrueOrderByNameAsc(categoryId)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
     private PresetResponseDto toDto(RepairPreset preset) {
         return new PresetResponseDto(
                 preset.getRepairPresetsId(),
