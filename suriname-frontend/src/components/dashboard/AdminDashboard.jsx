@@ -185,6 +185,8 @@ export default function AdminDashboard() {
   const [cardData, setCardData] = useState([statisticsData]);
   // 상태 관리: 처리 단계별 현황
   const [statusData, setStatusData] = useState(statusDistributionData);
+  // 상태 관리: 카테고리별 A/S 건수
+  const [categoryAsCountData, setCategoryAsCountData] = useState([]);
   // 상태 관리: 매출 그래프 데이터
   const [chartData, setChartData] = useState([]);
 
@@ -275,6 +277,23 @@ export default function AdminDashboard() {
     }
   }, [])
 
+  const fetchCategoryAsCount = useCallback(async () => {
+    try {
+      const response = await axios.get(`/api/analytics/category-as-count`);
+      const backendData = response.data;
+      console.log("DTO data: ", response.data);
+
+      const updatedCategoryAsCountData = backendData.map(stat => ({
+        product: stat.category,
+        count: stat.count
+      }));
+      console.log("updatedCategoryAsCountData: ", updatedCategoryAsCountData);
+      setCategoryAsCountData(updatedCategoryAsCountData);
+    } catch (error) {
+      console.error("카테고리별 A/S 건수 로드 에러:", error);
+    }
+  }, [])
+
   // const fetchSalesTrendData = useCallback(async () => {
   //   try {
   //     const response = await axios.get(`/api/sales-trend?period=${period}`);
@@ -303,6 +322,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchStatusData(); // 컴포넌트 마운트 시 데이터 불러오기
   }, [fetchStatusData]);
+
+  useEffect(() => {
+    fetchCategoryAsCount(); // 컴포넌트 마운트 시 데이터 불러오기
+  }, [fetchCategoryAsCount]);
+  
 
   // 컴포넌트 마운트 시, 또는 period가 변경될 때 데이터 다시 불러오기
   // useEffect(() => {
@@ -439,38 +463,35 @@ export default function AdminDashboard() {
   );
 
 // Modern Bar Chart with Trends
-  const ModernBarChart = ({ data, title }) => (
-      <Card className="p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">{title}</h3>
-        <div className="space-y-4">
-          {data.map((item, index) => (
-              <div key={index} className="flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-900">{item.product}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-gray-900">{item.count}건</span>
-                      {item.trend === 'up' ? (
-                          <TrendingUp className="w-4 h-4 text-green-500" />
-                      ) : (
-                          <TrendingDown className="w-4 h-4 text-red-500" />
-                      )}
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                        className={`h-2 rounded-full ${
-                            item.trend === 'up' ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-red-400 to-red-600'
-                        }`}
-                        style={{ width: `${(item.count / 50) * 100}%` }}
-                    />
-                  </div>
+const ModernBarChart = ({ data, title }) => {
+  const maxCount = Math.max(...data.map(item => item.count)); // 최대값 찾기
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-xl font-bold text-gray-900 mb-6">{title}</h3>
+      <div className="space-y-4">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-900">{item.product}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-gray-900">{item.count}건</span>
                 </div>
               </div>
-          ))}
-        </div>
-      </Card>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-green-400 to-green-600"
+                  style={{ width: `${(item.count / maxCount) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
   );
+};
 
   // StatisticsSection 컴포넌트
   const StatisticsSection = () => {
@@ -516,7 +537,7 @@ export default function AdminDashboard() {
                 title="처리 단계별 현황"
             />
             <ModernBarChart
-                data={productRankingData}
+                data={categoryAsCountData}
                 title="제품별 A/S 건수 (TOP 6)"
             />
           </div>

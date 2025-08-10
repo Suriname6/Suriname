@@ -1,5 +1,6 @@
 package com.suriname.analytics.repository;
 
+import com.suriname.analytics.dto.CategoryAsCountDTO;
 import com.suriname.analytics.dto.StatusCountResultDTO;
 import com.suriname.analytics.entity.RequestStatus;
 import com.suriname.request.entity.Request;
@@ -63,6 +64,21 @@ public interface CustomAnalyticsRepository extends JpaRepository<Request, Long> 
     GROUP BY status
     """, nativeQuery = true)
     List<StatusCountResultDTO> getStatusDistribution();
+
+    // 카테고리별 A/S 건수 (TOP 6)
+    @Query(value = """
+    SELECT 
+        c.name as categoryName,
+        COUNT(r.request_id) as asCount
+    FROM request r
+    JOIN customer_product cp ON r.customer_product_id = cp.customer_product_id
+    JOIN product p ON cp.product_id = p.product_id
+    JOIN category c ON p.category_id = c.category_id
+    GROUP BY c.category_id, c.name
+    ORDER BY asCount DESC
+    LIMIT 6
+    """, nativeQuery = true)
+    List<CategoryAsCountDTO> getCategoryAsCount();
 
     @Query(value = """
         SELECT 

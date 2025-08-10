@@ -17,23 +17,23 @@ import java.util.List;
 public class AnalyticsController {
     private final AnalyticsService analyticsService;
 
+    // 카드 통계
     @GetMapping("/statistics")
     public ResponseEntity<StatisticResponseDTO> getTodayRequestCount() {
         return ResponseEntity.ok(analyticsService.getStatistic());
     }
 
+    // 처리 단계별 현황
     @GetMapping("/status-count")
     public StatusCountDTO getStatusCount() {
         return analyticsService.getStatusCount();
     }
 
-    /**
-     * 카테고리별 A/S 건수 조회
-     */
-//    @GetMapping("/as-count-by-category")
-//    public List<CategoryCountDTO> getAsCountByCategory() {
-//        return analyticsService.getAsCountByCategory();
-//    }
+    // 제품별 A/S 건수 (TOP 6)
+   @GetMapping("/category-as-count")
+   public List<CategoryAsCountDTO> getCategoryAsCount() {
+       return analyticsService.getCategoryAsCount();
+   }
 
     @GetMapping("/employees")
     public List<EmployeeStatsDTO> getEmployeeStats() {

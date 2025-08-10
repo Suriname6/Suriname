@@ -31,9 +31,6 @@ public class AnalyticsService {
     // 도넛형 그래프(처리 단계별 현황)
     public StatusCountDTO getStatusCount() {
         List<StatusCountResultDTO> statusResults = customAnalyticsRepository.getStatusDistribution();
-        System.out.println("📊 getStatusDistribution() 결과: " + statusResults);
-        System.out.println("📊 결과 리스트가 비어있나요? " + statusResults.isEmpty());
-        System.out.println("📊 결과 리스트의 사이즈: " + statusResults.size());
 
         long receivedCount = 0;
         long repairingCount = 0;
@@ -42,7 +39,6 @@ public class AnalyticsService {
         long completedCount = 0;
 
         for (StatusCountResultDTO result : statusResults) {
-            System.out.println("   -> Status: " + result.status() + ", Count: " + result.count());
             switch (result.status()) {
                 case "RECEIVED":
                     receivedCount = result.count();
@@ -62,21 +58,16 @@ public class AnalyticsService {
                 // 다른 status가 있다면 여기에 추가적으로 처리 가능
             }
         }
-        System.out.println(
-                "receivedCount: " + receivedCount + ", " +
-                "repairingCount: " + repairingCount + ", " +
-                "waitingForPaymentCount: " + waitingForPaymentCount + ", " +
-                "waitingForDeliveryCount: " + waitingForDeliveryCount + ", " +
-                "completedCount: " + completedCount
-        );
         // 최종 DTO 생성
         return new StatusCountDTO(
-                receivedCount,
-                repairingCount,
-                waitingForPaymentCount,
-                waitingForDeliveryCount,
-                completedCount
+                receivedCount, repairingCount, waitingForPaymentCount,
+                waitingForDeliveryCount, completedCount
         );
+    }
+
+    // 제품별 A/S 건수 (TOP 6)
+    public List<CategoryAsCountDTO> getCategoryAsCount() {
+        return customAnalyticsRepository.getCategoryAsCount();
     }
 
     public List<EmployeeStatsDTO> getEmployeeStats() {
