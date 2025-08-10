@@ -70,6 +70,15 @@ public class AnalyticsService {
         return customAnalyticsRepository.getCategoryAsCount();
     }
 
+    // 매출 추이
+    public List<RevenueDTO> getRevenueTrend(String period) {
+        return switch (period) {
+            case "daily" -> customAnalyticsRepository.getDailyRevenue();
+            case "yearly" -> customAnalyticsRepository.getYearlyRevenue();
+            default -> customAnalyticsRepository.getMonthlyRevenue();
+        };
+    }
+
     public List<EmployeeStatsDTO> getEmployeeStats() {
         List<Object[]> rawData = customAnalyticsRepository.getEmployeeStatsRaw();
 

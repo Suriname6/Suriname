@@ -1,6 +1,7 @@
 package com.suriname.analytics.repository;
 
 import com.suriname.analytics.dto.CategoryAsCountDTO;
+import com.suriname.analytics.dto.RevenueDTO;
 import com.suriname.analytics.dto.StatusCountResultDTO;
 import com.suriname.analytics.entity.RequestStatus;
 import com.suriname.request.entity.Request;
@@ -79,6 +80,48 @@ public interface CustomAnalyticsRepository extends JpaRepository<Request, Long> 
     LIMIT 6
     """, nativeQuery = true)
     List<CategoryAsCountDTO> getCategoryAsCount();
+
+    // 매출 추이 - 일별 (최근 20일)
+    @Query(value = """
+        SELECT 
+            DAY(r.created_at) as label,
+            COALESCE(SUM(rd.cost), 0) as revenue
+        FROM request r
+        JOIN request_detail rd ON r.request_id = rd.requests_id
+        WHERE r.status = 'COMPLETED'
+        
+        GROUP BY DAY(r.created_at), MONTH(r.created_at), YEAR(r.created_at)
+        ORDER BY YEAR(r.created_at) ASC, MONTH(r.created_at) ASC, DAY(r.created_at) ASC
+        """, nativeQuery = true)
+    List<RevenueDTO> getDailyRevenue();
+
+    // 매출 추이 - 월별 (최근 12개월)
+    @Query(value = """
+        SELECT 
+            MONTH(r.created_at) as label,
+            COALESCE(SUM(rd.cost), 0) as revenue
+        FROM request r
+        JOIN request_detail rd ON r.request_id = rd.requests_id
+        WHERE r.status = 'COMPLETED'
+        
+        GROUP BY YEAR(r.created_at), MONTH(r.created_at)
+        ORDER BY YEAR(r.created_at) ASC, MONTH(r.created_at) ASC
+        """, nativeQuery = true)
+    List<RevenueDTO> getMonthlyRevenue();
+
+    // 매출 추이 - 연별 (최근 5년)
+    @Query(value = """
+        SELECT 
+            YEAR(r.created_at) as label,
+            COALESCE(SUM(rd.cost), 0) as revenue
+        FROM request r
+        JOIN request_detail rd ON r.request_id = rd.requests_id
+        WHERE r.status = 'COMPLETED'
+        AND r.created_at >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR)
+        GROUP BY YEAR(r.created_at)
+        ORDER BY YEAR(r.created_at)
+        """, nativeQuery = true)
+    List<RevenueDTO> getYearlyRevenue();
 
     @Query(value = """
         SELECT 

@@ -218,7 +218,6 @@ export default function AdminDashboard() {
           value: newValue // 값만 백엔드 데이터로 업데이트
         };
       });
-      console.log("updatedCardData: ", updatedCardData);
       setCardData(updatedCardData); // 업데이트된 데이터로 state 변경
     } catch (error) {
       console.error("통계 데이터 로드 에러:", error);
@@ -238,14 +237,11 @@ export default function AdminDashboard() {
     try {
       const response = await axios.get(`/api/analytics/status-count`);
       const backendData = response.data; // 백엔드에서 온 DTO 데이터
-      console.log("DTO data: ", response.data);
 
       // DTO 데이터를 받아서 기존 StatusData의 value만 업데이트!
       const updatedStatusData = statusDistributionData.map(stat => {
         let newValue = stat.value; // 기본값은 기존 value로
         let newCount = stat.count;
-        console.log("newValue: ", newValue);
-        console.log("newCount: ", newCount);
 
         if (stat.key && backendData.hasOwnProperty(stat.key)) { // stat.key가 있고, backendData에 해당 키가 존재하면
           newValue = backendData[stat.key]
@@ -261,7 +257,6 @@ export default function AdminDashboard() {
           count: newCount
         };
       });
-      console.log("updatedStatusData: ", updatedStatusData);
       setStatusData(updatedStatusData); // 업데이트된 데이터로 state 변경
     } catch (error) {
       console.error("통계 데이터 로드 에러:", error);
@@ -281,39 +276,43 @@ export default function AdminDashboard() {
     try {
       const response = await axios.get(`/api/analytics/category-as-count`);
       const backendData = response.data;
-      console.log("DTO data: ", response.data);
 
       const updatedCategoryAsCountData = backendData.map(stat => ({
         product: stat.category,
         count: stat.count
       }));
-      console.log("updatedCategoryAsCountData: ", updatedCategoryAsCountData);
       setCategoryAsCountData(updatedCategoryAsCountData);
     } catch (error) {
       console.error("카테고리별 A/S 건수 로드 에러:", error);
     }
   }, [])
 
-  // const fetchSalesTrendData = useCallback(async () => {
-  //   try {
-  //     const response = await axios.get(`/api/sales-trend?period=${period}`);
-  //
-  //     // response.data에 바로 JSON 파싱된 데이터가 들어있음!
-  //     setChartData(response.data);
-  //
-  //   } catch (error) {
-  //     console.error("매출 추이 데이터 로드 에러:", error);
-  //     // axios 에러 처리: error.response.status 등으로 상태 코드 접근 가능
-  //     if (error.response) {
-  //       console.error("응답 에러:", error.response.status, error.response.data);
-  //     } else if (error.request) {
-  //       console.error("요청 에러:", error.request);
-  //     } else {
-  //       console.error("알 수 없는 에러:", error.message);
-  //     }
-  //     setChartData([]);
-  //   }
-  // }, [period]);
+  const fetchSalesTrendData = useCallback(async () => {
+    try {
+      const response = await axios.get(`/api/analytics/revenue-trend?period=${period}`);
+      const backendData = response.data;
+      console.log("DTO data: ", response.data);
+
+      const updatedSalesTrendData = backendData.map(stat => ({
+        ...stat,
+        revenue: Number(stat.revenue)
+      }));
+      console.log("updatedSalesTrendData: ", updatedSalesTrendData);
+      setChartData(updatedSalesTrendData);
+      console.log("chartData: ", chartData);
+    } catch (error) {
+      console.error("매출 추이 데이터 로드 에러:", error);
+      // axios 에러 처리: error.response.status 등으로 상태 코드 접근 가능
+      if (error.response) {
+        console.error("응답 에러:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("요청 에러:", error.request);
+      } else {
+        console.error("알 수 없는 에러:", error.message);
+      }
+      setChartData([]);
+    }
+  }, [period]);
 
   useEffect(() => {
     fetchCardData(); // 컴포넌트 마운트 시 데이터 불러오기
@@ -329,9 +328,9 @@ export default function AdminDashboard() {
   
 
   // 컴포넌트 마운트 시, 또는 period가 변경될 때 데이터 다시 불러오기
-  // useEffect(() => {
-  //   fetchSalesTrendData();
-  // }, [fetchSalesTrendData]);
+  useEffect(() => {
+    fetchSalesTrendData();
+  }, [fetchSalesTrendData]);
 
   // 드롭다운 변경 핸들러
   const handleChangePeriod = (event) => {
@@ -341,19 +340,12 @@ export default function AdminDashboard() {
   // XAxis의 dataKey와 Tooltip의 label은 period에 따라 달라질 수 있어!
   // 예를 들어, 'daily'면 dataKey는 'date', 'monthly'면 'month'
   const getXAxisDataKey = () => {
-    switch (period) {
-      case 'daily': return 'date';
-      case 'weekly': return 'week';
-      case 'monthly': return 'month';
-      case 'yearly': return 'year';
-      default: return 'date'; // 기본값
-    }
+    return 'label';
   };
   // 차트 제목도 동적으로 변경
   const getChartTitle = () => {
     switch (period) {
       case 'daily': return '일별 매출 추이';
-      case 'weekly': return '주별 매출 추이';
       case 'monthly': return '월별 매출 추이';
       case 'yearly': return '년별 매출 추이';
       default: return '매출 추이';
@@ -411,56 +403,56 @@ export default function AdminDashboard() {
       </Card>
   );
 
-// Modern Area Chart
-  const ModernAreaChart = ({ data, title, dataKeys }) => (
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-          <div className="flex gap-4">
-            {dataKeys.map((key, index) => (
-                <div key={key.key} className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: key.color }} />
-                  <span className="text-sm font-medium text-gray-600">{key.name}</span>
-                </div>
-            ))}
-          </div>
-        </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-              </linearGradient>
-              <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-            <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
-            <YAxis stroke="#6B7280" fontSize={12} />
-            <Tooltip content={<CustomTooltip />} />
-            <Area
-                type="monotone"
-                dataKey="count"
-                stroke="#3B82F6"
-                strokeWidth={3}
-                fillOpacity={1}
-                fill="url(#colorCount)"
-            />
-            <Area
-                type="monotone"
-                dataKey="completed"
-                stroke="#10B981"
-                strokeWidth={3}
-                fillOpacity={1}
-                fill="url(#colorCompleted)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </Card>
-  );
+// // Modern Area Chart
+//   const ModernAreaChart = ({ data, title, dataKeys }) => (
+//       <Card className="p-6">
+//         <div className="flex items-center justify-between mb-6">
+//           <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+//           <div className="flex gap-4">
+//             {dataKeys.map((key, index) => (
+//                 <div key={key.key} className="flex items-center gap-2">
+//                   <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: key.color }} />
+//                   <span className="text-sm font-medium text-gray-600">{key.name}</span>
+//                 </div>
+//             ))}
+//           </div>
+//         </div>
+//         <ResponsiveContainer width="100%" height={300}>
+//           <AreaChart data={data}>
+//             <defs>
+//               <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+//                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+//                 <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+//               </linearGradient>
+//               <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+//                 <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+//                 <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+//               </linearGradient>
+//             </defs>
+//             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+//             <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
+//             <YAxis stroke="#6B7280" fontSize={12} />
+//             <Tooltip content={<CustomTooltip />} />
+//             <Area
+//                 type="monotone"
+//                 dataKey="count"
+//                 stroke="#3B82F6"
+//                 strokeWidth={3}
+//                 fillOpacity={1}
+//                 fill="url(#colorCount)"
+//             />
+//             <Area
+//                 type="monotone"
+//                 dataKey="completed"
+//                 stroke="#10B981"
+//                 strokeWidth={3}
+//                 fillOpacity={1}
+//                 fill="url(#colorCompleted)"
+//             />
+//           </AreaChart>
+//         </ResponsiveContainer>
+//       </Card>
+//   );
 
 // Modern Bar Chart with Trends
 const ModernBarChart = ({ data, title }) => {
@@ -545,10 +537,10 @@ const ModernBarChart = ({ data, title }) => {
           {/* 매출 트렌드 */}
           <Card className="p-6">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              {/* ⭐️ 차트 제목 ⭐️ */}
+              {/* 차트 제목 */}
               <h3 className="text-xl font-bold text-gray-900">{getChartTitle()}</h3>
 
-              {/* ⭐️ 기간 선택 드롭다운 ⭐️ */}
+              {/* 기간 선택 드롭다운 */}
               <FormControl variant="outlined" sx={{ minWidth: 120 }}>
                 <InputLabel id="period-select-label">기간</InputLabel>
                 <Select
@@ -558,14 +550,13 @@ const ModernBarChart = ({ data, title }) => {
                     label="기간"
                 >
                   <MenuItem value="daily">일별</MenuItem>
-                  <MenuItem value="weekly">주별</MenuItem>
                   <MenuItem value="monthly">월별</MenuItem>
                   <MenuItem value="yearly">년별</MenuItem>
                 </Select>
               </FormControl>
             </div>
             <ResponsiveContainer width="100%" height={350}>
-              <AreaChart data={chartData}> {/* ⭐️ chartData로 변경! ⭐️ */}
+              <AreaChart data={chartData}> {/* chartData로 변경 */}
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
@@ -573,12 +564,12 @@ const ModernBarChart = ({ data, title }) => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey={getXAxisDataKey()} stroke="#6B7280" fontSize={12} /> {/* ⭐️ dataKey 동적 변경! ⭐️ */}
+                <XAxis dataKey={getXAxisDataKey()} stroke="#6B7280" fontSize={12} /> {/* dataKey 동적 변경! */}
                 <YAxis stroke="#6B7280" fontSize={12} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area
                     type="monotone"
-                    dataKey="revenue" // ⭐️ 'revenue' 필드는 모든 기간에서 동일하다고 가정! ⭐️
+                    dataKey="revenue" // 'revenue' 필드는 모든 기간에서 동일하다고 가정! 
                     stroke="#8B5CF6"
                     strokeWidth={4}
                     fillOpacity={1}

@@ -25,15 +25,21 @@ public class AnalyticsController {
 
     // 처리 단계별 현황
     @GetMapping("/status-count")
-    public StatusCountDTO getStatusCount() {
-        return analyticsService.getStatusCount();
+    public ResponseEntity<StatusCountDTO> getStatusCount() {
+        return ResponseEntity.ok(analyticsService.getStatusCount());
     }
 
     // 제품별 A/S 건수 (TOP 6)
-   @GetMapping("/category-as-count")
-   public List<CategoryAsCountDTO> getCategoryAsCount() {
-       return analyticsService.getCategoryAsCount();
-   }
+    @GetMapping("/category-as-count")
+    public ResponseEntity<List<CategoryAsCountDTO>> getCategoryAsCount() {
+        return ResponseEntity.ok(analyticsService.getCategoryAsCount());
+    }
+
+    // 매출 추이
+    @GetMapping("/revenue-trend")
+    public ResponseEntity<List<RevenueDTO>> getRevenueTrend(@RequestParam String period) {
+        return ResponseEntity.ok(analyticsService.getRevenueTrend(period));
+    }
 
     @GetMapping("/employees")
     public List<EmployeeStatsDTO> getEmployeeStats() {
