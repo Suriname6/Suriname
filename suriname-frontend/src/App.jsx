@@ -17,7 +17,8 @@ import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
 import CustomerAdd from "./pages/Customer/CustomerAdd";
 import CustomerDetail from "./pages/Customer/CustomerDetail";
 
-import DashboardPage from "./pages/DashboardPage";
+import DashboardPage from "./pages/Dashboard/DashboardPage.jsx";
+import EmployeePerformancePage from "./pages/Dashboard/EmployeePerformancePage.jsx";
 
 import ProductList from "./pages/Product/ProductList";
 import ProductAdd from "./pages/Product/ProductAdd";
@@ -85,6 +86,8 @@ function App() {
           <Route path="/customer/upload" element={<CustomerAdd />} />
           <Route path="/customer/detail/:id" element={<CustomerDetail />} />
           <Route path="/dashboard/statistics" element={<DashboardPage />} />
+          <Route path="/dashboard/performance" element={<EmployeePerformancePage />} />
+
           <Route path="/payment/list" element={<PaymentListPage />} />
           <Route
             path="/payment/virtualaccount"
