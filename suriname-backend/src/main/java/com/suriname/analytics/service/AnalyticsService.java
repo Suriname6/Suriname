@@ -88,7 +88,8 @@ public class AnalyticsService {
                 ((Number) row[2]).longValue(),      // assignedCount
                 ((Number) row[3]).longValue(),      // completedCount
                 ((Number) row[4]).doubleValue(),    // completionRate
-                row[5] != null ? ((Number) row[5]).doubleValue() : null // averageRating
+                ((Number) row[5]).doubleValue(),    // averageCompletionHours
+                row[6] != null ? ((Number) row[6]).doubleValue() : null // averageRating
         )).toList();
     }
 }

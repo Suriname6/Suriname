@@ -124,21 +124,30 @@ public interface CustomAnalyticsRepository extends JpaRepository<Request, Long> 
     List<RevenueDTO> getYearlyRevenue();
 
     @Query(value = """
-        SELECT 
-          e.employee_id AS employeeId,
-          e.name AS employeeName,
-          COUNT(r.request_id) AS assignedCount,
-          SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END) AS completedCount,
-          CASE 
-            WHEN COUNT(r.request_id) = 0 THEN 0
-            ELSE ROUND(SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END) * 1.0 / COUNT(r.request_id), 2)
-          END AS completionRate,
-          ROUND(AVG(s.rating), 2) AS averageRating
+        SELECT
+            e.employee_id AS employeeId,
+            e.name AS employeeName,
+            COUNT(r.request_id) AS assignedCount, -- 배정 건수 (요청의 employee_id 기준)
+            SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END) AS completedCount, -- 완료 건수
+            CASE
+                WHEN COUNT(r.request_id) = 0 THEN 0
+                ELSE ROUND(SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END) * 1.0 / COUNT(r.request_id), 2)
+            END AS completionRate, -- 완료율
+            COALESCE(AVG_TIME.averageCompletionHours, 0) AS averageCompletionHours,
+            ROUND(AVG(s.rating), 2) AS averageRating -- 평균 만족도
         FROM employee e
         LEFT JOIN request r ON e.employee_id = r.employee_id
         LEFT JOIN satisfaction s ON r.request_id = s.request_id
+        LEFT JOIN (
+            SELECT r.employee_id, AVG(TIMESTAMPDIFF(HOUR, r.created_at, rsl_completed.changed_at)) AS averageCompletionHours
+            FROM request r
+            JOIN request_status_log rsl_completed ON r.request_id = rsl_completed.request_id
+                AND rsl_completed.new_status = 'COMPLETED' -- ⭐ 'COMPLETED' 상태로 변경된 시점만! ⭐
+            WHERE r.status = 'COMPLETED' -- ⭐ 실제 요청 상태도 'COMPLETED'여야 의미가 있음 ⭐
+            GROUP BY r.employee_id
+        ) AS AVG_TIME ON e.employee_id = AVG_TIME.employee_id
         GROUP BY e.employee_id, e.name
-        ORDER BY assignedCount DESC
+        ORDER BY assignedCount DESC;
         """, nativeQuery = true)
     List<Object[]> getEmployeeStatsRaw();
 }
