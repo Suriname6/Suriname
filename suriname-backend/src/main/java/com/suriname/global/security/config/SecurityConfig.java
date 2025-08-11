@@ -3,6 +3,7 @@ package com.suriname.global.security.config;
 import com.suriname.global.security.filter.JwtAuthenticationFilter;
 import com.suriname.global.security.provider.JwtTokenProvider;
 import com.suriname.global.security.service.EmployeeDetailsService;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,8 +54,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/signup", "/login").permitAll()
                         .requestMatchers("/", "/index.html", "/favicon.ico",
                                 "/assets/**", "/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers(HttpMethod.GET,
+                                "/login", "/signup",
+                                "/tracking", "/survey/**",
+                                "/customer/**",
+                                "/dashboard/**",
+                                "/payment/**",
+                                "/product/**",
+                                "/staff/**",
+                                "/repair/**",
+                                "/delivery/**",
+                                "/completion/**",
+                                "/request/**"
+                        ).permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
