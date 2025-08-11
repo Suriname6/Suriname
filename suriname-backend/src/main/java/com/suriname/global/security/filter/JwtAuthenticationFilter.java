@@ -24,20 +24,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String path = request.getRequestURI();
 		String method = request.getMethod();
 
-		/*
-		 * return path.equals("/api/auth/login") || path.equals("/api/auth/refresh") ||
-		 * (path.equals("/api/users") && method.equals("POST"));
-		 */
+        boolean isApi = path.startsWith("/api/");
 
-		boolean shouldSkip = path.equals("/api/auth/login") || path.equals("/api/auth/refresh")
-				|| (path.equals("/api/users") && method.equals("POST"));
+        boolean authWhitelist =
+                path.equals("/api/auth/login") ||
+                        path.equals("/api/auth/refresh") ||
+                        (path.equals("/api/users") && "POST".equals(method)) ||
+                        (path.equals("/api/payments/webhook/toss") && "POST".equals(method));
 
-		System.out.println("=== JWT FILTER ===");
-		System.out.println("URI: " + path);
-		System.out.println("METHOD: " + method);
-		System.out.println("shouldNotFilter: " + shouldSkip);
+        boolean staticWhitelist =
+                path.equals("/") ||
+                        path.equals("/index.html") ||
+                        path.startsWith("/assets/") ||
+                        path.equals("/favicon.ico") ||
+                        path.startsWith("/static/");
 
-		return shouldSkip;
+        boolean shouldSkip = !isApi || authWhitelist || staticWhitelist;
+
+        System.out.println("=== JWT FILTER ===");
+        System.out.println("URI: " + path + " | METHOD: " + method + " | shouldNotFilter: " + shouldSkip);
+
+        return shouldSkip;
 	}
 
 	@Override
