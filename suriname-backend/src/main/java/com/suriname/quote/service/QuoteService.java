@@ -50,7 +50,7 @@ public class QuoteService {
     @Transactional(readOnly = true)
     public QuotePageResponse getQuotesWithSearch(int page, int size, String customerName, 
             String requestNo, String productName, String serialNumber, String isApproved, 
-            String employeeName, String startDate, String endDate) {
+            String employeeName, String startDate, String endDate, String progressStatus, String paymentStatus) {
         
         try {
             System.out.println("=== QuoteService.getQuotesWithSearch ===");
@@ -63,11 +63,24 @@ public class QuoteService {
             long totalQuotes = quoteRepository.count();
             System.out.println("Total quotes in database: " + totalQuotes);
             
-            if (hasSearchCriteria(customerName, requestNo, productName, serialNumber, isApproved, employeeName, startDate, endDate)) {
-                System.out.println("Using filtered search");
+            if (hasSearchCriteria(customerName, requestNo, productName, serialNumber, isApproved, employeeName, startDate, endDate, progressStatus, paymentStatus)) {
+                System.out.println("Using filtered search with progressStatus: " + progressStatus + ", paymentStatus: " + paymentStatus);
                 quotePage = quoteRepository.findWithFilters(customerName, requestNo, productName, 
                         serialNumber, parseApprovalStatus(isApproved), employeeName, 
                         parseDate(startDate), parseDate(endDate), pageable);
+                
+                // 진행상태 필터링 (메모리에서 처리)
+                if (progressStatus != null && !progressStatus.trim().isEmpty()) {
+                    quotePage = filterByProgressStatus(quotePage, progressStatus, pageable);
+                }
+                
+                // 입금상태 필터링 (메모리에서 처리)
+                if (paymentStatus != null && !paymentStatus.trim().isEmpty()) {
+                    System.out.println("입금상태 필터링 시작 - paymentStatus: " + paymentStatus);
+                    System.out.println("필터링 전 Quote 개수: " + quotePage.getContent().size());
+                    quotePage = filterByPaymentStatus(quotePage, paymentStatus, pageable);
+                    System.out.println("필터링 후 Quote 개수: " + quotePage.getContent().size());
+                }
             } else {
                 System.out.println("Using findAll (no filters)");
                 quotePage = quoteRepository.findAll(pageable);
@@ -192,6 +205,9 @@ public class QuoteService {
             quoteRepository.save(savedQuote);
         }
         
+        // Request 상태 업데이트
+        updateRequestStatus(request, dto.getStatusChange());
+        
         // 직접 입력한 수리항목 자동 저장 기능 제거됨
         
         return savedQuote.getQuoteId();
@@ -262,11 +278,140 @@ public class QuoteService {
         
         Quote savedQuote = quoteRepository.save(existingQuote);
         
+        // Request 상태 업데이트
+        updateRequestStatus(request, dto.getStatusChange());
+        
         return savedQuote.getQuoteId();
     }
     
+    // Request 상태 업데이트 메서드
+    private void updateRequestStatus(Request request, String statusChange) {
+        if (statusChange == null) return;
+        
+        Request.Status newStatus;
+        switch (statusChange) {
+            case "IN_PROGRESS":
+                newStatus = Request.Status.REPAIRING;
+                break;
+            case "AWAITING_PAYMENT":
+                newStatus = Request.Status.WAITING_FOR_PAYMENT;
+                break;
+            case "READY_FOR_DELIVERY":
+                newStatus = Request.Status.WAITING_FOR_DELIVERY;
+                break;
+            case "COMPLETED":
+                newStatus = Request.Status.COMPLETED;
+                break;
+            default:
+                return; // 알 수 없는 상태는 업데이트하지 않음
+        }
+        
+        request.changeStatus(newStatus);
+        requestRepository.save(request);
+        System.out.println("Request 상태 업데이트: " + request.getRequestNo() + " -> " + newStatus);
+    }
+    
+    // 진행상태 필터링
+    private Page<Quote> filterByProgressStatus(Page<Quote> quotePage, String progressStatus, Pageable pageable) {
+        // 콤마로 구분된 여러 상태 처리 (예: "READY_FOR_DELIVERY,COMPLETED")
+        String[] statusArray = progressStatus.contains(",") ? progressStatus.split(",") : new String[]{progressStatus};
+        
+        List<Quote> filteredQuotes = quotePage.getContent().stream()
+                .filter(quote -> {
+                    if (quote.getRequest() == null || quote.getRequest().getStatus() == null) {
+                        return false;
+                    }
+                    
+                    String requestStatus = mapRequestStatusToProgressStatus(quote.getRequest().getStatus());
+                    
+                    // 여러 상태 중 하나라도 일치하면 포함
+                    for (String status : statusArray) {
+                        if (status.trim().equals(requestStatus)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        
+        return new org.springframework.data.domain.PageImpl<>(
+                filteredQuotes, pageable, filteredQuotes.size());
+    }
+    
+    // 입금상태 필터링  
+    private Page<Quote> filterByPaymentStatus(Page<Quote> quotePage, String paymentStatus, Pageable pageable) {
+        System.out.println("=== filterByPaymentStatus 호출됨 ===");
+        System.out.println("필터링할 paymentStatus: " + paymentStatus);
+        System.out.println("전체 Quote 개수: " + quotePage.getContent().size());
+        
+        List<Quote> filteredQuotes = quotePage.getContent().stream()
+                .filter(quote -> {
+                    String currentPaymentStatus = determinePaymentStatus(quote);
+                    boolean matches = paymentStatus.equals(currentPaymentStatus);
+                    System.out.println("Quote " + quote.getRequest().getRequestNo() + 
+                                     " - currentStatus: " + currentPaymentStatus + 
+                                     ", filterStatus: " + paymentStatus + 
+                                     ", matches: " + matches);
+                    return matches;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        
+        System.out.println("필터링 결과: " + filteredQuotes.size() + "개");
+        return new org.springframework.data.domain.PageImpl<>(
+                filteredQuotes, pageable, filteredQuotes.size());
+    }
+    
+    // Request 상태를 진행상태로 매핑
+    private String mapRequestStatusToProgressStatus(com.suriname.request.entity.Request.Status status) {
+        switch (status) {
+            case RECEIVED -> { return "RECEIVED"; }
+            case REPAIRING -> { return "IN_PROGRESS"; }
+            case WAITING_FOR_PAYMENT -> { return "AWAITING_PAYMENT"; }
+            case WAITING_FOR_DELIVERY -> { return "READY_FOR_DELIVERY"; }
+            case COMPLETED -> { return "COMPLETED"; }
+            default -> { return "IN_PROGRESS"; }
+        }
+    }
+    
+    // Quote를 기반으로 입금상태 결정
+    private String determinePaymentStatus(Quote quote) {
+        if (quote.getRequest() == null) {
+            return "AWAITING_PAYMENT";
+        }
+        
+        com.suriname.request.entity.Request.Status status = quote.getRequest().getStatus();
+        System.out.println("determinePaymentStatus - RequestNo: " + quote.getRequest().getRequestNo() + 
+                          ", Status: " + status + ", PaymentsSize: " + 
+                          (quote.getRequest().getPayments() != null ? quote.getRequest().getPayments().size() : "null"));
+        
+        if (status == com.suriname.request.entity.Request.Status.WAITING_FOR_DELIVERY || 
+            status == com.suriname.request.entity.Request.Status.COMPLETED) {
+            System.out.println("Returning COMPLETED for " + quote.getRequest().getRequestNo());
+            return "COMPLETED";
+        } else if (status == com.suriname.request.entity.Request.Status.WAITING_FOR_PAYMENT) {
+            // 입금대기 상태에서 가상계좌가 발급된 경우 구분
+            if (quote.getRequest().getPayments() != null && !quote.getRequest().getPayments().isEmpty()) {
+                // Payment가 존재하고 PENDING 상태면 가상계좌가 발급된 것으로 간주
+                boolean hasValidPayment = quote.getRequest().getPayments().stream()
+                    .anyMatch(payment -> payment.getStatus() != null && 
+                             payment.getStatus() == com.suriname.payment.Payment.Status.PENDING);
+                System.out.println("HasValidPayment (PENDING): " + hasValidPayment + " for " + quote.getRequest().getRequestNo());
+                if (hasValidPayment) {
+                    System.out.println("Returning VIRTUAL_ACCOUNT_ISSUED for " + quote.getRequest().getRequestNo());
+                    return "VIRTUAL_ACCOUNT_ISSUED";
+                }
+            }
+            System.out.println("Returning AWAITING_PAYMENT for " + quote.getRequest().getRequestNo());
+            return "AWAITING_PAYMENT";
+        } else {
+            System.out.println("Returning AWAITING_PAYMENT (default) for " + quote.getRequest().getRequestNo());
+            return "AWAITING_PAYMENT";
+        }
+    }
+    
     private boolean hasSearchCriteria(String customerName, String requestNo, String productName, 
-            String serialNumber, String isApproved, String employeeName, String startDate, String endDate) {
+            String serialNumber, String isApproved, String employeeName, String startDate, String endDate,
+            String progressStatus, String paymentStatus) {
         return (customerName != null && !customerName.trim().isEmpty()) ||
                (requestNo != null && !requestNo.trim().isEmpty()) ||
                (productName != null && !productName.trim().isEmpty()) ||
@@ -274,7 +419,9 @@ public class QuoteService {
                (isApproved != null && !isApproved.trim().isEmpty()) ||
                (employeeName != null && !employeeName.trim().isEmpty()) ||
                (startDate != null && !startDate.trim().isEmpty()) ||
-               (endDate != null && !endDate.trim().isEmpty());
+               (endDate != null && !endDate.trim().isEmpty()) ||
+               (progressStatus != null && !progressStatus.trim().isEmpty()) ||
+               (paymentStatus != null && !paymentStatus.trim().isEmpty());
     }
     
     private LocalDateTime parseDate(String dateStr) {
