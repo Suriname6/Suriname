@@ -28,16 +28,20 @@ const CustomerList = () => {
           },
         }
       );
-      setData(response.data.data.content);
+
+      const responseData = response.data.data.content;
+
+      const uniqueData = responseData.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t.customerId === item.customerId)
+      );
+
+      setData(uniqueData);
       setTotalPages(response.data.data.totalPages);
     } catch (err) {
       console.error("데이터 불러오기 실패:", err);
     }
   }, [currentPage, searchConditions]);
-
-  useEffect(() => {
-    fetchCustomerData();
-  }, [fetchCustomerData]);
 
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
@@ -81,8 +85,11 @@ const CustomerList = () => {
         alert(`${selectedItems.size}개 항목이 삭제되었습니다.`);
       }
       setData((prevData) =>
-        prevData.filter((item) => !selectedItems.has(item.customerId))
+        prevData.filter(
+          (item) => !selectedItems.has(item.productId || item.objectID)
+        )
       );
+
       setSelectedItems(new Set());
       setSelectAll(false);
       fetchCustomerData();
@@ -99,11 +106,15 @@ const CustomerList = () => {
     navigate(`/customer/detail/${customerId}`);
   };
 
+  useEffect(() => {
+    window._customers = data;
+  }, [data]);
+
   return (
     <div className={styles.container}>
       <CustomerSearch
         data={data}
-        setData={setData} 
+        setData={setData}
         setTotalPages={setTotalPages}
         itemsPerPage={itemsPerPage}
         setCurrentPage={setCurrentPage}
@@ -146,9 +157,13 @@ const CustomerList = () => {
           </thead>
           <tbody>
             {data.length > 0 ? (
-              data.map((item) => (
+              data.map((item, index) => (
                 <tr
-                  key={item.customerId}
+                  key={
+                    item.serialNumber
+                      ? `${item.customerId}-${item.serialNumber}`
+                      : `${item.customerId}-index-${index}`
+                  }
                   className={styles.clickableRow}
                   onClick={(e) => handleRowClick(item.customerId, e)}
                 >

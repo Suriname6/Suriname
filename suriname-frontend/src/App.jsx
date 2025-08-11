@@ -12,6 +12,9 @@ import Home from "./pages/Home";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
+import ReceiptMain from "./pages/Main/ReceiptMain";
+import RepaitMain from "./pages/Main/RepariMain";
+
 import CustomerList from "./pages/Customer/CustomerList";
 import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
 import CustomerAdd from "./pages/Customer/CustomerAdd";
@@ -81,9 +84,13 @@ function App() {
         {/* 사이드바 포함 페이지 */}
         <Route element={<LayoutWithSidebar />}>
           <Route path="/" element={<Home />} />
+
           <Route path="/customer/list" element={<CustomerList />} />
-          <Route path="/customer/upload/excel" element={<CustomerExcelAdd />} />
-          <Route path="/customer/upload" element={<CustomerAdd />} />
+          <Route
+            path="/customer/register/excel"
+            element={<CustomerExcelAdd />}
+          />
+          <Route path="/customer/register" element={<CustomerAdd />} />
           <Route path="/customer/detail/:id" element={<CustomerDetail />} />
           <Route path="/dashboard/statistics" element={<DashboardPage />} />
           <Route path="/dashboard/performance" element={<EmployeePerformancePage />} />
@@ -94,8 +101,8 @@ function App() {
             element={<PaymentVirtualAccountPage />}
           />
           <Route path="/product/list" element={<ProductList />} />
-          <Route path="/product/upload" element={<ProductAdd />} />
-          <Route path="/product/upload/excel" element={<ProductExcelAdd />} />
+          <Route path="/product/register" element={<ProductAdd />} />
+          <Route path="/product/register/excel" element={<ProductExcelAdd />} />
           <Route path="/product/detail/:id" element={<ProductDetail />} />
 
           <Route path="/staff/list" element={<StaffListPage />} />

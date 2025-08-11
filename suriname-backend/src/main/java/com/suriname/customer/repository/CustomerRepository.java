@@ -7,9 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.suriname.customer.entity.Customer;
 import com.suriname.customer.entity.Customer.Status;
+import com.suriname.product.entity.CustomerProduct;
 
 import java.util.Optional;
 
@@ -20,12 +22,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSp
 	
 	// 고객명으로 검색
 	Optional<Customer> findByName(String name);
-
+	
 
 	@Query("SELECT c FROM Customer c " +
 		       "WHERE c.isDeleted = false " +
 		       "AND c.status = :status " +
 		       "AND LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-		List<Customer> searchAutoComplete(String keyword, Status status);
+		List<Customer> searchAutoComplete(@Param("keyword")String keyword, @Param("status")Status status);
 
 }

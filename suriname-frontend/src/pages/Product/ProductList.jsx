@@ -7,7 +7,7 @@ import api from "../../api/api";
 
 const ProductList = () => {
   const [data, setData] = useState([]);
-  const [searchConditions, setSearchConditions] = useState({});
+  const [searchConditions] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedItems, setSelectedItems] = useState(new Set());
@@ -38,15 +38,10 @@ const ProductList = () => {
     fetchProductData();
   }, [fetchProductData]);
 
-  const handleSearch = (searchData) => {
-    setCurrentPage(1);
-    setSearchConditions(searchData);
-  };
-
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
     const newSet = checked
-      ? new Set(data.map((item) => item.productId))
+      ? new Set(data.map((item) => item.productId ?? item.objectID))
       : new Set();
     setSelectedItems(newSet);
   };
@@ -102,11 +97,12 @@ const ProductList = () => {
   return (
     <div className={styles.container}>
       <ProductSearch
-          data={data}
-          setData={setData}
-          setTotalPages={setTotalPages}
-          itemsPerPage={itemsPerPage}
-          setCurrentPage={setCurrentPage}
+        data={data}
+        setData={setData}
+        setTotalPages={setTotalPages}
+        itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
       />
 
       <div className={styles.tableHeader}>
@@ -141,25 +137,31 @@ const ProductList = () => {
           </thead>
           <tbody>
             {data.length > 0 ? (
-              data.map((item) => (
+              data.map((item, index) => (
                 <tr
-                  key={item.productId}
+                  key={item.productId || item.objectID || `fallback-${index}`}
                   className={styles.clickableRow}
-                  onClick={(e) => handleRowClick(item.productId, e)}
+                  onClick={(e) =>
+                    handleRowClick(item.productId || item.objectID, e)
+                  }
                 >
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedItems.has(item.productId)}
+                      checked={selectedItems.has(
+                        item.productId || item.objectID
+                      )}
                       onChange={(e) =>
-                        handleSelectItem(item.productId, e.target.checked)
+                        handleSelectItem(
+                          item.productId || item.objectID,
+                          e.target.checked
+                        )
                       }
                     />
                   </td>
                   <td>{item.productBrand}</td>
                   <td>{item.categoryName}</td>
                   <td>{item.productName}</td>
-
                   <td>{item.modelCode}</td>
                   <td>{item.memo || "-"}</td>
                 </tr>

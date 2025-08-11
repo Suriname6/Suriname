@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../css/Customer/CustomerAdd.module.css";
-import AutoComplete from "../../components/AutoComplete";
+import AutoComplete from "../../components/AutoComplete/ProductAutoComplete";
 import api from "../../api/api";
 
 const CustomerAdd = () => {
   const [selectedTab, setSelectedTab] = useState("general");
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const BRAND_OPTIONS = ["Samsung", "LG", "Apple", "기타"];
 
-  const [formData, setFormData] = useState({
+  const INITIAL_FORM = {
     name: "",
     phone: "",
     email: "",
@@ -21,11 +22,13 @@ const CustomerAdd = () => {
     modelCode: "",
     productId: "",
     serialNumber: "",
-  });
+  };
+
+  const [formData, setFormData] = useState(INITIAL_FORM);
 
   const handleTabClick = (tab) => {
     if (tab === "excel") {
-      navigate("/customer/upload/excel");
+      navigate("/customer/register/excel");
     }
   };
 
@@ -65,7 +68,9 @@ const CustomerAdd = () => {
   };
 
   const handleCancel = () => {
-    console.log("취소");
+    if (window.confirm("작성내용을 취소하시겠습니까?")) {
+      setFormData(INITIAL_FORM);
+    }
   };
 
   useEffect(() => {
@@ -246,16 +251,24 @@ const CustomerAdd = () => {
               <label className={styles.inputLabel}>제조사</label>
               <select
                 className={styles.inputControl}
-                value={formData.productBrand}
+                value={formData.productBrand || ""}
                 onChange={(e) =>
                   handleInputChange("productBrand", e.target.value)
                 }
               >
                 <option value="">선택</option>
-                <option value="삼성전자">삼성전자</option>
-                <option value="LG전자">LG전자</option>
-                <option value="Apple">Apple</option>
-                <option value="기타">기타</option>
+                {BRAND_OPTIONS.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+                {/* 서버/자동완성 값이 목록에 없으면 추가로 표시 */}
+                {formData.productBrand &&
+                  !BRAND_OPTIONS.includes(formData.productBrand) && (
+                    <option value={formData.productBrand}>
+                      {formData.productBrand}
+                    </option>
+                  )}
               </select>
             </div>
 
