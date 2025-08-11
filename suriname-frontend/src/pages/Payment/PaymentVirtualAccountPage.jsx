@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createVirtualAccount } from '../../api/payment';
+import axios from '../../api/axiosInstance';
 import styles from '../../css/Payment/PaymentVirtualAccount.module.css';
 
 const PaymentVirtualAccountPage = () => {
@@ -87,6 +88,20 @@ const PaymentVirtualAccountPage = () => {
       // 성공 메시지 표시 후 입금상태 목록으로 리다이렉트
       setMessage(`가상계좌가 발급되었습니다.\n은행: ${response.bankName || '가상계좌은행'}\n계좌번호: ${response.accountNumber || '가상계좌번호'}\n마감일: ${response.dueDate || '7일 후'}`);
       setMessageType('success');
+
+      // 가상계좌 발급 성공 시 Request 상태를 입금대기로 업데이트
+      try {
+        const statusUpdateResponse = await axios.put(`/api/requests/${formData.receptionNumber}/status`, {
+          status: 'AWAITING_PAYMENT'
+        });
+        
+        if (statusUpdateResponse.data.status === 200) {
+          console.log('Request 상태가 입금대기로 업데이트되었습니다.');
+        }
+      } catch (statusError) {
+        console.warn('Request 상태 업데이트 실패 (무시됨):', statusError);
+        // 상태 업데이트 실패해도 전체 프로세스는 계속 진행
+      }
 
       // 2초 후 입금상태 목록으로 이동
       setTimeout(() => {

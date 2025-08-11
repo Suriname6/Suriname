@@ -44,8 +44,7 @@ const RepairWritePage = () => {
   const statusOptions = [
     { value: 'IN_PROGRESS', label: '수리중' },
     { value: 'AWAITING_PAYMENT', label: '입금 대기' },
-    { value: 'READY_FOR_DELIVERY', label: '배송 대기' },
-    { value: 'COMPLETED', label: '완료' },
+    { value: 'READY_FOR_DELIVERY', label: '수리완료' },
   ];
 
   useEffect(() => {
@@ -65,7 +64,7 @@ const RepairWritePage = () => {
         engineerName: shouldClearEngineer ? '' : engineerName,
         productName: existingQuote.productName || '',
         customerConsent: existingQuote.isApproved || false,
-        statusChange: 'IN_PROGRESS',
+        statusChange: existingQuote.statusChange || 'IN_PROGRESS',
         createdDate: existingQuote.createdAt
           ? existingQuote.createdAt.split('T')[0]
           : new Date().toISOString().split('T')[0],
