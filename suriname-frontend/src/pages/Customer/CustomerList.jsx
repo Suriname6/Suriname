@@ -43,10 +43,6 @@ const CustomerList = () => {
     }
   }, [currentPage, searchConditions]);
 
-  useEffect(() => {
-    fetchCustomerData();
-  }, [fetchCustomerData]);
-
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
     const newSet = checked

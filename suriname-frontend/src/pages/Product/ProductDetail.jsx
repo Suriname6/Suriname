@@ -110,13 +110,30 @@ const ProductDetail = () => {
                 }
               >
                 <option value="">선택</option>
-                <option value="삼성">삼성</option>
+                <option value="Samsung">Samsung</option>
                 <option value="LG">LG</option>
                 <option value="Apple">Apple</option>
                 <option value="ASUS">ASUS</option>
                 <option value="HP">HP</option>
                 <option value="Dell">Dell</option>
+                <option value="Carrier">Carrier</option>
                 <option value="기타">기타</option>
+
+                {formData.productBrand &&
+                  ![
+                    "Samsung",
+                    "LG",
+                    "Apple",
+                    "ASUS",
+                    "HP",
+                    "Dell",
+                    "Carrier",
+                    "기타",
+                  ].includes(formData.productBrand) && (
+                    <option value={formData.productBrand}>
+                      {formData.productBrand}
+                    </option>
+                  )}
               </select>
             </div>
             <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
@@ -130,10 +147,16 @@ const ProductDetail = () => {
               >
                 <option value="">선택</option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                  <option key={cat.name} value={cat.name}>
+                    {cat.name}
                   </option>
                 ))}
+                {formData.categoryName &&
+                  !categories.some((c) => c.name === formData.categoryName) && (
+                    <option value={formData.categoryName}>
+                      {formData.categoryName}
+                    </option>
+                  )}
               </select>
             </div>
           </div>

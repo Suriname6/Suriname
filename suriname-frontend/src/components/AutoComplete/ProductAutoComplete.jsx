@@ -85,7 +85,11 @@ const AutoComplete = ({
             <li
               key={item.productId}
               className={styles.suggestionItem}
-              onClick={() => handleSelect(item)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSelect(item);
+              }}
             >
               {item.productName} ({item.modelCode})
             </li>

@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useCallback } from "react";
-import algoliasearch from "algoliasearch/lite";
+// import algoliasearch from 'algoliasearch'; // Temporarily disabled
 import * as XLSX from "xlsx"; // ✨ XLSX 라이브러리 임포트 ✨
 import { saveAs } from "file-saver"; // ✨ file-saver 임포트 ✨
 
-// 환경 변수 값 확인 (개발 중에는 로그 찍어보자)
-console.log(import.meta.env.ALGOLIA_APP_ID);
-console.log(import.meta.env.ALGOLIA_SEARCH_API_KEY);
+// Temporarily disable Algolia for development
+// TODO: Re-enable when Algolia is properly configured
 
-// Algolia 클라이언트 설정c
-const searchClient = algoliasearch(
-  import.meta.env.ALGOLIA_APP_ID,
-  import.meta.env.ALGOLIA_SEARCH_API_KEY
-);
+// // 환경 변수 값 확인 (개발 중에는 로그 찍어보자)
+// console.log(import.meta.env.ALGOLIA_APP_ID);
+// console.log(import.meta.env.ALGOLIA_SEARCH_API_KEY);
 
-// 인덱스 객체 생성
-const index = searchClient.initIndex("products");
+// // Algolia 클라이언트 설정c
+// const searchClient = algoliasearch(
+//     import.meta.env.ALGOLIA_APP_ID,
+//     import.meta.env.ALGOLIA_SEARCH_API_KEY
+// );
+
+// // 인덱스 객체 생성
+// const index = searchClient.initIndex('products');
 
 const categories = ["스마트폰", "태블릿", "냉장고", "세탁기"];
 const manufacturers = ["삼성", "LG", "Apple"];
@@ -42,81 +45,56 @@ const ProductSearch = ({
   // 디바운스를 위한 타이머
   const [searchTimer, setSearchTimer] = useState(null);
 
-  // Algolia 필터 빌드
-  const buildFilters = useCallback(() => {
-    const filters = [];
-
-    if (query.manufacturers.length > 0) {
-      const manufacturerFilters = query.manufacturers.map(
-        (m) => `productBrand:"${m}"`
-      );
-      filters.push(`(${manufacturerFilters.join(" OR ")})`);
-    }
-
-    if (query.categories.length > 0) {
-      const categoryFilters = query.categories.map(
-        (m) => `categoryName:"${m}"`
-      );
-      filters.push(`(${categoryFilters.join(" OR ")})`);
-    }
-
-    return filters.join(" AND ");
-  }, [query.manufacturers, query.categories]);
-
-  // 검색 쿼리 빌드
-  const buildSearchQuery = useCallback(() => {
-    const searchTerms = [query.productName, query.modelCode].filter(Boolean);
-
-    return searchTerms.join(" ");
-  }, [query]);
-
-  // Algolia 검색 수행
+  // 기본 제품 검색 수행 (Algolia 대신)
   const performSearch = useCallback(async () => {
     try {
-      const searchQuery = buildSearchQuery();
-      const filters = buildFilters();
-
-      const searchOptions = {
-        hitsPerPage: 1000, // 최대 결과 수 (페이지네이션은 클라이언트에서 처리)
-        filters: filters || undefined,
-        attributesToRetrieve: [
-          "productId",
-          "productBrand",
-          "categoryName",
-          "productName",
-          "modelCode",
-        ],
-      };
-
-      const response = await index.search(searchQuery, searchOptions);
-      console.log("Total hits from Algolia:", response.nbHits); // Algolia가 찾은 총 레코드 수
-      console.log("Actual hits received:", response.hits.length); // 현재 페이지에서 받은 레코드 수
-      console.log("🔎 Algolia hits:", response.hits);
-
-      // 검색 결과를 ProductList에 전달
-      setData(response.hits);
-      setTotalPages(Math.ceil(response.hits.length / itemsPerPage));
-      setCurrentPage(1);
-
-      // 검색 통계 업데이트
-      setSearchStats({
-        totalHits: response.nbHits,
-        processingTime: response.processingTimeMS,
+      // API 요청으로 제품 데이터 가져오기 (기본 검색)
+      const params = new URLSearchParams({
+        page: "0",
+        size: String(itemsPerPage),
       });
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(`/api/products/search?${params}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          productName: query.productName || null,
+          modelCode: query.modelCode || null,
+          productBrand:
+            query.manufacturers.length > 0 ? query.manufacturers : null,
+          categoryName: query.categories.length > 0 ? query.categories : null,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const page = result.data || {};
+        const products = page.content || [];
+
+        setData(products);
+        setTotalPages(page.totalPages ?? 0);
+        setCurrentPage(1);
+
+        setSearchStats({
+          totalHits: page.totalElements ?? products.length,
+          processingTime: 50, // Mock processing time
+        });
+      } else {
+        console.error("제품 검색 API 요청 실패:", response.status);
+        setData([]);
+        setTotalPages(0);
+        setSearchStats({ totalHits: 0, processingTime: 0 });
+      }
     } catch (error) {
-      console.error("Algolia 검색 실패:", error);
+      console.error("제품 검색 실패:", error);
       setData([]);
       setTotalPages(0);
       setSearchStats({ totalHits: 0, processingTime: 0 });
     }
-  }, [
-    buildSearchQuery,
-    buildFilters,
-    setData,
-    setTotalPages,
-    itemsPerPage,
-    setCurrentPage,
-  ]);
+  }, [query, setData, setTotalPages, itemsPerPage, setCurrentPage]);
 
   // 실시간 검색 (디바운스 적용)
   useEffect(() => {

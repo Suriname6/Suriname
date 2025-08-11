@@ -41,7 +41,7 @@ const ProductList = () => {
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
     const newSet = checked
-      ? new Set(data.map((item) => item.productId))
+      ? new Set(data.map((item) => item.productId ?? item.objectID))
       : new Set();
     setSelectedItems(newSet);
   };
@@ -101,6 +101,7 @@ const ProductList = () => {
         setData={setData}
         setTotalPages={setTotalPages}
         itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
         setCurrentPage={setCurrentPage}
       />
 

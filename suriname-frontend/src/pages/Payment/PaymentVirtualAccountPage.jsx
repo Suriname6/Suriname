@@ -71,15 +71,14 @@ const PaymentVirtualAccountPage = () => {
 
       const response = await createVirtualAccount(requestData);
       
-      setMessage(`가상계좌가 발급되었습니다.\n은행: ${response.bankName}\n계좌번호: ${response.accountNumber}\n마감일: ${response.dueDate}`);
+      // 성공 메시지 표시 후 입금상태 목록으로 리다이렉트
+      setMessage(`가상계좌가 발급되었습니다.\n은행: ${response.bankName || '가상계좌은행'}\n계좌번호: ${response.accountNumber || '가상계좌번호'}\n마감일: ${response.dueDate || '7일 후'}`);
       setMessageType('success');
 
-      // 폼 초기화
-      setFormData({
-        customerName: '',
-        receptionNumber: '',
-        paymentAmount: ''
-      });
+      // 2초 후 입금상태 목록으로 이동
+      setTimeout(() => {
+        navigate('/payment/list');
+      }, 2000);
 
     } catch (error) {
       console.error('가상계좌 발급 실패:', error);

@@ -72,7 +72,11 @@ const CustomerDetail = () => {
     const fetchCategories = async () => {
       try {
         const res = await api.get("/api/categories");
-        setCategories(res.data);
+        const raw = Array.isArray(res.data) ? res.data : [];
+        const normalized = raw.map((c) =>
+          typeof c === "string" ? { id: null, name: c } : c
+        );
+        setCategories(normalized);
       } catch (err) {
         console.error("카테고리 불러오기 실패:", err);
       }
@@ -176,19 +180,14 @@ const CustomerDetail = () => {
               <label className={styles.inputLabel}>제품분류</label>
               <select
                 className={styles.inputControl}
-                value={
-                  product?.categoryId ||
-                  categories.find((c) => c.name === product?.categoryName)
-                    ?.id ||
-                  ""
-                }
+                value={product?.categoryName || ""}
                 onChange={(e) =>
-                  handleProductChange("categoryId", parseInt(e.target.value))
+                  handleProductChange("categoryName", e.target.value)
                 }
               >
                 <option value="">선택</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
+                  <option key={cat.id ?? cat.name} value={cat.name}>
                     {cat.name}
                   </option>
                 ))}
@@ -219,12 +218,14 @@ const CustomerDetail = () => {
                 }
               >
                 <option value="">선택</option>
-                <option value="삼성전자">삼성전자</option>
-                <option value="LG전자">LG전자</option>
+                <option value="Samsung">Samsung</option>
+                <option value="LG">LG</option>
                 <option value="Apple">Apple</option>
+                <option value="Carrier">Carrier</option>
                 <option value="기타">기타</option>
               </select>
             </div>
+
             <div className={styles.inputField} style={{ flex: 1.2 }}>
               <label className={styles.inputLabel}>모델코드</label>
               <input
@@ -236,6 +237,7 @@ const CustomerDetail = () => {
               />
             </div>
           </div>
+
           <div className={styles.inputGroup}>
             <div className={`${styles.inputField} ${styles.inputFieldFull}`}>
               <label className={styles.inputLabel}>제품고유번호</label>
