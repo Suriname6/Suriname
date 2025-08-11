@@ -37,7 +37,7 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of(
                             "http://localhost:5173",
-                            "http://54.180.57.212:8081"
+                            "http://54.180.57.212"
                     ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
@@ -53,7 +53,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/signup", "/login").permitAll()
                         .requestMatchers("/", "/index.html", "/favicon.ico",
                                 "/assets/**", "/css/**", "/js/**", "/images/**").permitAll()
-
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
