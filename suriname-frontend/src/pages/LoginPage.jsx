@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "../api/axiosInstance"
+import axios from "../api/axiosInstance";
 import "../css/Login.css";
 import Logo from "../assets/suriname.png";
 import Illustration from "../assets/illustration.png";
@@ -27,7 +27,6 @@ function LoginPage() {
       localStorage.setItem("role", role);
 
       window.location.href = "/";
-
     } catch (err) {
       setError("아이디 또는 비밀번호가 올바르지 않습니다.");
     }

@@ -18,8 +18,8 @@ public class Payment {
     @Column(name = "payment_id")
     private Long paymentId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "request_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id", nullable = false)
     private Request request;
 
     @Column(name = "merchant_uid", nullable = false, length = 64, unique = true)

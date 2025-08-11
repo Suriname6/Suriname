@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import styles from "../../css/Customer/CustomerAdd.module.css";
 import AutoComplete from "../../components/AutoComplete";
+import api from "../../api/api";
 
 const CustomerAdd = () => {
   const [selectedTab, setSelectedTab] = useState("general");
@@ -55,7 +55,7 @@ const CustomerAdd = () => {
     console.log("serial:", formData.serialNumber);
 
     try {
-      const response = await axios.post("/api/customers", formDataToSend);
+      const response = await api.post("/api/customers", formDataToSend);
       console.log("등록 성공:", response.data);
       alert("고객 정보가 등록되었습니다!");
     } catch (error) {
@@ -71,7 +71,7 @@ const CustomerAdd = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get("/api/categories");
+        const res = await api.get("/api/categories");
         setCategories(res.data);
       } catch (err) {
         console.error("카테고리 불러오기 실패:", err);

@@ -17,7 +17,8 @@ import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
 import CustomerAdd from "./pages/Customer/CustomerAdd";
 import CustomerDetail from "./pages/Customer/CustomerDetail";
 
-import DashboardPage from "./pages/DashboardPage";
+import DashboardPage from "./pages/Dashboard/DashboardPage.jsx";
+import EmployeePerformancePage from "./pages/Dashboard/EmployeePerformancePage.jsx";
 
 import ProductList from "./pages/Product/ProductList";
 import ProductAdd from "./pages/Product/ProductAdd";
@@ -44,6 +45,11 @@ import SatisfactionSurvey from "./pages/Public/SatisfactionSurvey";
 import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
 import RepairPresetPage from "./pages/Repair/RepairPresetPage";
+
+import RequestList from "./pages/Request/RequestList.jsx"
+import RequestDetail from "./pages/Request/RequestDetail.jsx"
+import RequestForm from "./pages/Request/RequestForm.jsx"
+import RequestEdit from "./pages/Request/RequestEdit.jsx"
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -80,6 +86,8 @@ function App() {
           <Route path="/customer/upload" element={<CustomerAdd />} />
           <Route path="/customer/detail/:id" element={<CustomerDetail />} />
           <Route path="/dashboard/statistics" element={<DashboardPage />} />
+          <Route path="/dashboard/performance" element={<EmployeePerformancePage />} />
+
           <Route path="/payment/list" element={<PaymentListPage />} />
           <Route
             path="/payment/virtualaccount"
@@ -108,6 +116,12 @@ function App() {
           <Route path="/delivery/analytics" element={<DeliveryAnalytics />} />
           <Route path="/completion/list" element={<CompletionList />} />
           <Route path="/completion/register" element={<CompletionRegister />} />
+
+          <Route path="/request/list" element={<RequestList />} />
+          <Route path="/request/register" element={<RequestForm />} />
+          <Route path="/request/:id" element={<RequestDetail />} />
+          <Route path="/request/edit/:id" element={<RequestEdit />} />
+
         </Route>
       </Routes>
     </Router>

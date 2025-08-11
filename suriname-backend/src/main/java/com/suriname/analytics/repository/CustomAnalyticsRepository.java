@@ -1,5 +1,8 @@
 package com.suriname.analytics.repository;
 
+import com.suriname.analytics.dto.CategoryAsCountDTO;
+import com.suriname.analytics.dto.RevenueDTO;
+import com.suriname.analytics.dto.StatusCountResultDTO;
 import com.suriname.analytics.entity.RequestStatus;
 import com.suriname.request.entity.Request;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,54 +16,138 @@ import java.util.List;
 @Repository
 public interface CustomAnalyticsRepository extends JpaRepository<Request, Long> {
 
-    int countByCreatedAtAfter(LocalDateTime start);
+    Long countByStatus(Request.Status status);
 
-    int countByStatus(Request.Status status);
+    // 전체 접수 건수
+    @Query(value = "SELECT COUNT(*) FROM request", nativeQuery = true)
+    Long countAll();
 
-    int countByStatusIn(List<Request.Status> statuses);
+    // 오늘 접수 건수
+    @Query(value = "SELECT COUNT(*) FROM request WHERE DATE(created_at) = CURDATE()", nativeQuery = true)
+    Long countTodayRequests();
 
-    @Query("SELECT COUNT(r) FROM TempRequest r")
-    int countAll();
+    // 미완료 건수
+    @Query(value = "SELECT COUNT(*) FROM request WHERE status IN ('RECEIVED', 'REPAIRING', 'WAITING_FOR_PAYMENT', 'WAITING_FOR_DELIVERY')", nativeQuery = true)
+    Long countUncompleteRequests();
 
+    // 전체 완료율 (완료 건수 / 전체 건수 * 100)
+    @Query(value = "SELECT CASE WHEN COUNT(*) = 0 THEN 0.0 ELSE (COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) * 100.0 / COUNT(*)) END FROM request", nativeQuery = true)
+    Double getOverallCompletionRate();
+
+    // 총 매출액
     @Query(value = """
-        SELECT DATE_FORMAT(r.created_at, :format) AS label,
-               COUNT(*) AS count
-        FROM request r
-        GROUP BY label
-        ORDER BY label
-        """, nativeQuery = true)
-    List<Object[]> findRequestTrend(@Param("format") String format);
+    SELECT COALESCE(SUM(rd.cost), 0) 
+    FROM request r 
+    JOIN request_detail rd ON r.request_id = rd.requests_id 
+    WHERE r.status = 'COMPLETED'
+    """, nativeQuery = true)
+    Long getTotalRevenue();
 
+    // 평균 수리비
     @Query(value = """
-        SELECT parent.name AS parent_category,
-           child.name AS sub_category,
-           COUNT(*) AS count
+    SELECT COALESCE(AVG(cost_summary.total_cost), 0)
+    FROM (
+        SELECT SUM(rd.cost) as total_cost
         FROM request r
-        JOIN customer_product cp ON r.customer_product_id = cp.customer_product_id
-        JOIN product p ON cp.product_id = p.product_id
-        JOIN category child ON p.category_id = child.category_id
-        LEFT JOIN category parent ON child.parent_id = parent.category_id
-        GROUP BY parent.name, child.name
-        ORDER BY count DESC;
-        """, nativeQuery = true)
-    List<Object[]> countRequestsByCategory();
+        JOIN request_detail rd ON r.request_id = rd.requests_id
+        WHERE r.status = 'COMPLETED'
+        GROUP BY r.request_id
+    ) cost_summary
+    """, nativeQuery = true)
+    Double getAverageRepairCost();
 
+    // 도넛 그래프 (처리 단계별 현황)
+    @Query(value = """
+    SELECT 
+        status,
+        COUNT(*) as count
+    FROM request 
+    GROUP BY status
+    """, nativeQuery = true)
+    List<StatusCountResultDTO> getStatusDistribution();
+
+    // 카테고리별 A/S 건수 (TOP 6)
+    @Query(value = """
+    SELECT 
+        c.name as categoryName,
+        COUNT(r.request_id) as asCount
+    FROM request r
+    JOIN customer_product cp ON r.customer_product_id = cp.customer_product_id
+    JOIN product p ON cp.product_id = p.product_id
+    JOIN category c ON p.category_id = c.category_id
+    GROUP BY c.category_id, c.name
+    ORDER BY asCount DESC
+    LIMIT 6
+    """, nativeQuery = true)
+    List<CategoryAsCountDTO> getCategoryAsCount();
+
+    // 매출 추이 - 일별 (최근 20일)
     @Query(value = """
         SELECT 
-          e.employee_id AS employeeId,
-          e.name AS employeeName,
-          COUNT(r.request_id) AS assignedCount,
-          SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END) AS completedCount,
-          CASE 
-            WHEN COUNT(r.request_id) = 0 THEN 0
-            ELSE ROUND(SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END) * 1.0 / COUNT(r.request_id), 2)
-          END AS completionRate,
-          ROUND(AVG(s.rating), 2) AS averageRating
+            DAY(r.created_at) as label,
+            COALESCE(SUM(rd.cost), 0) as revenue
+        FROM request r
+        JOIN request_detail rd ON r.request_id = rd.requests_id
+        WHERE r.status = 'COMPLETED'
+        
+        GROUP BY DAY(r.created_at), MONTH(r.created_at), YEAR(r.created_at)
+        ORDER BY YEAR(r.created_at) ASC, MONTH(r.created_at) ASC, DAY(r.created_at) ASC
+        """, nativeQuery = true)
+    List<RevenueDTO> getDailyRevenue();
+
+    // 매출 추이 - 월별 (최근 12개월)
+    @Query(value = """
+        SELECT 
+            MONTH(r.created_at) as label,
+            COALESCE(SUM(rd.cost), 0) as revenue
+        FROM request r
+        JOIN request_detail rd ON r.request_id = rd.requests_id
+        WHERE r.status = 'COMPLETED'
+        
+        GROUP BY YEAR(r.created_at), MONTH(r.created_at)
+        ORDER BY YEAR(r.created_at) ASC, MONTH(r.created_at) ASC
+        """, nativeQuery = true)
+    List<RevenueDTO> getMonthlyRevenue();
+
+    // 매출 추이 - 연별 (최근 5년)
+    @Query(value = """
+        SELECT 
+            YEAR(r.created_at) as label,
+            COALESCE(SUM(rd.cost), 0) as revenue
+        FROM request r
+        JOIN request_detail rd ON r.request_id = rd.requests_id
+        WHERE r.status = 'COMPLETED'
+        AND r.created_at >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR)
+        GROUP BY YEAR(r.created_at)
+        ORDER BY YEAR(r.created_at)
+        """, nativeQuery = true)
+    List<RevenueDTO> getYearlyRevenue();
+
+    @Query(value = """
+        SELECT
+            e.employee_id AS employeeId,
+            e.name AS employeeName,
+            COUNT(r.request_id) AS assignedCount, -- 배정 건수 (요청의 employee_id 기준)
+            SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END) AS completedCount, -- 완료 건수
+            CASE
+                WHEN COUNT(r.request_id) = 0 THEN 0
+                ELSE ROUND(SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END) * 1.0 / COUNT(r.request_id), 2)
+            END AS completionRate, -- 완료율
+            COALESCE(AVG_TIME.averageCompletionHours, 0) AS averageCompletionHours,
+            ROUND(AVG(s.rating), 2) AS averageRating -- 평균 만족도
         FROM employee e
         LEFT JOIN request r ON e.employee_id = r.employee_id
         LEFT JOIN satisfaction s ON r.request_id = s.request_id
+        LEFT JOIN (
+            SELECT r.employee_id, AVG(TIMESTAMPDIFF(HOUR, r.created_at, rsl_completed.changed_at)) AS averageCompletionHours
+            FROM request r
+            JOIN request_status_log rsl_completed ON r.request_id = rsl_completed.request_id
+                AND rsl_completed.new_status = 'COMPLETED' -- ⭐ 'COMPLETED' 상태로 변경된 시점만! ⭐
+            WHERE r.status = 'COMPLETED' -- ⭐ 실제 요청 상태도 'COMPLETED'여야 의미가 있음 ⭐
+            GROUP BY r.employee_id
+        ) AS AVG_TIME ON e.employee_id = AVG_TIME.employee_id
         GROUP BY e.employee_id, e.name
-        ORDER BY assignedCount DESC
+        ORDER BY assignedCount DESC;
         """, nativeQuery = true)
     List<Object[]> getEmployeeStatsRaw();
 }

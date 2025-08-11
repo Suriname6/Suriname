@@ -1,0 +1,439 @@
+import React, { useEffect, useState } from "react";
+import axios from "../../api/axiosInstance";
+import styles from '../../css/Request/RequestList.module.css';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+
+export default function RequestList() {
+    const [requests, setRequests] = useState([]);
+    const [searchData, setSearchData] = useState({
+        customerName: '',
+        productName: '',
+        category: '',
+        brand: '',
+        modelCode: '',
+        employeeName: '',
+        status: '',
+        startDate: '',
+        endDate: ''
+    });
+    const [pagination, setPagination] = useState({
+        currentPage: 0,
+        totalPages: 0,
+        totalElements: 0,
+        size: 10,
+        first: true,
+        last: true
+    });
+    const [selectedRequests, setSelectedRequests] = useState([]);
+    const [selectAll, setSelectAll] = useState(false);
+    const [searchVisible, setSearchVisible] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const [role, setRole] = useState(localStorage.getItem("role") || "");
+
+    const statusConfig = {
+        EXPIRED:   { priority: 0, color: 'yellow', label: '만료됨' },
+        REJECTED:  { priority: 1, color: 'red',    label: '거절됨' },
+        CANCELLED: { priority: 2, color: 'brown',  label: '취소됨' },
+        PENDING:   { priority: 3, color: 'black',  label: '접수 대기' },
+        ACCEPTED:  { priority: 4, color: 'green',  label: '접수 완료' }
+    };
+
+
+    // 컴포넌트 마운트 시 데이터 로드
+    useEffect(() => {
+        fetchRequests();
+    }, [pagination.currentPage]);
+
+    const fetchRequests = async (searchParams = null) => {
+        setLoading(true);
+        try {
+            const res = await axios.get("/api/requests",{
+                params: searchParams || {}
+            });
+
+            const {
+                content,
+                number: currentPage,
+                totalPages,
+                totalElements,
+                size,
+                first,
+                last
+            } = res.data;
+
+            content.sort((a, b) => {
+                return statusConfig[a.assignmentStatus].priority - statusConfig[b.assignmentStatus].priority;
+            });
+            setRequests(content);
+            setPagination({ currentPage, totalPages, totalElements, size, first, last });
+
+        } catch (err) {
+            console.error("요청 목록 불러오기 실패:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteSelectedRequests = async () => {
+        console.log(selectedRequests)
+        if (selectedRequests.length === 0) {
+            alert('선택된 항목이 없습니다.');
+            return;
+        }
+
+        if (!confirm(`선택된 ${selectedRequests.length}개 항목을 삭제하시겠습니까?`)) {
+            return;
+        }
+
+        try {
+            await axios.delete("/api/requests", {
+                data: { ids: selectedRequests },
+            });
+            alert('선택된 항목이 삭제되었습니다.');
+            setSelectedRequests([]);
+            setSelectAll(false);
+            fetchRequests();
+        } catch (error) {
+            console.error('Error deleting Requests:', error);
+            alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+        }
+    };
+
+    // 검색 입력 처리
+    const handleInputChange = (field, value) => {
+        setSearchData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleSearch = () => {
+        setPagination(prev => ({ ...prev, currentPage: 0 }));
+        fetchRequests(searchData);
+    };
+
+    const handlePageChange = (page) => {
+        setPagination(prev => ({ ...prev, currentPage: page }));
+    };
+
+    const handleSelectAll = () => {
+        if (selectAll) {
+            setSelectedRequests([]);
+        } else {
+            setSelectedRequests(requests.map(Request => Request.requestId));
+        }
+        setSelectAll(!selectAll);
+    };
+
+    const handleSelectRequest = (RequestId) => {
+        setSelectedRequests(prev => {
+            if (prev.includes(RequestId)) {
+                const newSelected = prev.filter(id => id !== RequestId);
+                setSelectAll(false);
+                return newSelected;
+            } else {
+                const newSelected = [...prev, RequestId];
+                setSelectAll(newSelected.length === requests.length);
+                return newSelected;
+            }
+        });
+    };
+
+    const toggleSearchVisible = () => {
+        setSearchVisible(!searchVisible);
+    };
+
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    }
+
+    const updateAssignmentStatus = async (requestId, status, reason = "") => {
+        try {
+            await axios.put(`/api/requests/${requestId}/assignment-status`, { status, reason });
+            alert("상태가 변경되었습니다.");
+            // 방금 검색조건 유지한 채로 다시 조회
+            fetchRequests(searchData);
+        } catch (err) {
+            console.error("상태 변경 실패", err);
+            alert("상태 변경에 실패했습니다.");
+        }
+    };
+
+    const handleAccept = (request) => {
+        if (request.assignmentStatus !== "PENDING") {
+            alert("대기 상태(PENDING)에서만 접수가 가능합니다.");
+            return;
+        }
+        if (!confirm(`[${request.requestNo}]를 접수(ACCEPTED) 상태로 변경할까요?`)) return;
+        updateAssignmentStatus(request.requestId, "ACCEPTED");
+    };
+
+    return (
+        <div className={styles.container}>
+            {!searchVisible ? (
+                <div className={styles.searchToggle}>
+                    <button className={styles.searchToggleBtn} onClick={toggleSearchVisible}>
+                        검색 조건
+                    </button>
+                </div>
+            ) : (
+                <div className={styles.searchWrap}>
+                    <div className={styles.searchCloseBtn}>
+                        <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
+                    </div>
+
+                    <div className={styles.searchFields}>
+                        <div className={styles.searchRow}>
+                            <div className={styles.searchField}>
+                                <label>고객명</label>
+                                <input
+                                    type="text"
+                                    placeholder="입력"
+                                    value={searchData.customerName}
+                                    onChange={(e) => handleInputChange('customerName', e.target.value)}
+                                />
+                            </div>
+                            <div className={styles.searchField}>
+                                <label>수리 담당자</label>
+                                <input
+                                    type="text"
+                                    placeholder="입력"
+                                    value={searchData.employeeName}
+                                    onChange={(e) => handleInputChange('employeeName', e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className={styles.searchRow}>
+                            <div className={styles.searchField}>
+                                <label>제품명</label>
+                                <input
+                                    type="text"
+                                    placeholder="입력"
+                                    value={searchData.productName}
+                                    onChange={(e) => handleInputChange('productName', e.target.value)}
+                                />
+                            </div>
+
+                            <div className={styles.searchField}>
+                                <label>카테고리</label>
+                                <input
+                                    type="text"
+                                    placeholder="입력"
+                                    value={searchData.category}
+                                    onChange={(e) => handleInputChange('category', e.target.value)}
+                                />
+                            </div>
+
+                            <div className={styles.searchField}>
+                                <label>브랜드</label>
+                                <input
+                                    type="text"
+                                    placeholder="입력"
+                                    value={searchData.brand}
+                                    onChange={(e) => handleInputChange('brand', e.target.value)}
+                                />
+                            </div>
+                            <div className={styles.searchField}>
+                                <label>모델코드</label>
+                                <input
+                                    type="text"
+                                    placeholder="입력"
+                                    value={searchData.modelCode}
+                                    onChange={(e) => handleInputChange('modelCode', e.target.value)}
+                                />
+                            </div>
+
+                        </div>
+
+                        <div className={styles.searchRow}>
+                            <div className={styles.searchField}>
+                                <label>접수 상태</label>
+                                <select
+                                    value={searchData.status}
+                                    onChange={(e) => handleInputChange('status', e.target.value)}
+                                >
+                                    <option value="">전체</option>
+                                    {Object.entries(statusConfig)
+                                        .sort(([, a], [, b]) => b.priority - a.priority) // priority 내림차순
+                                        .map(([key, { label }]) => (
+                                            <option key={key} value={key}>{label}</option>
+                                        ))
+                                    }
+                                </select>
+
+                            </div>
+                            <div className={styles.searchField}>
+                                <label>시작 날짜</label>
+                                <input
+                                    type="date"
+                                    value={searchData.startDate}
+                                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                                />
+                            </div>
+
+                            <div className={styles.searchField}>
+                                <label>종료 날짜</label>
+                                <input
+                                    type="date"
+                                    value={searchData.endDate}
+                                    onChange={(e) => handleInputChange('endDate', e.target.value)}
+                                />
+                            </div>
+
+                            <button
+                                className={styles.searchButton}
+                                onClick={handleSearch}
+                                disabled={loading}
+                            >
+                                {loading ? '검색 중...' : '검색'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+            )}
+            {(role === "ADMIN" || role === "STAFF") && (
+            <div className={styles.tableHeader}>
+                <div>
+                    <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                    />
+                    <span>전체 선택</span>
+                </div>
+                <div className={styles.deleteButtonWrapper}>
+                    <button onClick={deleteSelectedRequests} className={styles.deleteButton}>
+                        삭제
+                    </button>
+                </div>
+            </div>
+            )}
+
+            <div className={styles.tableWrapper}>
+                {loading ? (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                        데이터를 불러오는 중...
+                    </div>
+                ) : (
+                    <table className={styles.table}>
+                        <thead>
+                        <tr>
+                            {(role === "ADMIN" || role === "STAFF") && <th className={styles.narrowTh}></th>}
+                            {role === "ENGINEER" && <th>작업하기</th>}
+                            <th>접수번호</th>
+                            <th>고객명</th>
+                            <th>제품명</th>
+                            <th>제품모델코드</th>
+                            <th>접수일자</th>
+                            <th>접수상태</th>
+                            <th>수리 담당자</th>
+                            <th>상세 페이지</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {requests.length === 0 ? (
+                            <tr>
+                                <td colSpan="9" className={styles.emptyState}>
+                                    <h3>데이터가 없습니다</h3>
+                                    <p>검색 조건에 맞는 수리 내역이 접수되지 않았습니다.</p>
+                                </td>
+                            </tr>
+                        ) : (
+                            requests.map((request) => (
+                                <tr key={request.requestId} className={request.assignmentStatus === "ACCEPTED" ? styles.acceptedRow : undefined} >
+                                    {(role === "ADMIN" || role === "STAFF") && (
+                                    <td className={styles.narrowTd}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedRequests.includes(request.requestId)}
+                                            onChange={() => handleSelectRequest(request.requestId)}
+                                        />
+                                    </td>
+                                    )}
+                                    {role === "ENGINEER" && (
+                                        <td>
+                                            <button
+                                                onClick={() => handleAccept(request)}
+                                                disabled={request.assignmentStatus !== "PENDING"}
+                                                className={`${styles.btn} ${styles.btnAccept}`}
+                                                title={request.assignmentStatus === "PENDING" ? "접수 가능" : "대기 상태에서만 접수 가능"}
+                                            >
+                                                접수
+                                            </button>
+                                        </td>
+                                    )}
+                                    <td>{request.requestNo}</td>
+                                    <td>{request.customerName}</td>
+                                    <td>{request.productName}</td>
+                                    <td>{request.modelCode}</td>
+                                    <td>{formatDate(request.createdAt)}</td>
+                                    <td style={{ color: statusConfig[request.assignmentStatus].color }}>
+                                        {statusConfig[request.assignmentStatus].label}
+                                    </td>
+                                    <td>{request.engineerName}</td>
+                                    <td>
+                                        <button
+                                            onClick={() => navigate(`/request/${request.requestId}`)}
+                                            style={{
+                                                padding: "6px 10px",
+                                                borderRadius: 6,
+                                                border: "1px solid #e5e7eb",
+                                                background: "white",
+                                                cursor: "pointer"
+                                            }}
+                                        >
+                                            상세
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
+            <div className={styles.pagination}>
+                <button
+                    onClick={() => handlePageChange(Math.max(0, pagination.currentPage - 1))}
+                    disabled={pagination.currentPage === 0}
+                >
+                    <ChevronLeft />
+                </button>
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                    <button
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                        className={pagination.currentPage === i ? styles.activePage : ""}
+                    >
+                        {i + 1}
+                    </button>
+                ))}
+                <button
+                    onClick={() => handlePageChange(Math.min(pagination.totalPages - 1, pagination.currentPage + 1))}
+                    disabled={pagination.currentPage === pagination.totalPages - 1}
+                >
+                    <ChevronRight />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
+

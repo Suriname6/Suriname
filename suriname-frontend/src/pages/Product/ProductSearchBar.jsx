@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import SearchBarLayout from "../../components/SearchLayout";
 import styles from "../../css/Product/ProductSearchBar.module.css";
-import axios from "axios";
+
+import api from "../../api/api";
 
 const ProductSearchBar = ({ onSearch }) => {
   const [form, setForm] = useState({
@@ -24,7 +25,7 @@ const ProductSearchBar = ({ onSearch }) => {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    axios.get("/api/categories").then((res) => setCategories(res.data));
+    api.get("/api/categories").then((res) => setCategories(res.data));
   }, []);
 
   return (

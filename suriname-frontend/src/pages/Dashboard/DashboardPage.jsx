@@ -1,9 +1,9 @@
-import { getUserRole } from "../utils/auth";
-import AdminDashboard from "../components/dashboard/AdminDashboard";
-import StaffDashboard from "../components/dashboard/StaffDashboard";
-import EngineerDashboard from "../components/dashboard/EngineerDashboard";
-import SidebarNavigation from "../components/SidebarNavigation";
-import "../css/Dashboard.css";
+import { getUserRole } from "../../utils/auth.js";
+import AdminDashboard from "../../components/dashboard/AdminDashboard.jsx";
+import StaffDashboard from "../../components/dashboard/StaffDashboard.jsx";
+import EngineerDashboard from "../../components/dashboard/EngineerDashboard.jsx";
+import SidebarNavigation from "../../components/SidebarNavigation.jsx";
+import "../../css/Dashboard.css";
 
 export default function DashboardPage() {
   const role = getUserRole();

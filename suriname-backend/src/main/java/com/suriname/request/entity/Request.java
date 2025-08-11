@@ -2,6 +2,7 @@ package com.suriname.request.entity;
 
 import com.suriname.customer.entity.Customer;
 import com.suriname.employee.entity.Employee;
+import com.suriname.image.entity.Image;
 import com.suriname.product.entity.CustomerProduct;
 import com.suriname.payment.Payment;
 
@@ -9,6 +10,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "request")
@@ -20,6 +23,10 @@ public class Request {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long requestId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private Employee receiver;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
@@ -36,15 +43,6 @@ public class Request {
     @Column(name = "request_no", nullable = false, length = 30, unique = true)
     private String requestNo;
 
-    @Column(name = "input_product_name", length = 100)
-    private String inputProductName;
-
-    @Column(name = "input_brand", length = 100)
-    private String inputBrand;
-
-    @Column(name = "input_model", length = 100)
-    private String inputModel;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
@@ -56,8 +54,8 @@ public class Request {
     private LocalDateTime createdAt;
     
     // Payment와의 역방향 관계 매핑
-    @OneToOne(mappedBy = "request", fetch = FetchType.LAZY)
-    private Payment payment;
+    @OneToMany(mappedBy = "request", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Payment> payments = new ArrayList<>();
 
     public enum Status {
         RECEIVED,    // 접수
@@ -73,22 +71,17 @@ public class Request {
     }
 
     @Builder
-    public Request(Employee employee,
-                    Customer customer,
-                    CustomerProduct customerProduct,
-                    String requestNo,
-                    String inputProductName,
-                    String inputBrand,
-                    String inputModel,
-                    String content) {
-
+    public Request(Employee receiver,
+                   Employee employee,
+                   Customer customer,
+                   CustomerProduct customerProduct,
+                   String requestNo,
+                   String content) {
+        this.receiver = receiver;
         this.employee = employee;
         this.customer = customer;
         this.customerProduct = customerProduct;
         this.requestNo = requestNo;
-        this.inputProductName = inputProductName;
-        this.inputBrand = inputBrand;
-        this.inputModel = inputModel;
         this.content = content;
         this.status = Status.RECEIVED;
     }
@@ -102,4 +95,10 @@ public class Request {
         r.setRequestId(requestId);
         return r;
     }
+
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RequestAssignmentLog> assignmentLogs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image> requestImages = new ArrayList<>();
 }
