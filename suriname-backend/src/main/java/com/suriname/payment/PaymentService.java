@@ -154,6 +154,10 @@ public class PaymentService {
         Payment payment = createAndSaveUniquePayment(request, dto.getAmount());
         String uniqueMerchantUid = payment.getMerchantUid();
 
+        // 고객 휴대폰 번호 설정
+        String customerPhone = request.getCustomer().getPhone();
+        dto.setCustomerPhone(customerPhone);
+        
         try {
             JsonNode response = tossPaymentsClient.issueVirtualAccount(uniqueMerchantUid, dto);
             
@@ -258,6 +262,11 @@ public class PaymentService {
                     System.err.println("Request 상태 업데이트 실패: " + e.getMessage());
                     // Request 상태 업데이트 실패해도 Payment 처리는 계속 진행
                 }
+            } else if ("CANCELED".equals(status)) {
+                payment.setStatus(Payment.Status.FAILED);
+                payment.setMemo("입금 취소로 인한 결제 실패");
+                paymentRepository.save(payment);
+                System.out.println("입금 취소 처리 완료: " + orderId + " -> " + payment.getStatus());
             } else {
                 System.out.println("처리되지 않은 상태: " + status);
             }
@@ -333,6 +342,11 @@ public class PaymentService {
                     System.err.println("Request 상태 업데이트 실패: " + e.getMessage());
                     // Request 상태 업데이트 실패해도 Payment 처리는 계속 진행
                 }
+            }
+            case "PAYMENT_CANCELED" -> {
+                payment.setStatus(Payment.Status.FAILED);
+                payment.setMemo("입금 취소로 인한 결제 실패");
+                System.out.println("결제 취소 처리: " + orderId);
             }
             default -> {
                 System.out.println("처리되지 않은 웹훅 이벤트: " + eventType);
