@@ -32,18 +32,21 @@ public class QuoteController {
             @RequestParam(required = false) String isApproved,
             @RequestParam(required = false) String employeeName,
             @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String progressStatus,
+            @RequestParam(required = false) String paymentStatus) {
         
         try {
             System.out.println("Quote API called with params: page=" + page + ", size=" + size + 
                              ", customerName=" + customerName + ", requestNo=" + requestNo + 
                              ", productName=" + productName + ", serialNumber=" + serialNumber + 
                              ", isApproved=" + isApproved + ", employeeName=" + employeeName + 
-                             ", startDate=" + startDate + ", endDate=" + endDate);
+                             ", startDate=" + startDate + ", endDate=" + endDate +
+                             ", progressStatus=" + progressStatus + ", paymentStatus=" + paymentStatus);
             
             QuotePageResponse response = quoteService.getQuotesWithSearch(
                 page, size, customerName, requestNo, productName, serialNumber, 
-                isApproved, employeeName, startDate, endDate);
+                isApproved, employeeName, startDate, endDate, progressStatus, paymentStatus);
             
             System.out.println("Quote API response: " + response.getTotalElements() + " elements found");
             return ResponseEntity.ok(response);

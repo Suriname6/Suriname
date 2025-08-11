@@ -44,8 +44,7 @@ const RepairWritePage = () => {
   const statusOptions = [
     { value: 'IN_PROGRESS', label: '수리중' },
     { value: 'AWAITING_PAYMENT', label: '입금 대기' },
-    { value: 'READY_FOR_DELIVERY', label: '배송 대기' },
-    { value: 'COMPLETED', label: '완료' },
+    { value: 'READY_FOR_DELIVERY', label: '수리완료' },
   ];
 
   useEffect(() => {
@@ -65,7 +64,7 @@ const RepairWritePage = () => {
         engineerName: shouldClearEngineer ? '' : engineerName,
         productName: existingQuote.productName || '',
         customerConsent: existingQuote.isApproved || false,
-        statusChange: 'IN_PROGRESS',
+        statusChange: existingQuote.statusChange || 'IN_PROGRESS',
         createdDate: existingQuote.createdAt
           ? existingQuote.createdAt.split('T')[0]
           : new Date().toISOString().split('T')[0],
@@ -465,7 +464,19 @@ const RepairWritePage = () => {
           await uploadTempImages(formData.requestNo);
         }
         alert(editMode ? '견적서가 성공적으로 수정되었습니다.' : '견적서가 성공적으로 생성되었습니다.');
-        navigate('/repair/list');
+        
+        // 입금대기 상태인 경우 가상계좌 발급 페이지로 이동
+        if (formData.statusChange === 'AWAITING_PAYMENT') {
+          navigate('/payment/virtualaccount', {
+            state: {
+              customerName: formData.customerName,
+              requestNo: formData.requestNo,
+              paymentAmount: actualCost
+            }
+          });
+        } else {
+          navigate('/repair/list');
+        }
       }
     } catch (error) {
       console.error('견적서 저장 실패:', error);
