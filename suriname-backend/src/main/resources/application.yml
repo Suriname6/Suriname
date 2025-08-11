@@ -39,4 +39,5 @@ sms:
     key: "${SMS_API_KEY}"
     secret: "${SMS_SECRET_KEY}"
   sender:
-    phone: "010-9158-3790"
+
+    phone: ""
