@@ -1,28 +1,34 @@
 import React, { useState, useEffect, useCallback } from "react";
 // import algoliasearch from 'algoliasearch'; // Temporarily disabled
 import * as XLSX from "xlsx";
-import { saveAs } from 'file-saver';
+import { saveAs } from "file-saver";
 
 // Temporarily disable Algolia for development
 // TODO: Re-enable when Algolia is properly configured
 
 const manufacturers = ["삼성", "LG", "Apple"];
 
-const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrentPage }) => {
+const CustomerSearch = ({
+  data,
+  setData,
+  setTotalPages,
+  itemsPerPage,
+  setCurrentPage,
+}) => {
   const [query, setQuery] = useState({
-    customerName: '',
-    address: '',
-    productName: '',
-    modelCode: '',
-    phone: '',
-    email: '',
+    customerName: "",
+    address: "",
+    productName: "",
+    modelCode: "",
+    phone: "",
+    email: "",
     manufacturers: [],
   });
 
   // 검색 결과 통계
   const [searchStats, setSearchStats] = useState({
     totalHits: 0,
-    processingTime: 0
+    processingTime: 0,
   });
 
   // 디바운스를 위한 타이머
@@ -32,10 +38,17 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
   const performSearch = useCallback(async () => {
     try {
       // API 요청으로 고객 데이터 가져오기 (기본 검색)
-      const response = await fetch('/api/customers/search', {
-        method: 'POST',
+      const token = localStorage.getItem("accessToken");
+      const params = new URLSearchParams({
+        page: "0",
+        size: String(itemsPerPage),
+      });
+
+      const response = await fetch(`/api/customers/search?${params}`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           customerName: query.customerName || null,
@@ -44,21 +57,24 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
           modelCode: query.modelCode || null,
           phone: query.phone || null,
           email: query.email || null,
-          manufacturers: query.manufacturers.length > 0 ? query.manufacturers : null
-        })
+          manufacturers:
+            query.manufacturers.length > 0 ? query.manufacturers : null,
+        }),
       });
 
       if (response.ok) {
         const result = await response.json();
-        const customers = result.data?.content || [];
-        
+        const page = result.data || {};
+        const customers = page.content || [];
+
         setData(customers);
         setTotalPages(Math.ceil(customers.length / itemsPerPage));
+        setTotalPages(page.totalPages ?? 0);
         setCurrentPage(1);
-        
+
         setSearchStats({
-          totalHits: customers.length,
-          processingTime: 50 // Mock processing time
+          totalHits: page.totalElements ?? customers.length,
+          processingTime: 50, // Mock processing time
         });
       } else {
         console.error("검색 API 요청 실패:", response.status);
@@ -66,7 +82,6 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
         setTotalPages(0);
         setSearchStats({ totalHits: 0, processingTime: 0 });
       }
-
     } catch (error) {
       console.error("검색 실패:", error);
       setData([]);
@@ -100,18 +115,18 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
   // 입력 변경 핸들러
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setQuery(prev => ({ ...prev, [name]: value }));
+    setQuery((prev) => ({ ...prev, [name]: value }));
   };
 
   // 제조사 체크박스 변경 핸들러
   const handleManufacturerChange = (manufacturer) => {
-    setQuery(prev => {
+    setQuery((prev) => {
       const exists = prev.manufacturers.includes(manufacturer);
       return {
         ...prev,
         manufacturers: exists
-          ? prev.manufacturers.filter(m => m !== manufacturer)
-          : [...prev.manufacturers, manufacturer]
+          ? prev.manufacturers.filter((m) => m !== manufacturer)
+          : [...prev.manufacturers, manufacturer],
       };
     });
   };
@@ -119,12 +134,12 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
   // 검색 초기화
   const handleReset = () => {
     setQuery({
-      customerName: '',
-      address: '',
-      productName: '',
-      modelCode: '',
-      phone: '',
-      email: '',
+      customerName: "",
+      address: "",
+      productName: "",
+      modelCode: "",
+      phone: "",
+      email: "",
       manufacturers: [],
     });
   };
@@ -149,21 +164,21 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
       "제품명",
       "제조사",
       "모델코드",
-      "제품고유번호"
+      "제품고유번호",
     ];
 
-    const excelData = data.map(item => [
-      item.objectID || '', // objectID를 고객 ID로 사용
-      item.customerName || '',
-      item.birth || '',
-      item.phone || '',
-      item.email || '',
-      item.address || '',
-      item.categoryName || '',
-      item.productName || '',
-      item.productBrand || '',
-      item.modelCode || '',
-      item.serialNumber || ''
+    const excelData = data.map((item) => [
+      item.objectID || "", // objectID를 고객 ID로 사용
+      item.customerName || "",
+      item.birth || "",
+      item.phone || "",
+      item.email || "",
+      item.address || "",
+      item.categoryName || "",
+      item.productName || "",
+      item.productBrand || "",
+      item.modelCode || "",
+      item.serialNumber || "",
     ]);
 
     // 워크북 생성 (빈 엑셀 파일 생성)
@@ -178,14 +193,19 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
 
     // 엑셀 파일 저장
     // XLSX.write: 워크북을 바이너리 데이터로 변환
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
 
     // Blob (Binary Large Object) 생성
-    const dataBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    const dataBlob = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
 
     // 파일 다운로드
     // saveAs(데이터, '파일이름.확장자')
-    saveAs(dataBlob, `제품목록_${new Date().toLocaleDateString('ko-KR')}.xlsx`);
+    saveAs(dataBlob, `제품목록_${new Date().toLocaleDateString("ko-KR")}.xlsx`);
 
     alert("엑셀 파일을 생성하고 다운로드를 시작합니다!");
   }, [data]);
@@ -197,8 +217,8 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
         <div className="text-sm text-gray-600">
           {searchStats.totalHits > 0 && (
             <span>
-              {searchStats.totalHits.toLocaleString()}개 결과 
-              ({searchStats.processingTime}ms)
+              {searchStats.totalHits.toLocaleString()}개 결과 (
+              {searchStats.processingTime}ms)
             </span>
           )}
         </div>
@@ -297,26 +317,27 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
           제조사
         </label>
         <div className="flex flex-wrap gap-2">
-          {manufacturers.map(manufacturer => {
+          {manufacturers.map((manufacturer) => {
             // 해당 제조사가 현재 선택된 상태인지 확인
             const isSelected = query.manufacturers.includes(manufacturer);
             return (
-                <button
-                    key={manufacturer}
-                    type="button" // 폼 제출 방지
-                    onClick={() => handleManufacturerChange(manufacturer)}
-                    // Tailwind CSS를 이용한 조건부 스타일링!
-                    className={`
+              <button
+                key={manufacturer}
+                type="button" // 폼 제출 방지
+                onClick={() => handleManufacturerChange(manufacturer)}
+                // Tailwind CSS를 이용한 조건부 스타일링!
+                className={`
                         px-4 py-2 rounded-full text-sm font-medium 
                         transition-colors duration-200 ease-in-out
-                        ${isSelected
-                        ? 'bg-blue-600 text-white shadow-md' // 선택되었을 때 스타일
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' // 선택되지 않았을 때 스타일
-                    }
+                        ${
+                          isSelected
+                            ? "bg-blue-600 text-white shadow-md" // 선택되었을 때 스타일
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300" // 선택되지 않았을 때 스타일
+                        }
                     `}
-                >
-                  {manufacturer}
-                </button>
+              >
+                {manufacturer}
+              </button>
             );
           })}
         </div>
@@ -333,12 +354,12 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
 
         {/* 엑셀 다운로드 버튼 */}
         <button
-            onClick={handleDownloadExcel}
-            className="px-4 py-2 text-sm font-medium text-white bg-green-500 border border-green-600 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+          onClick={handleDownloadExcel}
+          className="px-4 py-2 text-sm font-medium text-white bg-green-500 border border-green-600 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           엑셀 다운로드
         </button>
-        
+
         <div className="text-xs text-gray-500">
           🔍 입력하신 내용에 따라 실시간으로 검색됩니다
         </div>

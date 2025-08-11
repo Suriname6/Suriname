@@ -115,7 +115,7 @@ public class CustomerController {
     
     // 자동완성
     @GetMapping("/autocomplete")
-    public ResponseEntity<List<CustomerDetailDto>> autocompleteCustomers(@RequestParam String keyword) {
+    public ResponseEntity<List<CustomerDetailDto>> autocompleteCustomers(@RequestParam("keyword") String keyword) {
         List<CustomerDetailDto> results = customerService.autocompleteCustomers(keyword);
         return ResponseEntity.ok(results);
     }
@@ -128,12 +128,12 @@ public class CustomerController {
     }
 
     @GetMapping("/{customerId}/products")
-    public ResponseEntity<List<CustomerProductDto>> getCustomerProducts(@PathVariable Long customerId) {
-        List<CustomerProductDto> products = customerProductRepository.findByCustomerCustomerId(customerId)
+    public ResponseEntity<List<CustomerProductDto>> getCustomerProducts(@PathVariable("customerId") Long customerId) {
+        List<CustomerProductDto> products = customerProductRepository
+                .findByCustomerCustomerId(customerId)
                 .stream()
                 .map(CustomerProductDto::fromEntity)
                 .toList();
-
         return ResponseEntity.ok(products);
     }
 
