@@ -236,7 +236,7 @@ const RepairListPage = () => {
     } else if (paymentStatus === 'VIRTUAL_ACCOUNT_ISSUED') {
       return (
         <span style={{
-          color: '#28a745',
+          color: '#FFA500',
           fontWeight: 'bold',
           fontSize: '12px'
         }}>
