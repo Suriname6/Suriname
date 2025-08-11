@@ -47,6 +47,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/repair-presets/category/*/active").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/visible").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/", "/index.html", "/favicon.ico",
+                                "/assets/**", "/css/**", "/js/**", "/images/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
