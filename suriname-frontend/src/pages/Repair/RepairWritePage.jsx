@@ -465,7 +465,19 @@ const RepairWritePage = () => {
           await uploadTempImages(formData.requestNo);
         }
         alert(editMode ? '견적서가 성공적으로 수정되었습니다.' : '견적서가 성공적으로 생성되었습니다.');
-        navigate('/repair/list');
+        
+        // 입금대기 상태인 경우 가상계좌 발급 페이지로 이동
+        if (formData.statusChange === 'AWAITING_PAYMENT') {
+          navigate('/payment/virtualaccount', {
+            state: {
+              customerName: formData.customerName,
+              requestNo: formData.requestNo,
+              paymentAmount: actualCost
+            }
+          });
+        } else {
+          navigate('/repair/list');
+        }
       }
     } catch (error) {
       console.error('견적서 저장 실패:', error);

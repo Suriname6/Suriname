@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createVirtualAccount } from '../../api/payment';
 import styles from '../../css/Payment/PaymentVirtualAccount.module.css';
 
 const PaymentVirtualAccountPage = () => {
   const [selectedTab, setSelectedTab] = useState("virtual");
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     customerName: '',
     receptionNumber: '',
@@ -15,6 +16,18 @@ const PaymentVirtualAccountPage = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success', 'error'
+
+  // 수리내역 페이지에서 전달된 데이터로 폼 초기화
+  useEffect(() => {
+    if (location.state) {
+      const { customerName, requestNo, paymentAmount } = location.state;
+      setFormData({
+        customerName: customerName || '',
+        receptionNumber: requestNo || '',
+        paymentAmount: paymentAmount ? paymentAmount.toLocaleString() : ''
+      });
+    }
+  }, [location.state]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

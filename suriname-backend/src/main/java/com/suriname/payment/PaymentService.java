@@ -337,10 +337,10 @@ public class PaymentService {
         }
     }
 
-    // 완전히 유니크한 Payment 생성 및 저장
+    // Payment 생성 및 저장
     @Transactional
     private Payment createAndSaveUniquePayment(Request request, Integer amount) {
-        // 현재 시간과 UUID를 조합한 유니크한 merchant_uid 생성
+        // 현재 시간과 UUID를 조합한 merchant_uid 생성
         String uniqueMerchantUid = "VIR_" + System.currentTimeMillis() + "_" + 
                                   java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         
