@@ -20,7 +20,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +28,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final RequestRepository requestRepository;
     private final TossPaymentsClient tossPaymentsClient;
+    private final SmsService smsService;
     
     @Value("${toss.secret-key}")
     private String tossSecretKey;
@@ -154,6 +154,10 @@ public class PaymentService {
         Payment payment = createAndSaveUniquePayment(request, dto.getAmount());
         String uniqueMerchantUid = payment.getMerchantUid();
 
+        // 고객 휴대폰 번호 설정
+        String customerPhone = request.getCustomer().getPhone();
+        dto.setCustomerPhone(customerPhone);
+        
         try {
             JsonNode response = tossPaymentsClient.issueVirtualAccount(uniqueMerchantUid, dto);
             
@@ -192,6 +196,20 @@ public class PaymentService {
             payment.setAccountAndBank(account, bank);
             payment = paymentRepository.save(payment);
 
+            // 가상계좌 발급 성공 시 SMS 발송
+            try {
+                smsService.sendVirtualAccountSms(
+                    customerPhone,
+                    request.getCustomer().getName(),
+                    bank,
+                    account,
+                    String.format("%,d", dto.getAmount())
+                );
+            } catch (Exception smsException) {
+                System.err.println("SMS 발송 실패 (가상계좌 발급은 성공): " + smsException.getMessage());
+                // SMS 실패해도 가상계좌 발급은 성공으로 처리
+            }
+
             return new VirtualAccountResponseDto(bank, account, dueDate);
         } catch (Exception e) {
             // API 에러가 발생해도 기본값으로 가상계좌 정보 설정
@@ -208,6 +226,19 @@ public class PaymentService {
             payment = paymentRepository.save(payment);
             
             System.out.println("기본값으로 가상계좌 설정 완료 - 은행: " + defaultBank + ", 계좌: " + defaultAccount);
+            
+            // 기본값으로도 SMS 발송 시도
+            try {
+                smsService.sendVirtualAccountSms(
+                    customerPhone,
+                    request.getCustomer().getName(),
+                    defaultBank,
+                    defaultAccount,
+                    String.format("%,d", dto.getAmount())
+                );
+            } catch (Exception smsException) {
+                System.err.println("SMS 발송 실패 (기본값 가상계좌): " + smsException.getMessage());
+            }
             
             // 기본값으로 응답 반환
             return new VirtualAccountResponseDto(defaultBank, defaultAccount, defaultDueDate);
@@ -258,6 +289,11 @@ public class PaymentService {
                     System.err.println("Request 상태 업데이트 실패: " + e.getMessage());
                     // Request 상태 업데이트 실패해도 Payment 처리는 계속 진행
                 }
+            } else if ("CANCELED".equals(status)) {
+                payment.setStatus(Payment.Status.FAILED);
+                payment.setMemo("입금 취소로 인한 결제 실패");
+                paymentRepository.save(payment);
+                System.out.println("입금 취소 처리 완료: " + orderId + " -> " + payment.getStatus());
             } else {
                 System.out.println("처리되지 않은 상태: " + status);
             }
@@ -333,6 +369,11 @@ public class PaymentService {
                     System.err.println("Request 상태 업데이트 실패: " + e.getMessage());
                     // Request 상태 업데이트 실패해도 Payment 처리는 계속 진행
                 }
+            }
+            case "PAYMENT_CANCELED" -> {
+                payment.setStatus(Payment.Status.FAILED);
+                payment.setMemo("입금 취소로 인한 결제 실패");
+                System.out.println("결제 취소 처리: " + orderId);
             }
             default -> {
                 System.out.println("처리되지 않은 웹훅 이벤트: " + eventType);

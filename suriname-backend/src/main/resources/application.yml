@@ -32,3 +32,12 @@ jwt:
 toss:
   secret-key: "${TOSS_SECRET_KEY}"
   client-key: "${TOSS_CLIENT_KEY}"
+
+sms:
+  api:
+    url: https://api.solapi.com/messages/v4/send
+    key: "${SMS_API_KEY}"
+    secret: "${SMS_SECRET_KEY}"
+  sender:
+
+    phone: ""
