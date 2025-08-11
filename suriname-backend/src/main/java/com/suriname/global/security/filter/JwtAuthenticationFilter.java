@@ -17,23 +17,44 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	private final JwtTokenProvider jwtTokenProvider;
-    
-	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
-		String token = jwtTokenProvider.resolveToken(request);
+    private final JwtTokenProvider jwtTokenProvider;
 
-		if (token != null && jwtTokenProvider.validateToken(token)) {
-			Authentication authentication = jwtTokenProvider.getAuthentication(token);
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
 
-			if (authentication instanceof AbstractAuthenticationToken tokenAuth) {
-				tokenAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-			}
+        /*
+         * return path.equals("/api/auth/login") || path.equals("/api/auth/refresh") ||
+         * (path.equals("/api/users") && method.equals("POST"));
+         */
 
-			SecurityContextHolder.getContext().setAuthentication(authentication);
-		}
+        boolean shouldSkip = path.equals("/api/auth/login") || path.equals("/api/auth/refresh")
+                || (path.equals("/api/users") && method.equals("POST"));
 
-		filterChain.doFilter(request, response);
-	}
+        System.out.println("=== JWT FILTER ===");
+        System.out.println("URI: " + path);
+        System.out.println("METHOD: " + method);
+        System.out.println("shouldNotFilter: " + shouldSkip);
+
+        return shouldSkip;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        String token = jwtTokenProvider.resolveToken(request);
+
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+            Authentication authentication = jwtTokenProvider.getAuthentication(token);
+
+            if (authentication instanceof AbstractAuthenticationToken tokenAuth) {
+                tokenAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            }
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
+        filterChain.doFilter(request, response);
+    }
 }
