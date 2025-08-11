@@ -43,7 +43,7 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users", "/api/payments/webhook/toss").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/repair-presets/category/*/active").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/visible").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")

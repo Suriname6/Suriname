@@ -243,6 +243,21 @@ public class PaymentService {
                 payment.markCompleted();
                 paymentRepository.save(payment);
                 System.out.println("입금 완료 처리 성공: " + orderId + " -> " + payment.getStatus());
+                
+                // 입금 완료 시 Request 상태를 배송대기로 변경
+                try {
+                    Request request = payment.getRequest();
+                    if (request != null) {
+                        request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+                        requestRepository.save(request);
+                        System.out.println("Request 상태를 배송대기로 업데이트: " + request.getRequestNo());
+                    } else {
+                        System.err.println("Payment에 연결된 Request가 없습니다: " + payment.getPaymentId());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Request 상태 업데이트 실패: " + e.getMessage());
+                    // Request 상태 업데이트 실패해도 Payment 처리는 계속 진행
+                }
             } else {
                 System.out.println("처리되지 않은 상태: " + status);
             }
@@ -303,6 +318,21 @@ public class PaymentService {
             case "PAYMENT_CONFIRMED" -> {
                 payment.markCompleted();
                 System.out.println("결제 완료 처리: " + orderId);
+                
+                // 입금 완료 시 Request 상태를 배송대기로 변경
+                try {
+                    Request request = payment.getRequest();
+                    if (request != null) {
+                        request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+                        requestRepository.save(request);
+                        System.out.println("Request 상태를 배송대기로 업데이트: " + request.getRequestNo());
+                    } else {
+                        System.err.println("Payment에 연결된 Request가 없습니다: " + payment.getPaymentId());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Request 상태 업데이트 실패: " + e.getMessage());
+                    // Request 상태 업데이트 실패해도 Payment 처리는 계속 진행
+                }
             }
             default -> {
                 System.out.println("처리되지 않은 웹훅 이벤트: " + eventType);
@@ -337,10 +367,10 @@ public class PaymentService {
         }
     }
 
-    // 완전히 유니크한 Payment 생성 및 저장
+    // Payment 생성 및 저장
     @Transactional
     private Payment createAndSaveUniquePayment(Request request, Integer amount) {
-        // 현재 시간과 UUID를 조합한 유니크한 merchant_uid 생성
+        // 현재 시간과 UUID를 조합한 merchant_uid 생성
         String uniqueMerchantUid = "VIR_" + System.currentTimeMillis() + "_" + 
                                   java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         
