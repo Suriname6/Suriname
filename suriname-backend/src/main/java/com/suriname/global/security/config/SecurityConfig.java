@@ -35,7 +35,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:5173"));
+                    config.setAllowedOrigins(List.of(
+                            "http://localhost:5173",
+                            "http://54.180.57.212:8081"
+                    ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
@@ -43,7 +46,7 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/users", "/api/payments/webhook/toss").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users", "/api/users/", "/api/payments/webhook/toss").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/repair-presets/category/*/active").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/visible").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")

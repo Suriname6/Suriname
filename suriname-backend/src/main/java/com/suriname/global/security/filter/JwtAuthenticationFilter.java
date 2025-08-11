@@ -18,35 +18,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtTokenProvider jwtTokenProvider;
-
-	@Override
-	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-		String path = request.getRequestURI();
-		String method = request.getMethod();
-
-        boolean isApi = path.startsWith("/api/");
-
-        boolean authWhitelist =
-                path.equals("/api/auth/login") ||
-                        path.equals("/api/auth/refresh") ||
-                        (path.equals("/api/users") && "POST".equals(method)) ||
-                        (path.equals("/api/payments/webhook/toss") && "POST".equals(method));
-
-        boolean staticWhitelist =
-                path.equals("/") ||
-                        path.equals("/index.html") ||
-                        path.startsWith("/assets/") ||
-                        path.equals("/favicon.ico") ||
-                        path.startsWith("/static/");
-
-        boolean shouldSkip = !isApi || authWhitelist || staticWhitelist;
-
-        System.out.println("=== JWT FILTER ===");
-        System.out.println("URI: " + path + " | METHOD: " + method + " | shouldNotFilter: " + shouldSkip);
-
-        return shouldSkip;
-	}
-
+    
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
