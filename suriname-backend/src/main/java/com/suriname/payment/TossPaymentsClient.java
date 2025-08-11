@@ -45,8 +45,7 @@ public class TossPaymentsClient {
         requestBody.put("customerName", dto.getVbankHolder());
         requestBody.put("bank", "신한"); // 가상계좌 은행 (신한, 국민, 하나, 기업, 농협, 우리 등)
         requestBody.put("validHours", 168); // 7일(168시간) 유효 (최대 720시간)
-        //requestBody.put("customerMobilePhone", dto.getCustomerPhone());
-        requestBody.put("customerMobilePhone", "010-9158-3790");
+        requestBody.put("customerMobilePhone", dto.getCustomerPhone());
 
         System.out.println("토스페이먼츠 가상계좌 발급 요청 (API v2022-11-16): " + requestBody);
 
