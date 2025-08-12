@@ -19,6 +19,7 @@ import CustomerDetail from "./pages/Customer/CustomerDetail";
 
 import DashboardPage from "./pages/Dashboard/DashboardPage.jsx";
 import EmployeePerformancePage from "./pages/Dashboard/EmployeePerformancePage.jsx";
+import ReportPage from "./pages/Dashboard/ReportPage.jsx";
 
 import ProductList from "./pages/Product/ProductList";
 import ProductAdd from "./pages/Product/ProductAdd";
@@ -87,6 +88,7 @@ function App() {
           <Route path="/customer/detail/:id" element={<CustomerDetail />} />
           <Route path="/dashboard/statistics" element={<DashboardPage />} />
           <Route path="/dashboard/performance" element={<EmployeePerformancePage />} />
+          <Route path="/dashboard/report" element={<ReportPage />} />
 
           <Route path="/payment/list" element={<PaymentListPage />} />
           <Route
