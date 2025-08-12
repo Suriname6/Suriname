@@ -1,6 +1,8 @@
 package com.suriname.analytics.service;
 
-import com.itextpdf.io.source.ByteArrayOutputStream;
+import com.itextpdf.io.font.FontProgramFactory;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
@@ -10,11 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import com.itextpdf.layout.element.Paragraph;
 
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.URL;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,11 @@ public class ReportSchedulerService {
             PdfWriter writer = new PdfWriter(new FileOutputStream(filePath));
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
+
+            // 한글 폰트 적용
+            String fontPath = "fonts/NotoSansKR-Regular.ttf";
+            PdfFont koreanFont = PdfFontFactory.createFont(fontPath, "Identity-H");
+            document.setFont(koreanFont);
 
             // 예시: 통계 데이터 가져오기
             var stats = analyticsService.getStatistic();
