@@ -20,8 +20,4 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
     
     // 수리기사 이름으로 존재 여부 확인
     boolean existsByName(String name);
-    
-    // 수리기사 이름으로 검색
-    Optional<Employee> findByName(String name);
-
 }

@@ -109,11 +109,6 @@ public class ImageService {
         log.info("다중 이미지 업로드 완료: requestId={}, 성공={}/{}", requestId, uploadedImageIds.size(), files.length);
         return uploadedImageIds;
     }
-
-    @Transactional(readOnly = true)
-    public List<Image> getImagesByRequestId(Long requestId) {
-        return imageRepository.findByRequestRequestIdOrderByCreatedAtAsc(requestId);
-    }
     
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getImagesSummaryByRequestId(Long requestId) {
@@ -158,17 +153,5 @@ public class ImageService {
         // BLOB 저장 시에는 DB에서만 삭제하면 됨
         imageRepository.deleteAll(images);
         log.info("All images deleted from BLOB for requestId={}, count={}", requestId, images.size());
-    }
-
-    public String testBlobConnection() {
-        log.info("=== ImageService BLOB 저장 테스트 시작 ===");
-        
-        // BLOB 저장 시에는 DB 연결만 확인하면 됨
-        try {
-            long imageCount = imageRepository.count();
-            return "BLOB 저장 시스템 정상 - 총 이미지 수: " + imageCount;
-        } catch (Exception e) {
-            return "BLOB 저장 시스템 오류: " + e.getMessage();
-        }
     }
 }

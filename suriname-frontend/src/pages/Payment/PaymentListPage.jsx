@@ -51,10 +51,7 @@ const PaymentListPage = () => {
         }
       });
 
-      console.log('Fetching payments with params:', params);
-
       const data = await getPayments(params);
-      console.log('Response data:', data);
       
       setPayments(data.content || []);
       setPagination({
@@ -66,7 +63,6 @@ const PaymentListPage = () => {
         last: data.last !== false
       });
     } catch (error) {
-      console.error('Error fetching payments:', error);
       alert(`데이터 로드 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
     setLoading(false);
@@ -89,7 +85,6 @@ const PaymentListPage = () => {
       setSelectAll(false);
       fetchPayments();
     } catch (error) {
-      console.error('Error deleting payments:', error);
       alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     }
   };

@@ -4,7 +4,6 @@ import qs from 'qs';
 // 견적 목록 조회 (페이징 및 검색)
 export const getQuotes = async (params = {}) => {
   try {
-    console.log('Calling getQuotes with params:', params);
     
     const response = await axiosInstance.get('/api/quotes', {
       params,
@@ -14,10 +13,8 @@ export const getQuotes = async (params = {}) => {
       }),
     });
 
-    console.log('getQuotes response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching quotes:', error);
     throw error;
   }
 };
@@ -28,7 +25,6 @@ export const deleteQuote = async (quoteId) => {
     const response = await axiosInstance.delete(`/api/quotes/${quoteId}`);
     return response.data;
   } catch (error) {
-    console.error('Error deleting quote:', error);
     throw error;
   }
 };
@@ -41,7 +37,6 @@ export const deleteQuotes = async (quoteIds) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error deleting quotes:', error);
     throw error;
   }
 };

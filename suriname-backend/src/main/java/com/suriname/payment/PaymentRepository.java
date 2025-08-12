@@ -16,14 +16,6 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment,Long> {
     Optional<Payment> findByMerchantUid(String merchantUid);
     
-    boolean existsByRequest(Request request);
-    
-    boolean existsByRequestAndStatus(Request request, Payment.Status status);
-    
-    List<Payment> findByRequestAndStatus(Request request, Payment.Status status);
-    
-    List<Payment> findByMerchantUidAndStatus(String merchantUid, Payment.Status status);
-    
     @Query("SELECT p FROM Payment p JOIN p.request r JOIN r.customer c " +
            "WHERE (:customerName IS NULL OR c.name LIKE %:customerName%) " +
            "AND (:receptionNumber IS NULL OR r.requestNo LIKE %:receptionNumber%) " +

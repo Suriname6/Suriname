@@ -22,7 +22,7 @@ import java.util.UUID;
 public class SmsService {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    //private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${sms.api.url}")
     private String apiUrl;
@@ -48,11 +48,8 @@ public class SmsService {
             );
 
             sendSms(customerPhone, message);
-            System.out.println("가상계좌 SMS 발송 완료: " + customerPhone);
             
         } catch (Exception e) {
-            System.err.println("SMS 발송 실패: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -77,12 +74,9 @@ public class SmsService {
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-            System.out.println("SMS 발송 요청: " + requestBody);
             ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
-            System.out.println("SMS API 응답: " + response.getBody());
 
         } catch (Exception e) {
-            System.err.println("SMS 발송 중 오류 발생: " + e.getMessage());
             throw new RuntimeException("SMS 발송 실패", e);
         }
     }
