@@ -65,7 +65,6 @@ const RepairPresetPage = () => {
       });
       setCategories(sorted.length ? sorted : FALLBACK_CATEGORIES);
     } catch (e) {
-      console.error('카테고리 로드 실패:', e);
       setCategories(FALLBACK_CATEGORIES);
     } finally {
       setLoading(false);
@@ -174,7 +173,6 @@ const RepairPresetPage = () => {
       setFormData({ categoryId: '', name: '', description: '', cost: '' });
       setErrors({ categoryId: '', name: '', cost: '' });
     } catch (err) {
-      console.error('프리셋 등록 실패:', err);
       setErrorMsg('등록 실패');
     } finally {
       setLoading(false);

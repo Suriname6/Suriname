@@ -4,7 +4,6 @@ import qs from 'qs';
 // 결제 목록 조회 (페이징 및 검색)
 export const getPayments = async (params = {}) => {
   try {
-    console.log('Calling getPayments with params:', params);
     
     const response = await axiosInstance.get('/api/payments', {
       params,
@@ -14,10 +13,8 @@ export const getPayments = async (params = {}) => {
       }),
     });
 
-    console.log('getPayments response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching payments:', error);
     throw error;
   }
 };
@@ -28,7 +25,6 @@ export const deletePayment = async (paymentId) => {
     const response = await axiosInstance.delete(`/api/payments/${paymentId}`);
     return response.data;
   } catch (error) {
-    console.error('Error deleting payment:', error);
     throw error;
   }
 };
@@ -41,7 +37,6 @@ export const deletePayments = async (paymentIds) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error deleting payments:', error);
     throw error;
   }
 };
@@ -52,7 +47,6 @@ export const createVirtualAccount = async (data) => {
     const response = await axiosInstance.post('/api/payments/virtual-account', data);
     return response.data;
   } catch (error) {
-    console.error('Error creating virtual account:', error);
     throw error;
   }
 };

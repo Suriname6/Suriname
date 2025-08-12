@@ -15,10 +15,6 @@ import java.util.Optional;
 
 @Repository
 public interface QuoteRepository extends JpaRepository<Quote, Long> {
-    Optional<Quote> findByRequest(Request request);
-    
-    List<Quote> findByIsApprovedFalse();
-    List<Quote> findByIsApprovedTrue();
     
     @Query("SELECT q FROM Quote q " +
            "JOIN q.request r " +

@@ -81,7 +81,6 @@ const PaymentVirtualAccountPage = () => {
         vbankDue: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7일 후
       };
 
-      console.log('가상계좌 발급 요청:', requestData);
 
       const response = await createVirtualAccount(requestData);
       
@@ -95,11 +94,7 @@ const PaymentVirtualAccountPage = () => {
           status: 'AWAITING_PAYMENT'
         });
         
-        if (statusUpdateResponse.data.status === 200) {
-          console.log('Request 상태가 입금대기로 업데이트되었습니다.');
-        }
       } catch (statusError) {
-        console.warn('Request 상태 업데이트 실패 (무시됨):', statusError);
         // 상태 업데이트 실패해도 전체 프로세스는 계속 진행
       }
 
@@ -109,7 +104,6 @@ const PaymentVirtualAccountPage = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('가상계좌 발급 실패:', error);
       setMessage(error.response?.data?.message || '가상계좌 발급에 실패했습니다.');
       setMessageType('error');
     } finally {

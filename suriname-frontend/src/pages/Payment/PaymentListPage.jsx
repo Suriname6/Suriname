@@ -51,10 +51,7 @@ const PaymentListPage = () => {
         }
       });
 
-      console.log('Fetching payments with params:', params);
-
       const data = await getPayments(params);
-      console.log('Response data:', data);
       
       setPayments(data.content || []);
       setPagination({
@@ -66,7 +63,6 @@ const PaymentListPage = () => {
         last: data.last !== false
       });
     } catch (error) {
-      console.error('Error fetching payments:', error);
       alert(`데이터 로드 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
     setLoading(false);
@@ -89,7 +85,6 @@ const PaymentListPage = () => {
       setSelectAll(false);
       fetchPayments();
     } catch (error) {
-      console.error('Error deleting payments:', error);
       alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     }
   };
@@ -329,9 +324,9 @@ const PaymentListPage = () => {
                 </th>
                 <th>고객명</th>
                 <th>접수번호</th>
-                <th>가상계좌번호</th>
-                <th>결제수단</th>
-                <th>결제금액</th>
+                <th>계좌번호</th>
+                <th>은행이름</th>
+                <th>입금금액</th>
                 <th>입금상태</th>
                 <th>입금완료시각</th>
                 <th>비고</th>
