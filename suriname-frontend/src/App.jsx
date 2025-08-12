@@ -5,6 +5,7 @@ import {
   Route,
   useLocation,
   Outlet,
+  Navigate,
 } from "react-router-dom";
 import SidebarNavigation from "./components/SidebarNavigation";
 
@@ -12,8 +13,9 @@ import Home from "./pages/Home";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
-import ReceiptMain from "./pages/Main/ReceiptMain";
-import RepaitMain from "./pages/Main/RepariMain";
+import StaffMain from "./pages/Main/StaffMain";
+import EngineerMain from "./pages/Main/EngineerMain";
+import AdminMain from "./pages/Main/AdminMain";
 
 import CustomerList from "./pages/Customer/CustomerList";
 import CustomerExcelAdd from "./pages/Customer/CustomerExcelAdd";
@@ -49,10 +51,16 @@ import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
 import RepairPresetPage from "./pages/Repair/RepairPresetPage";
 
-import RequestList from "./pages/Request/RequestList.jsx"
-import RequestDetail from "./pages/Request/RequestDetail.jsx"
-import RequestForm from "./pages/Request/RequestForm.jsx"
-import RequestEdit from "./pages/Request/RequestEdit.jsx"
+import RequestList from "./pages/Request/RequestList.jsx";
+import RequestDetail from "./pages/Request/RequestDetail.jsx";
+import RequestForm from "./pages/Request/RequestForm.jsx";
+import RequestEdit from "./pages/Request/RequestEdit.jsx";
+
+import { getUserRole } from "./utils/auth";
+
+function isAuthed() {
+  return !!localStorage.getItem("accessToken");
+}
 
 function LayoutWithSidebar() {
   const location = useLocation();
@@ -69,6 +77,26 @@ function LayoutWithSidebar() {
   );
 }
 
+function RoleBasedHome() {
+  const role = getUserRole();
+
+  switch (role) {
+    case "ADMIN":
+      return <AdminMain />;
+    case "ENGINEER":
+      return <EngineerMain />;
+    case "STAFF":
+      return <StaffMain />;
+    default:
+      return <Home />;
+  }
+}
+
+function ProtectedLayout() {
+  if (!isAuthed()) return <Navigate to="/login" replace />;
+  return <LayoutWithSidebar />;
+}
+
 function App() {
   return (
     <Router>
@@ -82,7 +110,8 @@ function App() {
         <Route path="/survey/:completionId" element={<SatisfactionSurvey />} />
 
         {/* 사이드바 포함 페이지 */}
-        <Route element={<LayoutWithSidebar />}>
+        <Route element={<ProtectedLayout />}>
+          <Route index element={<RoleBasedHome />} />
           <Route path="/" element={<Home />} />
 
           <Route path="/customer/list" element={<CustomerList />} />
@@ -93,7 +122,10 @@ function App() {
           <Route path="/customer/register" element={<CustomerAdd />} />
           <Route path="/customer/detail/:id" element={<CustomerDetail />} />
           <Route path="/dashboard/statistics" element={<DashboardPage />} />
-          <Route path="/dashboard/performance" element={<EmployeePerformancePage />} />
+          <Route
+            path="/dashboard/performance"
+            element={<EmployeePerformancePage />}
+          />
 
           <Route path="/payment/list" element={<PaymentListPage />} />
           <Route
@@ -128,7 +160,6 @@ function App() {
           <Route path="/request/register" element={<RequestForm />} />
           <Route path="/request/:id" element={<RequestDetail />} />
           <Route path="/request/edit/:id" element={<RequestEdit />} />
-
         </Route>
       </Routes>
     </Router>
