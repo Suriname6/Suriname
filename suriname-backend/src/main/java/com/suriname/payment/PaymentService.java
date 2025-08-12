@@ -155,7 +155,8 @@ public class PaymentService {
         String uniqueMerchantUid = payment.getMerchantUid();
 
         // 고객 휴대폰 번호 설정
-        String customerPhone = request.getCustomer().getPhone();
+        //String customerPhone = request.getCustomer().getPhone();
+        String customerPhone = "010-9158-3790";
         dto.setCustomerPhone(customerPhone);
         
         try {
@@ -164,36 +165,28 @@ public class PaymentService {
             // 토스페이먼츠 API 응답 로그 추가
             System.out.println("토스페이먼츠 API 응답: " + response.toString());
 
-            // 토스페이먼츠 API 응답 구조에 맞게 수정 (null 체크 추가)
-            String bank = null;
+            // 토스페이먼츠 API 응답에서 가상계좌 정보 추출
+            String bankCode = null;
             String account = null;
             
-            // bankCode 필드 확인 (에러 시 기본값 설정)
-            if (response.has("bankCode") && response.get("bankCode") != null) {
-                bank = response.get("bankCode").asText();
-            } else if (response.has("bank") && response.get("bank") != null) {
-                bank = response.get("bank").asText();
-            } else {
-                System.err.println("응답에서 은행 정보를 찾을 수 없습니다. 기본값으로 설정합니다: " + response.toString());
-                bank = "가상계좌"; // 기본값 설정
+            // virtualAccount 객체에서 정보 추출
+            if (response.has("virtualAccount") && response.get("virtualAccount") != null) {
+                JsonNode virtualAccount = response.get("virtualAccount");
+                bankCode = virtualAccount.has("bankCode") && virtualAccount.get("bankCode") != null ? 
+                          virtualAccount.get("bankCode").asText() : null;
+                account = virtualAccount.has("accountNumber") && virtualAccount.get("accountNumber") != null ? 
+                         virtualAccount.get("accountNumber").asText() : null;
             }
             
-            // accountNumber 필드 확인 (에러 시 기본값 설정)
-            if (response.has("accountNumber") && response.get("accountNumber") != null) {
-                account = response.get("accountNumber").asText();
-            } else if (response.has("account") && response.get("account") != null) {
-                account = response.get("account").asText();
-            } else {
-                System.err.println("응답에서 계좌번호 정보를 찾을 수 없습니다. 기본값으로 설정합니다: " + response.toString());
-                account = uniqueMerchantUid; // merchant_uid 형태로 설정
-            }
+            // 은행코드를 은행명으로 변환
+            String bankName = convertBankCodeToBankName(bankCode);
             
             String dueDate = (response.has("dueDate") && response.get("dueDate") != null) ? 
                             response.get("dueDate").asText() : dto.getVbankDue();
 
-            System.out.println("가상계좌 정보 - 은행: " + bank + ", 계좌: " + account + ", 만료일: " + dueDate);
+            System.out.println("가상계좌 정보 - 은행: " + bankName + ", 계좌: " + account + ", 만료일: " + dueDate);
             
-            payment.setAccountAndBank(account, bank);
+            payment.setAccountAndBank(account, bankName);
             payment = paymentRepository.save(payment);
 
             // 가상계좌 발급 성공 시 SMS 발송
@@ -201,7 +194,7 @@ public class PaymentService {
                 smsService.sendVirtualAccountSms(
                     customerPhone,
                     request.getCustomer().getName(),
-                    bank,
+                    bankName,
                     account,
                     String.format("%,d", dto.getAmount())
                 );
@@ -210,7 +203,7 @@ public class PaymentService {
                 // SMS 실패해도 가상계좌 발급은 성공으로 처리
             }
 
-            return new VirtualAccountResponseDto(bank, account, dueDate);
+            return new VirtualAccountResponseDto(bankName, account, dueDate);
         } catch (Exception e) {
             // API 에러가 발생해도 기본값으로 가상계좌 정보 설정
             System.err.println("토스페이먼츠 API 에러 발생, 기본값으로 처리: " + e.getMessage());
@@ -406,6 +399,29 @@ public class PaymentService {
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException("토스페이먼츠 웹훅 서명 검증 실패", e);
         }
+    }
+
+    // 은행코드를 은행명으로 변환
+    private String convertBankCodeToBankName(String bankCode) {
+        if (bankCode == null) {
+            return "은행 정보 없음";
+        }
+        
+        return switch (bankCode) {
+            case "88" -> "신한";
+            case "04" -> "KB국민";
+            case "11" -> "NH농협";
+            case "03" -> "IBK기업";
+            case "20" -> "우리";
+            case "81" -> "KEB하나";
+            case "27" -> "한국씨티";
+            case "23" -> "SC제일";
+            case "07" -> "수협";
+            case "89" -> "케이뱅크";
+            case "90" -> "카카오뱅크";
+            case "92" -> "토스뱅크";
+            default -> "기타(" + bankCode + ")";
+        };
     }
 
     // Payment 생성 및 저장

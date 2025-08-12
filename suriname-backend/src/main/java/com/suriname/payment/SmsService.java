@@ -39,10 +39,10 @@ public class SmsService {
     public void sendVirtualAccountSms(String customerPhone, String customerName, String bank, String account, String amount) {
         try {
             String message = String.format(
-                "[Suriname] %s고객님 입금 요청\n" +
-                "결제방식: %s\n" +
-                "주문번호: %s\n" +
-                "입금액: %s원\n" +
+                "[Suriname] %s고객님, 수리남을 이용해주셔서 감사드립니다.\n"+
+                "가상계좌은행: %s\n" +
+                "가상계좌번호: %s\n" +
+                "입금액: %s원\n\n" +
                 "7일 이내 입금 부탁드립니다.",
                 customerName, bank, account, amount
             );

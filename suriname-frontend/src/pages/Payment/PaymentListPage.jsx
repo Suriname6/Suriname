@@ -329,9 +329,9 @@ const PaymentListPage = () => {
                 </th>
                 <th>고객명</th>
                 <th>접수번호</th>
-                <th>가상계좌번호</th>
-                <th>결제수단</th>
-                <th>결제금액</th>
+                <th>계좌번호</th>
+                <th>은행이름</th>
+                <th>입금금액</th>
                 <th>입금상태</th>
                 <th>입금완료시각</th>
                 <th>비고</th>
