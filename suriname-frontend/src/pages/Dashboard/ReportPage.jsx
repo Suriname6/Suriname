@@ -91,7 +91,7 @@ const ReportPDFDocument = ({ adminStats, employeeStats }) => (
                         <Text style={styles.tableCell}>{adminStats?.totalRequestCount ?? '-'}</Text>
                         <Text style={styles.tableCell}>{adminStats?.todayRequestCount ?? '-'}</Text>
                         <Text style={styles.tableCell}>{adminStats?.uncompletedCount ?? '-'}</Text>
-                        <Text style={styles.tableCell}>{adminStats?.completedRatio ? `${(adminStats.completedRatio * 100).toFixed(1)}%` : '-'}</Text>
+                        <Text style={styles.tableCell}>{adminStats?.completedRatio ? `${adminStats.completedRatio.toFixed(1)}%` : '-'}</Text>
                         <Text style={styles.tableCell}>{adminStats?.totalRevenue ?? '-'}</Text>
                         <Text style={[styles.tableCell, styles.lastCell]}>{adminStats?.averageRepairCost ?? '-'}</Text>
                     </View>
@@ -114,7 +114,7 @@ const ReportPDFDocument = ({ adminStats, employeeStats }) => (
                                 <Text style={styles.tableCell}>{emp.employeeName}</Text>
                                 <Text style={styles.tableCell}>{emp.assignedCount}</Text>
                                 <Text style={styles.tableCell}>{emp.completedCount}</Text>
-                                <Text style={styles.tableCell}>{emp.completionRate ? `${(emp.completionRate * 100).toFixed(1)}%` : '-'}</Text>
+                                <Text style={styles.tableCell}>{emp.completionRate ? `${emp.completionRate.toFixed(1)}%` : '-'}</Text>
                                 <Text style={styles.tableCell}>{emp.averageCompletionHours ?? '-'}</Text>
                                 <Text style={[styles.tableCell, styles.lastCell]}>{emp.averageRating ?? '-'}</Text>
                             </View>
