@@ -26,8 +26,16 @@ function LoginPage() {
       localStorage.setItem("name", name);
       localStorage.setItem("role", role);
 
+      const user = {
+        name: name || "",
+        role: role,
+        authorities: [{ authority: role }],
+      };
+      localStorage.setItem("user", JSON.stringify(user));
+
       window.location.href = "/";
     } catch (err) {
+      console.error(err);
       setError("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
   };

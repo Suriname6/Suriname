@@ -16,8 +16,7 @@ import java.util.List;
 @Entity
 @Table(name = "request")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Getter
-@Setter
+@Getter @Setter
 public class Request {
 
     @Id
@@ -40,34 +39,44 @@ public class Request {
     @JoinColumn(name = "customer_product_id", nullable = false)
     private CustomerProduct customerProduct;
 
-    @Column(name = "request_no", nullable = false, length = 30, unique = true)
+    @Column(name = "request_no", length = 30, unique = true, nullable = true)
     private String requestNo;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 30)
     private Status status;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
-    // Payment와의 역방향 관계 매핑
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     @OneToMany(mappedBy = "request", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Payment> payments = new ArrayList<>();
 
     public enum Status {
-        RECEIVED,    // 접수
-        REPAIRING,  // 수리중
-        WAITING_FOR_PAYMENT, // 입금대기
-        WAITING_FOR_DELIVERY, // 배송대기
-        COMPLETED   // 완료
+        RECEIVED,           // 접수
+        REPAIRING,          // 수리중
+        WAITING_FOR_PAYMENT,// 입금대기
+        WAITING_FOR_DELIVERY,// 배송대기
+        COMPLETED           // 완료
     }
 
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 
     @Builder
@@ -81,13 +90,18 @@ public class Request {
         this.employee = employee;
         this.customer = customer;
         this.customerProduct = customerProduct;
-        this.requestNo = requestNo;
+        this.requestNo = requestNo;  
         this.content = content;
         this.status = Status.RECEIVED;
     }
 
+    //상태 변경 시 완료시간 자동 세팅
     public void changeStatus(Status newStatus) {
         this.status = newStatus;
+        if (newStatus == Status.COMPLETED && this.completedAt == null) {
+            this.completedAt = LocalDateTime.now();
+        }
+        if (newStatus != Status.COMPLETED) this.completedAt = null;
     }
 
     public static Request of(Long requestId) {
