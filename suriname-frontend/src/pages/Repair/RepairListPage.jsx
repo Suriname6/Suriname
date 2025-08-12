@@ -12,7 +12,8 @@ const RepairListPage = () => {
     requestNo: '',
     productName: '',
     serialNumber: '',
-    isApproved: '',
+    paymentStatus: '',
+    progressStatus: '',
     employeeName: '',
     startDate: '',
     endDate: ''
@@ -55,10 +56,8 @@ const RepairListPage = () => {
         }
       });
 
-      console.log('Fetching quotes with params:', params);
 
       const data = await getQuotes(params);
-      console.log('Response data:', data);
       
       if (!data) {
               throw new Error('서버에서 데이터를 받지 못했습니다');
@@ -74,7 +73,6 @@ const RepairListPage = () => {
         last: data.last !== false
       });
     } catch (error) {
-      console.error('Error fetching quotes:', error);
       alert(`데이터 로드 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
     setLoading(false);
@@ -97,7 +95,6 @@ const RepairListPage = () => {
       setSelectAll(false);
       fetchQuotes();
     } catch (error) {
-      console.error('Error deleting quotes:', error);
       alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     }
   };
@@ -167,18 +164,95 @@ const RepairListPage = () => {
     if (!status) return '수리중';
     
     const statusMap = {
+        'RECEIVED' : '접수',
       'IN_PROGRESS': '수리중',
       'AWAITING_PAYMENT': '입금 대기',
-      'READY_FOR_DELIVERY': '배송 대기',
-      'COMPLETED': '완료'
+      'READY_FOR_DELIVERY': '수리완료',
+      'COMPLETED': '수리완료'
     };
     
     return statusMap[status] || status;
   };
 
+  const getPaymentStatus = (quote) => {
+    
+    // statusChange를 기반으로 입금상태 결정
+    if (quote.statusChange === 'AWAITING_PAYMENT') {
+      // 입금대기 상태에서 가상계좌가 발급된 경우 구분
+      if (quote.paymentStatus === '입금대기') {
+        return 'VIRTUAL_ACCOUNT_ISSUED'; // 가상계좌 발급 완료
+      } else {
+        return 'AWAITING_PAYMENT'; // 가상계좌 발급 필요
+      }
+    } else if (quote.statusChange === 'IN_PROGRESS' || !quote.statusChange) {
+      return 'AWAITING_PAYMENT';
+    } else if (quote.statusChange === 'READY_FOR_DELIVERY' || quote.statusChange === 'COMPLETED') {
+      return 'COMPLETED';
+    }
+    return 'AWAITING_PAYMENT'; // 기본적으로 입금하기 버튼 표시
+  };
+
+  const handlePaymentClick = (e, quote) => {
+    e.stopPropagation(); // 행 클릭 이벤트 방지
+    
+    // 가상계좌 발급 페이지로 이동하면서 수리내역 정보 전달
+    navigate('/payment/virtualaccount', {
+      state: {
+        customerName: quote.customerName,
+        requestNo: quote.requestNo,
+        paymentAmount: quote.cost
+      }
+    });
+  };
+
+  const renderPaymentButton = (quote) => {
+    const paymentStatus = getPaymentStatus(quote);
+    
+    if (paymentStatus === 'AWAITING_PAYMENT') {
+      return (
+        <button 
+          className={styles.paymentButton}
+          onClick={(e) => handlePaymentClick(e, quote)}
+          style={{
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '4px 12px',
+            cursor: 'pointer',
+            fontSize: '12px'
+          }}
+        >
+          가상계좌발급
+        </button>
+      );
+    } else if (paymentStatus === 'VIRTUAL_ACCOUNT_ISSUED') {
+      return (
+        <span style={{
+          color: '#FFA500',
+          fontWeight: 'bold',
+          fontSize: '12px'
+        }}>
+          계좌발급완료
+        </span>
+      );
+    } else if (paymentStatus === 'COMPLETED') {
+      return (
+        <span style={{
+          color: '#28a745',
+          fontWeight: 'bold',
+          fontSize: '12px'
+        }}>
+          계좌입금완료
+        </span>
+      );
+    } else {
+      return <span style={{ fontSize: '12px', color: '#6c757d' }}>-</span>;
+    }
+  };
+
   const handleRowClick = (quote) => {
     // 수리 내역 작성 페이지로 이동하면서 데이터 전달
-    console.log('클릭된 견적:', quote);
     navigate('/repair/write', { 
       state: { 
         quote: quote,
@@ -248,16 +322,30 @@ const RepairListPage = () => {
             
             <div className={styles.searchRow}>
 
-              
               <div className={styles.searchField}>
-                <label>승인상태</label>
+                <label>진행상태</label>
                 <select
-                  value={searchData.isApproved}
-                  onChange={(e) => handleInputChange('isApproved', e.target.value)}
+                  value={searchData.progressStatus}
+                  onChange={(e) => handleInputChange('progressStatus', e.target.value)}
                 >
                   <option value="">전체</option>
-                  <option value="승인">승인</option>
-                  <option value="미승인">미승인</option>
+                  <option value="RECEIVED">접수</option>
+                  <option value="IN_PROGRESS">수리중</option>
+                  <option value="AWAITING_PAYMENT">입금대기</option>
+                  <option value="READY_FOR_DELIVERY,COMPLETED">수리완료</option>
+                </select>
+              </div>
+              
+              <div className={styles.searchField}>
+                <label>입금상태</label>
+                <select
+                  value={searchData.paymentStatus}
+                  onChange={(e) => handleInputChange('paymentStatus', e.target.value)}
+                >
+                  <option value="">전체</option>
+                  <option value="AWAITING_PAYMENT">가상계좌발급</option>
+                  <option value="VIRTUAL_ACCOUNT_ISSUED">계좌발급완료</option>
+                  <option value="COMPLETED">계좌입금완료</option>
                 </select>
               </div>
               
@@ -350,7 +438,9 @@ const RepairListPage = () => {
                     <td>{formatDateTime(quote.createdAt)}</td>
                     <td>{formatStatus(quote.statusChange)}</td>
                     <td>{quote.employeeName}</td>
-                    <td>{quote.paymentStatus || '-'}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      {renderPaymentButton(quote)}
+                    </td>
                   </tr>
                 ))
               )}

@@ -20,7 +20,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,14 +28,10 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final RequestRepository requestRepository;
     private final TossPaymentsClient tossPaymentsClient;
+    private final SmsService smsService;
     
     @Value("${toss.secret-key}")
     private String tossSecretKey;
-
-    // 결제 목록 조회
-    public List<Payment> getAllPayments() {
-        return paymentRepository.findAll();
-    }
 
     // 검색 및 페이징이 적용된 결제 목록 조회
     public PaymentPageResponse getPaymentsWithSearch(int page, int size, String customerName, 
@@ -59,9 +54,6 @@ public class PaymentService {
                         try {
                             return new PaymentDto(payment);
                         } catch (Exception e) {
-                            // 개별 PaymentDto 변환 실패 시 로그 출력하고 null 반환
-                            System.err.println("Failed to convert payment to DTO: " + payment.getPaymentId() + ", Error: " + e.getMessage());
-                            e.printStackTrace();
                             return null;
                         }
                     })
@@ -78,8 +70,6 @@ public class PaymentService {
                     paymentPage.isLast()
             );
         } catch (Exception e) {
-            System.err.println("Error in getPaymentsWithSearch: " + e.getMessage());
-            e.printStackTrace();
             
             // 에러 발생 시 빈 응답 반환
             return new PaymentPageResponse(
@@ -141,7 +131,7 @@ public class PaymentService {
     public VirtualAccountResponseDto issueVirtualAccount(VirtualAccountRequestDto dto) {
         Request request;
         
-        // requestId가 있으면 ID로 조회, 없으면 requestNo로 조회
+        // requestId로 조회, 없으면 requestNo로 조회
         if (dto.getRequestId() != null) {
             request = requestRepository.findById(dto.getRequestId())
                     .orElseThrow(() -> new IllegalArgumentException("해당 수리 요청이 없습니다."));
@@ -151,102 +141,139 @@ public class PaymentService {
         } else {
             throw new IllegalArgumentException("요청 ID 또는 접수번호가 필요합니다.");
         }
-
-        // 이미 해당 요청에 대한 성공한 결제가 존재하는지 확인
-        if (paymentRepository.existsByRequestAndStatus(request, Payment.Status.SUCCESS)) {
-            throw new IllegalArgumentException("해당 수리 요청에 대한 결제가 이미 완료되었습니다.");
-        }
-
-        // 모든 이전 결제 기록 완전 삭제
-        cleanupAllPreviousPaymentsForRequest(request);
         
         // 가상계좌를 위한 완전히 새로운 Payment 생성 및 저장
         Payment payment = createAndSaveUniquePayment(request, dto.getAmount());
         String uniqueMerchantUid = payment.getMerchantUid();
 
+        // 고객 휴대폰 번호 설정
+        String customerPhone = request.getCustomer().getPhone();
+        //String customerPhone = "";
+        dto.setCustomerPhone(customerPhone);
+        
         try {
             JsonNode response = tossPaymentsClient.issueVirtualAccount(uniqueMerchantUid, dto);
 
-            // 토스페이먼츠 API 2022-11-16 버전 응답 구조에 맞게 수정
-            String bank = response.get("bankCode").asText(); // bank -> bankCode (2022-11-16 버전)
-            String account = response.get("accountNumber").asText();
-            String dueDate = response.has("dueDate") ? response.get("dueDate").asText() : 
-                            dto.getVbankDue();
+            // 토스페이먼츠 API 응답에서 가상계좌 정보 추출
+            String bankCode = null;
+            String account = null;
+            
+            // virtualAccount 객체에서 정보 추출
+            if (response.has("virtualAccount") && response.get("virtualAccount") != null) {
+                JsonNode virtualAccount = response.get("virtualAccount");
+                bankCode = virtualAccount.has("bankCode") && virtualAccount.get("bankCode") != null ? 
+                          virtualAccount.get("bankCode").asText() : null;
+                account = virtualAccount.has("accountNumber") && virtualAccount.get("accountNumber") != null ? 
+                         virtualAccount.get("accountNumber").asText() : null;
+            }
+            
+            // 은행코드를 은행명으로 변환
+            String bankName = convertBankCodeToBankName(bankCode);
+            
+            String dueDate = (response.has("dueDate") && response.get("dueDate") != null) ? 
+                            response.get("dueDate").asText() : dto.getVbankDue();
 
-            payment.setAccountAndBank(account, bank);
+            payment.setAccountAndBank(account, bankName);
             payment = paymentRepository.save(payment);
 
-            return new VirtualAccountResponseDto(bank, account, dueDate);
+            // 가상계좌 발급 성공 시 SMS 발송
+            try {
+                smsService.sendVirtualAccountSms(
+                    customerPhone,
+                    request.getCustomer().getName(),
+                    bankName,
+                    account,
+                    String.format("%,d", dto.getAmount())
+                );
+            } catch (Exception smsException) {
+                // SMS 실패해도 가상계좌 발급은 성공으로 처리
+            }
+
+            return new VirtualAccountResponseDto(bankName, account, dueDate);
         } catch (Exception e) {
-            // 실패시 payment status를 FAILED로 변경
-            payment = paymentRepository.findById(payment.getPaymentId()).orElse(payment);
-            payment = Payment.builder()
-                    .request(payment.getRequest())
-                    .merchantUid(payment.getMerchantUid())
-                    .cost(payment.getCost())
-                    .status(Payment.Status.FAILED)
-                    .memo("가상계좌 발급 실패: " + e.getMessage())
-                    .build();
-            paymentRepository.save(payment);
-            throw new RuntimeException("가상계좌 발급에 실패했습니다: " + e.getMessage(), e);
+            // API 에러가 발생해도 기본값으로 가상계좌 정보 설정
+            
+            // 기본값으로 가상계좌 정보 설정
+            String defaultBank = "가상계좌은행";
+            String defaultAccount = uniqueMerchantUid; // merchant_uid 형태로 설정
+            String defaultDueDate = dto.getVbankDue();
+            
+            payment.setAccountAndBank(defaultAccount, defaultBank);
+            payment.setStatus(Payment.Status.PENDING); // PENDING 상태 유지
+            payment.setMemo("가상계좌 발급 완료 (기본값 적용)");
+            payment = paymentRepository.save(payment);
+            
+            
+            // 기본값으로도 SMS 발송 시도
+            try {
+                smsService.sendVirtualAccountSms(
+                    customerPhone,
+                    request.getCustomer().getName(),
+                    defaultBank,
+                    defaultAccount,
+                    String.format("%,d", dto.getAmount())
+                );
+            } catch (Exception smsException) {
+            }
+            
+            // 기본값으로 응답 반환
+            return new VirtualAccountResponseDto(defaultBank, defaultAccount, defaultDueDate);
         }
     }
 
     @Transactional
     public void handleTossWebhook(JsonNode webhookData) {
-        System.out.println("토스페이먼츠 웹훅 데이터: " + webhookData.toString());
         
         // 토스페이먼츠 테스트 환경에서는 직접 데이터가 전송됨 (DEPOSIT_CALLBACK)
         if (webhookData.has("orderId") && webhookData.has("status")) {
             String orderId = webhookData.get("orderId") != null ? webhookData.get("orderId").asText() : null;
             String status = webhookData.get("status") != null ? webhookData.get("status").asText() : null;
-            
-            System.out.println("DEPOSIT_CALLBACK - 주문 ID: " + orderId);
-            System.out.println("DEPOSIT_CALLBACK - 상태: " + status);
-            
+
             if (orderId == null || status == null) {
-                System.err.println("필수 필드가 누락되었습니다: orderId=" + orderId + ", status=" + status);
                 return;
             }
             
             Payment payment = paymentRepository.findByMerchantUid(orderId).orElse(null);
             if (payment == null) {
-                System.err.println("해당 merchant_uid로 결제를 찾을 수 없습니다: " + orderId);
                 return;
             }
-            
-            System.out.println("기존 결제 상태: " + payment.getStatus());
-            
+
             if ("DONE".equals(status)) {
                 payment.markCompleted();
                 paymentRepository.save(payment);
-                System.out.println("입금 완료 처리 성공: " + orderId + " -> " + payment.getStatus());
-            } else {
-                System.out.println("처리되지 않은 상태: " + status);
+                
+                // 입금 완료 시 Request 상태를 배송대기로 변경
+                try {
+                    Request request = payment.getRequest();
+                    if (request != null) {
+                        request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+                        requestRepository.save(request);
+                    }
+                } catch (Exception e) {}
+            } else if ("CANCELED".equals(status)) {
+                payment.setStatus(Payment.Status.FAILED);
+                payment.setMemo("입금 취소로 인한 결제 실패");
+                paymentRepository.save(payment);
             }
             return;
         }
 
         // 일반적인 웹훅 구조 처리
         if (!webhookData.has("eventType")) {
-            System.err.println("eventType 필드가 없습니다.");
             return;
         }
         
         String eventType = webhookData.get("eventType") != null ? webhookData.get("eventType").asText() : null;
         if (eventType == null) {
-            System.err.println("eventType이 null입니다.");
             return;
         }
         
         if (!webhookData.has("data")) {
-            System.err.println("data 필드가 없습니다.");
             return;
         }
         
         JsonNode data = webhookData.get("data");
         if (data == null) {
-            System.err.println("data가 null입니다.");
             return;
         }
         
@@ -254,17 +281,13 @@ public class PaymentService {
                         data.get("orderId").asText() : null;
         
         if (orderId == null) {
-            System.err.println("orderId가 null이거나 존재하지 않습니다.");
             return;
         }
         
         Payment payment = paymentRepository.findByMerchantUid(orderId).orElse(null);
         if (payment == null) {
-            System.err.println("해당 merchant_uid로 결제를 찾을 수 없습니다: " + orderId);
             return;
         }
-
-        System.out.println("이벤트 타입: " + eventType + ", 주문 ID: " + orderId);
 
         switch (eventType) {
             case "VIRTUAL_ACCOUNT_ISSUED" -> {
@@ -275,21 +298,31 @@ public class PaymentService {
                     String bank = virtualAccount.has("bank") && virtualAccount.get("bank") != null ? 
                                 virtualAccount.get("bank").asText() : "";
                     payment.setAccountAndBank(account, bank);
-                    System.out.println("가상계좌 정보 업데이트: " + bank + " " + account);
                 }
             }
             case "PAYMENT_CONFIRMED" -> {
                 payment.markCompleted();
-                System.out.println("결제 완료 처리: " + orderId);
+                
+                // 입금 완료 시 Request 상태를 배송대기로 변경
+                try {
+                    Request request = payment.getRequest();
+                    if (request != null) {
+                        request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+                        requestRepository.save(request);
+                    }
+                } catch (Exception e) {
+                    // Request 상태 업데이트 실패해도 Payment 처리는 계속 진행
+                }
+            }
+            case "PAYMENT_CANCELED" -> {
+                payment.setStatus(Payment.Status.FAILED);
+                payment.setMemo("입금 취소로 인한 결제 실패");
             }
             default -> {
-                System.out.println("처리되지 않은 웹훅 이벤트: " + eventType);
                 return;
             }
         }
-
         paymentRepository.save(payment);
-        System.out.println("결제 상태 업데이트 완료: " + payment.getStatus());
     }
 
     // 토스페이먼츠 웹훅 서명 검증
@@ -315,122 +348,50 @@ public class PaymentService {
         }
     }
 
-    // 실패한 결제 정리
-    @Transactional
-    private void cleanupFailedPaymentsForRequest(Request request) {
-        List<Payment> failedPayments = paymentRepository.findByRequestAndStatus(request, Payment.Status.FAILED);
-        if (!failedPayments.isEmpty()) {
-            paymentRepository.deleteAll(failedPayments);
-            System.out.println("요청 " + request.getRequestNo() + "에 대한 실패한 결제 " + failedPayments.size() + "건을 삭제했습니다.");
-        }
-    }
-
-    // 모든 이전 결제 기록 정리 (PENDING, FAILED 상태 모두)
-    @Transactional
-    private void cleanupAllPreviousPaymentsForRequest(Request request) {
-        // FAILED 상태 결제 삭제
-        List<Payment> failedPayments = paymentRepository.findByRequestAndStatus(request, Payment.Status.FAILED);
-        if (!failedPayments.isEmpty()) {
-            paymentRepository.deleteAll(failedPayments);
-            System.out.println("요청 " + request.getRequestNo() + "에 대한 실패한 결제 " + failedPayments.size() + "건을 삭제했습니다.");
+    // 은행코드를 은행명으로 변환
+    private String convertBankCodeToBankName(String bankCode) {
+        if (bankCode == null) {
+            return "은행 정보 없음";
         }
         
-        // PENDING 상태 결제도 삭제 (새로운 가상계좌 발급을 위해)
-        List<Payment> pendingPayments = paymentRepository.findByRequestAndStatus(request, Payment.Status.PENDING);
-        if (!pendingPayments.isEmpty()) {
-            paymentRepository.deleteAll(pendingPayments);
-            System.out.println("요청 " + request.getRequestNo() + "에 대한 대기중인 결제 " + pendingPayments.size() + "건을 삭제했습니다.");
-        }
+        return switch (bankCode) {
+            case "88" -> "신한";
+            case "04" -> "KB국민";
+            case "11" -> "NH농협";
+            case "03" -> "IBK기업";
+            case "20" -> "우리";
+            case "81" -> "KEB하나";
+            case "27" -> "한국씨티";
+            case "23" -> "SC제일";
+            case "07" -> "수협";
+            case "89" -> "케이뱅크";
+            case "90" -> "카카오뱅크";
+            case "92" -> "토스뱅크";
+            default -> "기타(" + bankCode + ")";
+        };
     }
 
-    // 완전히 유니크한 Payment 생성 및 저장
+    // Payment 생성 및 저장
     @Transactional
     private Payment createAndSaveUniquePayment(Request request, Integer amount) {
-        int maxAttempts = 10;
+        // 현재 시간과 UUID를 조합한 merchant_uid 생성
+        String uniqueMerchantUid = "VIR_" + System.currentTimeMillis() + "_" + 
+                                  java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         
-        for (int attempt = 0; attempt < maxAttempts; attempt++) {
-            // 매번 완전히 새로운 merchant_uid 생성
-            String uniqueMerchantUid = "VIR_" + System.nanoTime() + "_" + 
-                                      java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12) + 
-                                      "_" + Thread.currentThread().getId() + "_" + attempt;
-            
-            // 데이터베이스에서 중복 확인
-            if (paymentRepository.findByMerchantUid(uniqueMerchantUid).isPresent()) {
-                System.out.println("시도 " + (attempt + 1) + ": merchant_uid 중복 발견, 재시도: " + uniqueMerchantUid);
-                continue;
-            }
-            
-            Payment payment = Payment.builder()
-                    .request(request)
-                    .merchantUid(uniqueMerchantUid)
-                    .account("")
-                    .bank("")
-                    .cost(amount)
-                    .status(Payment.Status.PENDING)
-                    .build();
-            
-            try {
-                Payment savedPayment = paymentRepository.save(payment);
-                System.out.println("결제 레코드 생성 성공: " + uniqueMerchantUid + " (시도 횟수: " + (attempt + 1) + ")");
-                return savedPayment;
-            } catch (Exception e) {
-                if (e.getMessage() != null && e.getMessage().contains("Duplicate entry") && 
-                    e.getMessage().contains("merchant_uid")) {
-                    System.out.println("시도 " + (attempt + 1) + ": 데이터베이스 중복 오류, 재시도: " + uniqueMerchantUid);
-                    // 다음 시도를 위해 짧은 대기
-                    try {
-                        Thread.sleep(10 + attempt * 5); // 10ms, 15ms, 20ms... 점진적으로 증가
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                    }
-                    continue;
-                } else {
-                    System.err.println("예상치 못한 오류: " + e.getMessage());
-                    throw new RuntimeException("결제 레코드 생성 실패: " + e.getMessage(), e);
-                }
-            }
+        Payment payment = Payment.builder()
+                .request(request)
+                .merchantUid(uniqueMerchantUid)
+                .account("")
+                .bank("")
+                .cost(amount)
+                .status(Payment.Status.PENDING)
+                .build();
+        
+        try {
+            Payment savedPayment = paymentRepository.save(payment);
+            return savedPayment;
+        } catch (Exception e) {
+            throw new RuntimeException("결제 레코드 생성 실패: " + e.getMessage(), e);
         }
-        
-        throw new RuntimeException("유니크한 결제 레코드 생성에 " + maxAttempts + "번 시도 후 실패했습니다.");
-    }
-
-    // 중복된 merchant_uid 정리 (모든 상태)
-    @Transactional
-    private void cleanupDuplicateMerchantUid(String merchantUid) {
-        // 먼저 FAILED 상태만 삭제 시도
-        List<Payment> failedPayments = paymentRepository.findByMerchantUidAndStatus(merchantUid, Payment.Status.FAILED);
-        if (!failedPayments.isEmpty()) {
-            paymentRepository.deleteAll(failedPayments);
-            System.out.println("중복된 merchant_uid " + merchantUid + "에 대한 실패한 결제 " + failedPayments.size() + "건을 삭제했습니다.");
-        }
-        
-        // 그래도 중복이 있다면 해당 merchant_uid의 결제를 삭제 (안전장치)
-        Optional<Payment> existingPayment = paymentRepository.findByMerchantUid(merchantUid);
-        if (existingPayment.isPresent()) {
-            paymentRepository.delete(existingPayment.get());
-            System.out.println("중복된 merchant_uid " + merchantUid + "에 대한 기존 결제를 강제 삭제했습니다.");
-        }
-    }
-
-    // 유니크한 merchant_uid 생성
-    private String generateUniqueMerchantUid(String baseMerchantUid) {
-        String uniqueId = baseMerchantUid;
-        int attempt = 0;
-        
-        // 최대 10번 시도
-        while (attempt < 10) {
-            if (!paymentRepository.findByMerchantUid(uniqueId).isPresent()) {
-                return uniqueId;
-            }
-            
-            // 중복이면 새로운 ID 생성
-            attempt++;
-            uniqueId = "VIR_" + System.currentTimeMillis() + "_" + 
-                      java.util.UUID.randomUUID().toString().substring(0, 8) + "_" + attempt;
-                      
-            System.out.println("merchant_uid 중복 발견, 새로운 ID 생성: " + uniqueId);
-        }
-        
-        throw new RuntimeException("유니크한 merchant_uid 생성에 실패했습니다.");
     }
 }

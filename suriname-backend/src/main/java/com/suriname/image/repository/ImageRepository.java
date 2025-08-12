@@ -11,9 +11,7 @@ import java.util.List;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
-    List<Image> findByRequest(Request request);
     List<Image> findByRequestRequestIdOrderByCreatedAtAsc(Long requestId);
-    void deleteByRequest(Request request);
     
     @Query("SELECT i.imageId, i.fileName, i.fileUrl, i.contentType, i.fileSize, i.createdAt " +
            "FROM Image i WHERE i.request.requestId = :requestId ORDER BY i.createdAt ASC")

@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createVirtualAccount } from '../../api/payment';
+import axios from '../../api/axiosInstance';
 import styles from '../../css/Payment/PaymentVirtualAccount.module.css';
 
 const PaymentVirtualAccountPage = () => {
   const [selectedTab, setSelectedTab] = useState("virtual");
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     customerName: '',
     receptionNumber: '',
@@ -15,6 +17,18 @@ const PaymentVirtualAccountPage = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success', 'error'
+
+  // 수리내역 페이지에서 전달된 데이터로 폼 초기화
+  useEffect(() => {
+    if (location.state) {
+      const { customerName, requestNo, paymentAmount } = location.state;
+      setFormData({
+        customerName: customerName || '',
+        receptionNumber: requestNo || '',
+        paymentAmount: paymentAmount ? paymentAmount.toLocaleString() : ''
+      });
+    }
+  }, [location.state]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -67,22 +81,29 @@ const PaymentVirtualAccountPage = () => {
         vbankDue: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7일 후
       };
 
-      console.log('가상계좌 발급 요청:', requestData);
 
       const response = await createVirtualAccount(requestData);
       
-      setMessage(`가상계좌가 발급되었습니다.\n은행: ${response.bankName}\n계좌번호: ${response.accountNumber}\n마감일: ${response.dueDate}`);
+      // 성공 메시지 표시 후 입금상태 목록으로 리다이렉트
+      setMessage(`가상계좌가 발급되었습니다.\n은행: ${response.bankName || '가상계좌은행'}\n계좌번호: ${response.accountNumber || '가상계좌번호'}\n마감일: ${response.dueDate || '7일 후'}`);
       setMessageType('success');
 
-      // 폼 초기화
-      setFormData({
-        customerName: '',
-        receptionNumber: '',
-        paymentAmount: ''
-      });
+      // 가상계좌 발급 성공 시 Request 상태를 입금대기로 업데이트
+      try {
+        const statusUpdateResponse = await axios.put(`/api/requests/${formData.receptionNumber}/status`, {
+          status: 'AWAITING_PAYMENT'
+        });
+        
+      } catch (statusError) {
+        // 상태 업데이트 실패해도 전체 프로세스는 계속 진행
+      }
+
+      // 2초 후 입금상태 목록으로 이동
+      setTimeout(() => {
+        navigate('/payment/list');
+      }, 2000);
 
     } catch (error) {
-      console.error('가상계좌 발급 실패:', error);
       setMessage(error.response?.data?.message || '가상계좌 발급에 실패했습니다.');
       setMessageType('error');
     } finally {

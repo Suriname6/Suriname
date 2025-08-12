@@ -54,8 +54,8 @@ public class Request {
     private LocalDateTime createdAt;
     
     // Payment와의 역방향 관계 매핑
-    @OneToOne(mappedBy = "request", fetch = FetchType.LAZY)
-    private Payment payment;
+    @OneToMany(mappedBy = "request", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Payment> payments = new ArrayList<>();
 
     public enum Status {
         RECEIVED,    // 접수

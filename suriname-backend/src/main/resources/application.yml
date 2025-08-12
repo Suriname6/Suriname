@@ -21,6 +21,10 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+  sql:
+    init:
+      mode: never
+
 jwt:
   secret: "${JWT_SECRET}"
   expiration: 86400000
@@ -28,3 +32,12 @@ jwt:
 toss:
   secret-key: "${TOSS_SECRET_KEY}"
   client-key: "${TOSS_CLIENT_KEY}"
+
+sms:
+  api:
+    url: https://api.solapi.com/messages/v4/send
+    key: "${SMS_API_KEY}"
+    secret: "${SMS_SECRET_KEY}"
+  sender:
+
+    phone: ""
