@@ -23,28 +23,30 @@ public class QuoteController {
 
     @GetMapping
     public ResponseEntity<QuotePageResponse> getQuotes(
-    	    @RequestParam(name = "page", defaultValue = "0") int page,
-    	    @RequestParam(name = "size", defaultValue = "10") int size,
-    	    @RequestParam(name = "customerName", required = false) String customerName,
-    	    @RequestParam(name = "requestNo", required = false) String requestNo,
-    	    @RequestParam(name = "productName", required = false) String productName,
-    	    @RequestParam(name = "serialNumber", required = false) String serialNumber,
-    	    @RequestParam(name = "isApproved", required = false) String isApproved,
-    	    @RequestParam(name = "employeeName", required = false) String employeeName,
-    	    @RequestParam(name = "startDate", required = false) String startDate,
-    	    @RequestParam(name = "endDate", required = false) String endDate
-    	) {
-        
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String requestNo,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String serialNumber,
+            @RequestParam(required = false) String isApproved,
+            @RequestParam(required = false) String employeeName,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String progressStatus,
+            @RequestParam(required = false) String paymentStatus) {
+    
         try {
             System.out.println("Quote API called with params: page=" + page + ", size=" + size + 
                              ", customerName=" + customerName + ", requestNo=" + requestNo + 
                              ", productName=" + productName + ", serialNumber=" + serialNumber + 
                              ", isApproved=" + isApproved + ", employeeName=" + employeeName + 
-                             ", startDate=" + startDate + ", endDate=" + endDate);
+                             ", startDate=" + startDate + ", endDate=" + endDate +
+                             ", progressStatus=" + progressStatus + ", paymentStatus=" + paymentStatus);
             
             QuotePageResponse response = quoteService.getQuotesWithSearch(
                 page, size, customerName, requestNo, productName, serialNumber, 
-                isApproved, employeeName, startDate, endDate);
+                isApproved, employeeName, startDate, endDate, progressStatus, paymentStatus);
             
             System.out.println("Quote API response: " + response.getTotalElements() + " elements found");
             return ResponseEntity.ok(response);

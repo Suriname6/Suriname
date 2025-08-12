@@ -140,21 +140,96 @@ public class RequestController {
 		}
 	}
 
-	@GetMapping("/list")
-	public ResponseEntity<java.util.Map<String, Object>> getRequestList() {
-		try {
-			var requests = requestRepository.findAll();
-			var requestList = requests.stream()
-					.map(request -> java.util.Map.of("requestId", request.getRequestId(), "requestNo",
-							request.getRequestNo(), "status", request.getStatus(), "createdAt", request.getCreatedAt()))
-					.limit(10).toList(); // 최대 10개만 조회
+    @GetMapping("/list")
+    public ResponseEntity<java.util.Map<String, Object>> getRequestList() {
+        try {
+            var requests = requestRepository.findAll();
+            var requestList = requests.stream().map(request -> 
+                java.util.Map.of(
+                    "requestId", request.getRequestId(),
+                    "requestNo", request.getRequestNo(),
+                    "status", request.getStatus(),
+                    "createdAt", request.getCreatedAt()
+                )
+            ).limit(10).toList(); // 최대 10개만 조회
+            
+            return ResponseEntity.ok(java.util.Map.of(
+                "status", 200,
+                "data", requestList,
+                "total", requests.size()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of(
+                "status", 500,
+                "message", "Request 목록 조회 중 오류가 발생했습니다: " + e.getMessage()
+            ));
+        }
+    }
 
-			return ResponseEntity.ok(java.util.Map.of("status", 200, "data", requestList, "total", requests.size()));
-		} catch (Exception e) {
-			return ResponseEntity.badRequest()
-					.body(java.util.Map.of("status", 500, "message", "Request 목록 조회 중 오류가 발생했습니다: " + e.getMessage()));
-		}
-	}
+    // Request 상태 업데이트
+    @PutMapping("/{requestNo}/status")
+    public ResponseEntity<java.util.Map<String, Object>> updateRequestStatus(
+            @PathVariable String requestNo,
+            @RequestBody java.util.Map<String, String> statusUpdate) {
+        try {
+            var request = requestRepository.findByRequestNo(requestNo);
+            if (request.isPresent()) {
+                String newStatus = statusUpdate.get("status");
+                com.suriname.request.entity.Request.Status requestStatus;
+                String statusMessage;
+                
+                switch (newStatus) {
+                    case "RECEIVED":
+                        requestStatus = com.suriname.request.entity.Request.Status.RECEIVED;
+                        statusMessage = "접수";
+                        break;
+                    case "IN_PROGRESS":
+                    case "REPAIRING":
+                        requestStatus = com.suriname.request.entity.Request.Status.REPAIRING;
+                        statusMessage = "수리중";
+                        break;
+                    case "AWAITING_PAYMENT":
+                    case "WAITING_FOR_PAYMENT":
+                        requestStatus = com.suriname.request.entity.Request.Status.WAITING_FOR_PAYMENT;
+                        statusMessage = "입금대기";
+                        break;
+                    case "READY_FOR_DELIVERY":
+                    case "WAITING_FOR_DELIVERY":
+                        requestStatus = com.suriname.request.entity.Request.Status.WAITING_FOR_DELIVERY;
+                        statusMessage = "배송대기";
+                        break;
+                    case "COMPLETED":
+                        requestStatus = com.suriname.request.entity.Request.Status.COMPLETED;
+                        statusMessage = "완료";
+                        break;
+                    default:
+                        return ResponseEntity.badRequest().body(java.util.Map.of(
+                            "status", 400,
+                            "message", "지원하지 않는 상태입니다: " + newStatus
+                        ));
+                }
+                
+                request.get().changeStatus(requestStatus);
+                requestRepository.save(request.get());
+                
+                return ResponseEntity.ok(java.util.Map.of(
+                    "status", 200,
+                    "message", "Request 상태가 " + statusMessage + "로 업데이트되었습니다."
+                ));
+            } else {
+                return ResponseEntity.badRequest().body(java.util.Map.of(
+                    "status", 404,
+                    "message", "해당 접수번호의 수리 요청을 찾을 수 없습니다."
+                ));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of(
+                "status", 500,
+                "message", "Request 상태 업데이트 중 오류가 발생했습니다: " + e.getMessage()
+            ));
+        }
+    }
+    
 
 	// 내가 수리한 내역
 	  @GetMapping("/my")
@@ -210,5 +285,4 @@ public class RequestController {
 	        Long receiverId = user.getEmployee().getEmployeeId();
 	        return ResponseEntity.ok(requestService.getStaffSummary(receiverId));
 	    }
-
 }
