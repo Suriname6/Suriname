@@ -1,6 +1,5 @@
-package com.suriname.payment;
+package com.suriname.global.sms;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
