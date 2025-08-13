@@ -24,6 +24,18 @@ spring:
   sql:
     init:
       mode: never
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: "${GMAIL_ACCOUNT}"
+    password: "${GMAIL_APP_PW}"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
   secret: "${JWT_SECRET}"
