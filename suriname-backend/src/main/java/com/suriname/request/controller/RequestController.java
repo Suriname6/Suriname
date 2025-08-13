@@ -9,6 +9,7 @@ import com.suriname.request.service.RequestAssignmentLogService;
 import com.suriname.request.service.RequestService;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -284,5 +285,11 @@ public class RequestController {
 	    ) {
 	        Long receiverId = user.getEmployee().getEmployeeId();
 	        return ResponseEntity.ok(requestService.getStaffSummary(receiverId));
+	    }
+	    
+	    @GetMapping("/customer")
+	    public ResponseEntity<Map<String, Object>> lastOfCustomer(@RequestParam String name) {
+	        var data = requestRepository.findLatestOpenBriefByCustomer(name).orElse(null);
+	        return ResponseEntity.ok(Map.of("status", 200, "data", data));
 	    }
 }

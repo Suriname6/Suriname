@@ -103,7 +103,7 @@ public class CustomerController {
     }
 
     // 액셀 일괄 등록
-    @PostMapping("/upload/excel")
+    @PostMapping("/register/excel")
     public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
         try {
             customerExcelService.importFromExcel(file); 

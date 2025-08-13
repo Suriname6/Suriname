@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import styles from "../../css/Product/ProductDetail.module.css";
 import api from "../../api/api";
@@ -25,7 +25,7 @@ const ProductDetail = () => {
     const fetchCategories = async () => {
       try {
         const res = await api.get("/api/categories");
-        setCategories(res.data); // ["노트북", "태블릿", ...]
+        setCategories(res.data);
       } catch (error) {
         console.error("카테고리 목록 불러오기 실패:", error);
       }
@@ -34,6 +34,19 @@ const ProductDetail = () => {
     fetchProduct();
     fetchCategories();
   }, [id]);
+
+  const normalizedCategories = useMemo(() => {
+    return (categories || [])
+      .map((c, idx) =>
+        typeof c === "string"
+          ? { id: c, name: c }
+          : {
+              id: c?.id ?? `cat-${idx}-${c?.name ?? "unknown"}`,
+              name: c?.name ?? "",
+            }
+      )
+      .filter((c) => c.name);
+  }, [categories]);
 
   // 입력 변경 핸들러
   const handleInputChange = useCallback(
@@ -110,15 +123,20 @@ const ProductDetail = () => {
                 }
               >
                 <option value="">선택</option>
-                <option value="Samsung">Samsung</option>
-                <option value="LG">LG</option>
-                <option value="Apple">Apple</option>
-                <option value="ASUS">ASUS</option>
-                <option value="HP">HP</option>
-                <option value="Dell">Dell</option>
-                <option value="Carrier">Carrier</option>
-                <option value="기타">기타</option>
-
+                {[
+                  "Samsung",
+                  "LG",
+                  "Apple",
+                  "ASUS",
+                  "HP",
+                  "Dell",
+                  "Carrier",
+                  "기타",
+                ].map((brand) => (
+                  <option key={`brand-${brand}`} value={brand}>
+                    {brand}
+                  </option>
+                ))}
                 {formData.productBrand &&
                   ![
                     "Samsung",
@@ -130,12 +148,16 @@ const ProductDetail = () => {
                     "Carrier",
                     "기타",
                   ].includes(formData.productBrand) && (
-                    <option value={formData.productBrand}>
+                    <option
+                      key={`custom-brand-${formData.productBrand}`}
+                      value={formData.productBrand}
+                    >
                       {formData.productBrand}
                     </option>
                   )}
               </select>
             </div>
+
             <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
               <label className={styles.inputLabel}>제품분류</label>
               <select
@@ -146,14 +168,21 @@ const ProductDetail = () => {
                 }
               >
                 <option value="">선택</option>
-                {categories.map((cat) => (
-                  <option key={cat.name} value={cat.name}>
+
+                {normalizedCategories.map((cat) => (
+                  <option key={`cat-${cat.id ?? cat.name}`} value={cat.name}>
                     {cat.name}
                   </option>
                 ))}
+
                 {formData.categoryName &&
-                  !categories.some((c) => c.name === formData.categoryName) && (
-                    <option value={formData.categoryName}>
+                  !normalizedCategories.some(
+                    (c) => c.name === formData.categoryName
+                  ) && (
+                    <option
+                      key={`custom-category-${formData.categoryName}`}
+                      value={formData.categoryName}
+                    >
                       {formData.categoryName}
                     </option>
                   )}
