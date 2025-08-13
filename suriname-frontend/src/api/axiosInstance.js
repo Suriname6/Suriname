@@ -4,8 +4,10 @@ const baseURL = import.meta.env.PROD
   ? "/api"
   : (import.meta.env.VITE_API_URL || "http://localhost:8081");
 
+const normalizedBase = baseURL.replace(/\/$/, "");
+
 const instance = axios.create({
-  baseURL,
+  baseURL: normalizedBase,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json; charset=utf-8",

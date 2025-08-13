@@ -1,13 +1,16 @@
 name: Frontend Deploy
+
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    concurrency: { group: fe-cd-prod, cancel-in-progress: true }
+    concurrency:
+      group: fe-cd-prod
+      cancel-in-progress: true
 
     steps:
       - uses: actions/checkout@v4
@@ -18,6 +21,7 @@ jobs:
           cache: npm
           cache-dependency-path: suriname-frontend/package-lock.json
 
+      # 1. Build & Package
       - name: Build (env 주입 + 패키징)
         working-directory: suriname-frontend
         env:
@@ -33,12 +37,15 @@ jobs:
           test -d dist/assets
           tar -czf ../dist.tgz -C dist .
 
-      - name: Debug dist.tgz path (Runner 내부)
+      # 2. dist.tgz 확인
+      - name: Debug dist.tgz path
         run: |
           echo "=== dist.tgz 위치 확인 ==="
-          find . -name dist.tgz -exec ls -lh --time-style=long-iso {} \;
+          ls -lh --time-style=long-iso dist.tgz
+          tar -tzf dist.tgz | head -n 20
 
-      - name: Upload dist.tgz to EC2 (/tmp)
+      # 3. dist.tgz 업로드 (EC2 /tmp)
+      - name: Upload dist.tgz to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -48,7 +55,8 @@ jobs:
           target: "/tmp/"
           overwrite: true
 
-      - name: Unpack → Move to Nginx root → Reload
+      # 4. 서버에서 압축 해제 & Nginx reload
+      - name: Deploy to Nginx
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -59,25 +67,21 @@ jobs:
             ROOT_DIR=${{ secrets.FRONTEND_DIR }}
             TMP_DIR="/tmp/suriname-dist"
 
-            echo "=== /tmp/dist.tgz 존재 여부 확인 ==="
-            if [ ! -f /tmp/dist.tgz ]; then
-              echo "[ERROR] dist.tgz 파일이 EC2에 없습니다."
-              exit 1
-            fi
+            echo "=== dist.tgz 업로드 확인 ==="
             ls -lh --time-style=long-iso /tmp/dist.tgz
 
-            # 기존 배포 폴더 삭제
+            echo "=== 기존 임시폴더 제거 ==="
             sudo rm -rf "$TMP_DIR"
             sudo mkdir -p "$TMP_DIR"
 
-            # 압축 해제
+            echo "=== dist.tgz 압축 해제 ==="
             sudo tar -xzf /tmp/dist.tgz -C "$TMP_DIR"
 
-            # nginx root로 복사
+            echo "=== Nginx 루트로 배포 ==="
             sudo mkdir -p "$ROOT_DIR"
             sudo rsync -a --delete "$TMP_DIR"/ "$ROOT_DIR"/
             sudo chown -R www-data:www-data "$ROOT_DIR"
 
-            # nginx reload
+            echo "=== Nginx Reload ==="
             sudo nginx -t
             sudo systemctl reload nginx
