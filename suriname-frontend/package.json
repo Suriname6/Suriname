@@ -13,6 +13,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.3.1",
+    "algoliasearch": "^4.25.2",
     "axios": "^1.11.0",
     "file-saver": "^2.0.5",
     "lucide-react": "^0.535.0",
