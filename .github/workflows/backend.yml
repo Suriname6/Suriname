@@ -7,7 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    concurrency: { group: be-cd-prod, cancel-in-progress: true }
 
     steps:
       - uses: actions/checkout@v4
@@ -23,28 +22,19 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew clean build -x test
-          ls -al build/libs || true
+          ls -al build/libs
 
-      - name: Find JAR
-        id: jar
-        working-directory: suriname-backend
-        run: |
-          # SNAPSHOT이 아닐 수도 있으니 *.jar로 탐색
-          FILE=$(ls build/libs/*.jar | head -n1)
-          echo "file=$FILE" >> $GITHUB_OUTPUT
-          echo "Found JAR: $FILE"
-
-      - name: Upload JAR to EC2
+      - name: Upload JARs to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "suriname-backend/${{ steps.jar.outputs.file }}"
-          target: "${{ secrets.BACKEND_DIR }}/build/libs/"
-          strip_components: 2
+          source: "suriname-backend/build/libs/*.jar"
+          target: "/home/ubuntu/Suriname/suriname-backend/build/libs/"
+          overwrite: true
 
-      - name: Restart backend service
+      - name: Restart (nohup + env.properties)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -52,6 +42,19 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             set -e
-            sudo systemctl daemon-reload || true
-            sudo systemctl restart ${{ secrets.SERVICE_NAME }}
-            sudo systemctl status ${{ secrets.SERVICE_NAME }} --no-pager -n 20 || true
+            cd /home/ubuntu/Suriname/suriname-backend
+
+            pkill -f 'java .*build/libs' || true
+
+            JAR=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1)
+            echo "Using JAR: $JAR"
+
+            ln -sfn "$JAR" build/libs/app.jar
+
+            nohup java -Dserver.address=127.0.0.1 -Dserver.port=8081 \
+              -jar build/libs/app.jar \
+              --spring.config.additional-location=file:/home/ubuntu/Suriname/suriname-backend/.env.properties \
+              > ~/app.log 2>&1 &
+
+            sleep 2
+            pgrep -f 'java .*build/libs/app\.jar' >/dev/null && echo "Backend started ✅" || (echo "Start failed ❌"; exit 1)
