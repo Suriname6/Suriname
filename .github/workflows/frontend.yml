@@ -1,29 +1,23 @@
 name: Frontend Deploy
-
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    concurrency:
-      group: fe-cd-prod
-      cancel-in-progress: true
+    concurrency: { group: fe-cd-prod, cancel-in-progress: true }
 
     steps:
-      # 1. 소스 체크아웃
       - uses: actions/checkout@v4
 
-      # 2. Node.js 설정
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: suriname-frontend/package-lock.json
 
-      # 3. 빌드 (환경변수 주입 + 패키징)
       - name: Build (env 주입 + 패키징)
         working-directory: suriname-frontend
         env:
@@ -37,28 +31,23 @@ jobs:
           npm run build
           test -f dist/index.html
           test -d dist/assets
-          # 빌드 결과를 루트로 압축 (경로 혼동 방지)
-          tar -czf dist.tgz -C dist .
+          tar -czf ../dist.tgz -C dist .
 
-      # 4. dist.tgz 위치/시간 확인 (경로 디버그)
-      - name: Debug dist.tgz path
-        working-directory: suriname-frontend
+      - name: Debug dist.tgz path (Runner 내부)
         run: |
           echo "=== dist.tgz 위치 확인 ==="
-          ls -lh --time-style=long-iso dist.tgz
+          find . -name dist.tgz -exec ls -lh --time-style=long-iso {} \;
 
-      # 5. EC2로 dist.tgz 업로드
       - name: Upload dist.tgz to EC2 (/tmp)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "suriname-frontend/dist.tgz"
+          source: "dist.tgz"
           target: "/tmp/"
           overwrite: true
 
-      # 6. 압축 해제 → Nginx 경로 이동 → Reload
       - name: Unpack → Move to Nginx root → Reload
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -70,21 +59,25 @@ jobs:
             ROOT_DIR=${{ secrets.FRONTEND_DIR }}
             TMP_DIR="/tmp/suriname-dist"
 
-            # dist.tgz 존재 여부 확인
+            echo "=== /tmp/dist.tgz 존재 여부 확인 ==="
+            if [ ! -f /tmp/dist.tgz ]; then
+              echo "[ERROR] dist.tgz 파일이 EC2에 없습니다."
+              exit 1
+            fi
             ls -lh --time-style=long-iso /tmp/dist.tgz
 
-            # 기존 배포 폴더 제거
+            # 기존 배포 폴더 삭제
             sudo rm -rf "$TMP_DIR"
             sudo mkdir -p "$TMP_DIR"
 
-            # dist.tgz 압축 해제
+            # 압축 해제
             sudo tar -xzf /tmp/dist.tgz -C "$TMP_DIR"
 
-            # Nginx 루트에 덮어쓰기
+            # nginx root로 복사
             sudo mkdir -p "$ROOT_DIR"
             sudo rsync -a --delete "$TMP_DIR"/ "$ROOT_DIR"/
             sudo chown -R www-data:www-data "$ROOT_DIR"
 
-            # Nginx 설정 테스트 & Reload
+            # nginx reload
             sudo nginx -t
             sudo systemctl reload nginx
