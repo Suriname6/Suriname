@@ -78,157 +78,9 @@ const DeliveryRegister = () => {
     }
   };
 
-  // Mock A/S 접수 데이터 (배송 대기 중인 상태)
-  const mockRequests = [
-    {
-      requestId: 1,
-      requestNo: "AS-20250801-001",
-      customer: {
-        name: "김민수",
-        phone: "010-1234-5678"
-      },
-      inputProductName: "삼성 갤럭시 노트20",
-      content: "화면 터치가 안되는 문제로 A/S 신청합니다.",
-      requestDate: "2025-08-01T10:30:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 2,
-      requestNo: "AS-20250801-002",
-      customer: {
-        name: "이영희",
-        phone: "010-9876-5432"
-      },
-      inputProductName: "LG 그램 노트북 17인치",
-      content: "배터리가 충전되지 않아 점검 요청드립니다.",
-      requestDate: "2025-08-01T14:20:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 3,
-      requestNo: "AS-20250802-001",
-      customer: {
-        name: "박철수",
-        phone: "010-5555-6666"
-      },
-      inputProductName: "아이폰 15 Pro",
-      content: "카메라가 흐리게 나오는 증상이 있습니다.",
-      requestDate: "2025-08-02T09:15:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 4,
-      requestNo: "AS-20250802-002",
-      customer: {
-        name: "최수진",
-        phone: "010-7777-8888"
-      },
-      inputProductName: "다이슨 청소기 V15",
-      content: "흡입력이 약해지고 이상한 소리가 납니다.",
-      requestDate: "2025-08-02T16:45:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 5,
-      requestNo: "AS-20250803-001",
-      customer: {
-        name: "정하나",
-        phone: "010-2222-3333"
-      },
-      inputProductName: "에어팟 프로 2세대",
-      content: "좌측 이어폰에서 소리가 나지 않습니다.",
-      requestDate: "2025-08-03T11:30:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 6,
-      requestNo: "AS-20250803-002",
-      customer: {
-        name: "강도현",
-        phone: "010-4444-5555"
-      },
-      inputProductName: "MacBook Air M2",
-      content: "키보드 스페이스바가 제대로 작동하지 않습니다.",
-      requestDate: "2025-08-03T13:50:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 7,
-      requestNo: "AS-20250804-001",
-      customer: {
-        name: "윤서영",
-        phone: "010-6666-7777"
-      },
-      inputProductName: "샤오미 공기청정기",
-      content: "필터 교체 후에도 이상한 냄새가 계속 납니다.",
-      requestDate: "2025-08-04T08:20:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 8,
-      requestNo: "AS-20250804-002",
-      customer: {
-        name: "임지훈",
-        phone: "010-8888-9999"
-      },
-      inputProductName: "소니 WH-1000XM5 헤드폰",
-      content: "노이즈 캔슬링 기능이 작동하지 않습니다.",
-      requestDate: "2025-08-04T15:40:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 9,
-      requestNo: "AS-20250805-001",
-      customer: {
-        name: "송미라",
-        phone: "010-1111-2222"
-      },
-      inputProductName: "닌텐도 스위치 OLED",
-      content: "화면에 선이 나타나고 터치가 불안정합니다.",
-      requestDate: "2025-08-05T12:15:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 10,
-      requestNo: "AS-20250805-002",
-      customer: {
-        name: "오현수",
-        phone: "010-3333-4444"
-      },
-      inputProductName: "iPad Pro 12.9인치",
-      content: "Apple Pencil 인식이 되지 않는 문제입니다.",
-      requestDate: "2025-08-05T17:25:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 11,
-      requestNo: "AS-20250806-001",
-      customer: {
-        name: "한예슬",
-        phone: "010-9999-0000"
-      },
-      inputProductName: "비스포크 냉장고 4도어",
-      content: "냉동실 온도가 제대로 유지되지 않습니다.",
-      requestDate: "2025-08-06T09:30:00",
-      status: "WAITING_FOR_DELIVERY"
-    },
-    {
-      requestId: 12,
-      requestNo: "AS-20250806-002",
-      customer: {
-        name: "신동욱",
-        phone: "010-5555-7777"
-      },
-      inputProductName: "갤럭시 워치6 클래식",
-      content: "화면이 계속 꺼지고 배터리가 빨리 소모됩니다.",
-      requestDate: "2025-08-06T14:10:00",
-      status: "WAITING_FOR_DELIVERY"
-    }
-  ];
 
   const fetchRequestList = async () => {
     try {
-      // 실제 API 호출 시도
       const response = await axios.get("/api/requests", {
         params: {
           status: "WAITING_FOR_DELIVERY",
@@ -238,9 +90,8 @@ const DeliveryRegister = () => {
       });
       setRequestList(response.data.data.content || []);
     } catch (error) {
-      console.log("API 호출 실패, Mock 데이터 사용:", error);
-      // API 실패시 Mock 데이터 사용
-      setRequestList(mockRequests);
+      console.error("A/S 접수 목록 조회 실패:", error);
+      setRequestList([]);
     }
   };
 

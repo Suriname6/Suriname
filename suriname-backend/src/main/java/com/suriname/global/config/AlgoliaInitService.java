@@ -54,7 +54,8 @@ public class AlgoliaInitService {
             
             log.info("Algolia 초기화가 완료되었습니다.");
         } catch (Exception e) {
-            log.error("Algolia 초기화 중 오류가 발생했습니다: {}", e.getMessage(), e);
+            log.warn("Algolia 초기화 건너뜀: {}", e.getMessage());
+            log.info("검색 기능은 백엔드 API로 동작합니다.");
         }
     }
 
