@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
+// import algoliasearch from 'algoliasearch'; // Temporarily disabled
 import * as XLSX from "xlsx";
 import { saveAs } from 'file-saver';
+
+// Temporarily disable Algolia for development
+// TODO: Re-enable when Algolia is properly configured
 
 const manufacturers = ["삼성", "LG", "Apple"];
 
