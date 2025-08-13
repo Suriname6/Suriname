@@ -20,7 +20,7 @@ jobs:
           cache: npm
           cache-dependency-path: suriname-frontend/package-lock.json
 
-      # 3. 프론트 빌드 + 압축
+      # 3. 클린 빌드 + 압축
       - name: Build (env 주입 + 패키징)
         working-directory: suriname-frontend
         env:
@@ -29,19 +29,22 @@ jobs:
           VITE_ALGOLIA_SEARCH_API_KEY: "98bc7573d3d136029642f704d1fa2e48"
         run: |
           set -euo pipefail
+          # 기존 빌드 파일 삭제 (빌드 머신에서만)
+          rm -f dist.tgz
+          rm -rf dist
           npm ci || (rm -rf node_modules package-lock.json && npm install)
           npm i -D @rollup/rollup-linux-x64-gnu || true
           npm run build
           test -f dist/index.html
           test -d dist/assets
-          # 빌드 산출물을 source 경로와 동일하게 생성
+          # 산출물 압축 (suriname-frontend 내부)
           tar -czf dist.tgz -C dist .
 
       # 4. 빌드 산출물 검증
       - name: Verify build artifact
         working-directory: suriname-frontend
         run: |
-          test -f dist.tgz
+          date
           ls -lh dist.tgz
 
       # 5. 빌드 산출물 전송
