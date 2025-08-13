@@ -6,7 +6,7 @@ import { saveAs } from "file-saver";
 // Temporarily disable Algolia for development
 // TODO: Re-enable when Algolia is properly configured
 
-const manufacturers = ["Samsung", "LG", "Apple"];
+const manufacturers = ["Samsung", "LG", "Apple", "ASUS"];
 
 const CustomerSearch = ({
   data,
