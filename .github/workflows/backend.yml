@@ -1,4 +1,4 @@
-name: Deploy Backend (nohup)
+name: Deploy Backend (minimal & port-safe)
 
 on:
   push:
@@ -11,9 +11,6 @@ on:
 concurrency:
   group: deploy-backend-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  BACKEND_DIR: ${{ secrets.BACKEND_DIR }}
 
 jobs:
   deploy:
@@ -30,21 +27,19 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Build (in subdir)
-        working-directory: ${{ env.BACKEND_DIR }}
+      - name: Build (subdir)
+        working-directory: ${{ secrets.BACKEND_DIR }}
         run: |
-          set -e
           chmod +x gradlew || true
           ./gradlew clean build -x test
 
-      - name: Find built JAR (auto-pick latest)
+      - name: Pick latest JAR
         id: jar
-        working-directory: ${{ env.BACKEND_DIR }}
+        working-directory: ${{ secrets.BACKEND_DIR }}
         run: |
-          set -e
           JAR=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1)
           test -n "$JAR"
-          echo "file=$GITHUB_WORKSPACE/${{ env.BACKEND_DIR }}/$JAR" >> $GITHUB_OUTPUT
+          echo "file=$GITHUB_WORKSPACE/${{ secrets.BACKEND_DIR }}/$JAR" >> $GITHUB_OUTPUT
           echo "Found: $JAR"
 
       - name: Upload JAR to EC2
@@ -57,51 +52,10 @@ jobs:
           target: "${{ secrets.BACKEND_REMOTE_DIR }}/build/libs/"
           timeout: 60s
 
-      - name: Restart backend (nohup + verify)
+      - name: Start backend (kill 8081 & run latest)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          timeout: 60s
-          command_timeout: 10m
-          script: |
-            set -euo pipefail
-            cd "${{ secrets.BACKEND_REMOTE_DIR }}"
-
-            echo "[1] Stop old process"
-            pkill -f "java .*build/libs/app\.jar" || true
-            pkill -f "java .*build/libs" || true
-            sleep 1
-
-            echo "[2] Link latest jar"
-            LATEST=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1)
-            test -n "$LATEST"
-            ln -sfn "$LATEST" build/libs/app.jar
-            echo "Using JAR: $LATEST"
-
-            echo "[3] Check env file"
-            test -f ".env.properties"
-
-            echo "[4] Start backend"
-            nohup java -Dserver.address=127.0.0.1 -Dserver.port=8081 \
-              -jar build/libs/app.jar \
-              --spring.config.additional-location="file:${PWD}/.env.properties" \
-              > ~/app.log 2>&1 &
-
-            echo "[5] Verify process"
-            sleep 3
-            if pgrep -f "java .*build/libs/app\.jar" >/dev/null; then
-              echo "Backend started"
-            else
-              echo "Start failed"
-              tail -n 200 ~/app.log || true
-              exit 1
-            fi
-
-            echo "[6] Port check"
-            (command -v ss >/dev/null && ss -lntp | grep 8081) || \
-            (command -v netstat >/dev/null && netstat -lntp | grep 8081) || true
-
-            echo "[7] Recent logs"
-            tail -n 80 ~/app.log || true
+          script: 'cd "${{ secrets.BACKEND_REMOTE_DIR }}" && mkdir -p build/libs && (command -v fuser >/dev/null && fuser -k 8081/tcp || true) && pkill -f "java .*build/libs" || true && LATEST=$(ls -1t build/libs/*.jar 2>/dev/null | head -n1) && nohup java -Dserver.address=127.0.0.1 -Dserver.port=8081 -jar "$LATEST" --spring.config.additional-location="file:${{ secrets.BACKEND_REMOTE_DIR }}/.env.properties" > ~/app.log 2>&1 &'
