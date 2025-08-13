@@ -33,11 +33,50 @@ const DeliveryRegister = () => {
     "대신택배"
   ];
 
+  // URL 파라미터로 전달된 데이터 처리
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('requestId');
+    const customerName = urlParams.get('customerName');
+    const receptionNumber = urlParams.get('receptionNumber');
+    
+    if (requestId && customerName && receptionNumber) {
+      // 전달된 데이터로 자동 채우기
+      fetchRequestDetail(requestId, customerName, receptionNumber);
+    }
+  }, []);
+  
   useEffect(() => {
     if (showRequestModal) {
       fetchRequestList();
     }
   }, [showRequestModal]);
+  
+  const fetchRequestDetail = async (requestId, customerName, receptionNumber) => {
+    try {
+      const response = await axios.get(`/api/requests/${requestId}`);
+      
+      if (response.data.status === 200) {
+        const requestData = response.data.data;
+        setSelectedRequest(requestData);
+        setFormData({
+          ...formData,
+          requestId: requestData.requestId,
+          name: requestData.customer?.name || customerName,
+          phone: requestData.customer?.phone || ""
+        });
+      }
+    } catch (error) {
+      console.error('접수 상세 정보 조회 실패:', error);
+      // URL 파라미터 데이터로 기본 설정
+      setFormData({
+        ...formData,
+        requestId: requestId,
+        name: decodeURIComponent(customerName),
+        phone: ""
+      });
+    }
+  };
 
   // Mock A/S 접수 데이터 (배송 대기 중인 상태)
   const mockRequests = [
