@@ -8,7 +8,7 @@ import api from "../../api/api";
 
 const CustomerList = () => {
   const [data, setData] = useState([]);
-  const [searchConditions] = useState({});
+  const [searchConditions, setSearchConditions] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedItems, setSelectedItems] = useState(new Set());
@@ -28,20 +28,20 @@ const CustomerList = () => {
           },
         }
       );
-
-      const responseData = response.data.data.content;
-
-      const uniqueData = responseData.filter(
-        (item, index, self) =>
-          index === self.findIndex((t) => t.customerId === item.customerId)
-      );
-
-      setData(uniqueData);
-      setTotalPages(response.data.data.totalPages);
+      const page = response?.data?.data ?? {};
+      const list = page.content ?? [];
+      setData(list);
+      setTotalPages(page.totalPages ?? 0);
+      setSelectedItems(new Set());
+      setSelectAll(false);
     } catch (err) {
       console.error("데이터 불러오기 실패:", err);
     }
   }, [currentPage, searchConditions]);
+
+  useEffect(() => {
+    fetchCustomerData();
+  }, [fetchCustomerData]);
 
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
@@ -84,10 +84,9 @@ const CustomerList = () => {
         });
         alert(`${selectedItems.size}개 항목이 삭제되었습니다.`);
       }
-      setData((prevData) =>
-        prevData.filter(
-          (item) => !selectedItems.has(item.productId || item.objectID)
-        )
+
+      setData((prev) =>
+        prev.filter((item) => !selectedItems.has(item.customerId))
       );
 
       setSelectedItems(new Set());
@@ -118,6 +117,7 @@ const CustomerList = () => {
         setTotalPages={setTotalPages}
         itemsPerPage={itemsPerPage}
         setCurrentPage={setCurrentPage}
+        setSearchConditions={setSearchConditions}
       />
 
       <div className={styles.tableHeader}>

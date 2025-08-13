@@ -96,7 +96,7 @@ public class ProductController {
 	}
 
 	// 엑셀
-	@PostMapping("upload/excel")
+	@PostMapping("register/excel")
 	public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
 		productService.importFromExcel(file);
 		return ResponseEntity.ok(Map.of("status", 200, "message", "엑셀 등록이 완료되었습니다."));
