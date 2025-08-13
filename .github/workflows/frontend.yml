@@ -31,9 +31,7 @@ jobs:
           npm run build
           test -f dist/index.html
           test -d dist/assets
-          ls -al dist | head -n 50
-          tar -czf ../dist.tgz -C dist .
-          ls -lh ../dist.tgz
+          tar -czf dist.tgz -C dist .
 
       - name: Upload dist.tgz to EC2 (/tmp)
         uses: appleboy/scp-action@v0.1.7
@@ -41,7 +39,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "dist.tgz"
+          source: "suriname-frontend/dist.tgz"
           target: "/tmp/"
 
       - name: Unpack → Move to Nginx root → Reload
@@ -52,7 +50,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             set -euo pipefail
-            ROOT_DIR=${{ secrets.FRONTEND_DIR }}   # 예: /usr/share/nginx/html
+            ROOT_DIR=${{ secrets.FRONTEND_DIR }}
             TMP_DIR="/tmp/suriname-dist"
 
             sudo rm -rf "$TMP_DIR"
@@ -62,6 +60,12 @@ jobs:
             sudo mkdir -p "$ROOT_DIR"
             sudo rsync -a --delete "$TMP_DIR"/ "$ROOT_DIR"/
             sudo chown -R www-data:www-data "$ROOT_DIR"
+
+            SRC_TIME=$(stat -c %Y "$TMP_DIR/index.html")
+            DEST_TIME=$(stat -c %Y "$ROOT_DIR/index.html")
+            if [ "$SRC_TIME" != "$DEST_TIME" ]; then
+              exit 1
+            fi
 
             sudo nginx -t
             sudo systemctl reload nginx
