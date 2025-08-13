@@ -4,7 +4,7 @@ const API_BASE =
   import.meta.env.VITE_API_URL ||
   (location.hostname === "localhost"
     ? "http://localhost:8081"
-    : "/api");
+    : "");
 
 const normalizedBase = API_BASE.replace(/\/$/, "");
 
