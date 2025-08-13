@@ -34,6 +34,7 @@ jobs:
           npm run build
           test -f dist/index.html
           test -d dist/assets
+          # 빌드 산출물을 source 경로와 동일하게 생성
           tar -czf dist.tgz -C dist .
 
       # 4. 빌드 산출물 검증
@@ -75,11 +76,11 @@ jobs:
             sudo rsync -avh --delete "$TMP_DIR"/ "$ROOT_DIR"/
             sudo chown -R www-data:www-data "$ROOT_DIR"
 
-            # 배포 검증
+            # 배포 검증 (수정 시간 비교)
             SRC_TIME=$(stat -c %Y "$TMP_DIR/index.html")
             DEST_TIME=$(stat -c %Y "$ROOT_DIR/index.html")
             if [ "$SRC_TIME" != "$DEST_TIME" ]; then
-              echo " Deployment failed: index.html not updated"
+              echo "Deployment failed: index.html not updated"
               exit 1
             fi
 
