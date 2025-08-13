@@ -18,7 +18,7 @@ jobs:
           cache: npm
           cache-dependency-path: suriname-frontend/package-lock.json
 
-      - name: Build
+      - name: Build (env 주입)
         working-directory: suriname-frontend
         env:
           VITE_API_URL: "/api"
@@ -26,10 +26,11 @@ jobs:
           VITE_ALGOLIA_SEARCH_API_KEY: "98bc7573d3d136029642f704d1fa2e48"
         run: |
           npm ci || (rm -rf node_modules package-lock.json && npm install)
+          npm i -D @rollup/rollup-linux-x64-gnu || true
           npm run build
           ls -al dist || true
 
-      - name: Upload dist to EC2
+      - name: Upload dist to EC2 (/tmp)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
