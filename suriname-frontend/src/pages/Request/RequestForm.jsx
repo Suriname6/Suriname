@@ -37,7 +37,7 @@ export default function RequestForm() {
 
   // 권한 체크
   useEffect(() => {
-    if (!(role === "ADMIN" || role === "STAFF" || role === "ENGINEER")) {
+    if (!(role === "ADMIN" || role === "STAFF")) {
       navigate("/request/list", { replace: true });
     }
   }, [role, navigate]);

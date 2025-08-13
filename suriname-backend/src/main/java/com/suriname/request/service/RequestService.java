@@ -40,8 +40,7 @@ public class RequestService {
 	// AS 요청 생성
 	@Transactional
 	public RequestCreateResponseDto createRequest(Long receiverId, RequestCreateRequestDto dto) {
-		if (receiverId == null)
-			throw new IllegalArgumentException("receiverId is null");
+		if (receiverId == null) throw new IllegalArgumentException("접수 담당자 ID가 필요합니다.");
 		if (dto.getEmployeeId() == null)
 			throw new IllegalArgumentException("수리 담당자 ID가 필요합니다.");
 		if (dto.getCustomerId() == null)
@@ -65,8 +64,10 @@ public class RequestService {
 
 		String createdDate = request.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 		String requestNo = String.format("AS-%s-%d", createdDate, request.getRequestId());
-
 		request.setRequestNo(requestNo);
+
+		request.publishStatusInitialized(receiver.getEmployeeId().toString(), "요청 생성");
+		requestRepository.saveAndFlush(request);
 
 		// 수리 담당자 배정 이력
 		RequestAssignmentLog assignmentLog = RequestAssignmentLog.builder().request(request).employee(employee) // 수리 기사
@@ -84,6 +85,11 @@ public class RequestService {
 	@Transactional(readOnly = true)
 	public Page<RequestListResponseDto> getRequestList(RequestSearchCondition condition, Pageable pageable,
 			Long viewerId, String role) {
+
+		if (!"ADMIN".equals(role) && !"STAFF".equals(role) && !"ENGINEER".equals(role)) {
+			throw new AccessDeniedException("권한이 없습니다.");
+		}
+
 		return requestQueryRepository.searchRequestList(condition, pageable, viewerId, role);
 	}
 
@@ -119,18 +125,22 @@ public class RequestService {
 
 		return RequestDetailResponseDto.builder().requestId(request.getRequestId()).requestNo(request.getRequestNo())
 				.createdAt(request.getCreatedAt()).status(request.getStatus().name())
-				.receiverName(request.getReceiver().getName()).engineerName(request.getEmployee().getName())
+				.receiverName(request.getReceiver().getName())
+				.receiverPhone(request.getReceiver().getPhone())
+				.engineerName(request.getEmployee().getName())
+				.engineerPhone(request.getEmployee().getPhone())
 				.content(request.getContent())
 
 				.assignmentStatus(latestLog.getStatus().name()).rejectionReason(latestLog.getRejectionReason())
+				.assignmentStatusChangedAt(latestLog.getStatusChangedAt())
 
 				.customerName(request.getCustomer().getName())
+				.customerPhone(request.getCustomer().getPhone())
+				.customerBirth(request.getCustomer().getBirth())
 
 				.categoryName(product.getCategory().getName()).productName(product.getProductName())
 				.modelCode(product.getModelCode()).productBrand(product.getProductBrand())
-
 				.serialNumber(customerProduct.getSerialNumber())
-
 				.requestImages(requestImages).build();
 	}
 
@@ -162,19 +172,16 @@ public class RequestService {
 		if (dto.getContent() != null)
 			request.setContent(dto.getContent());
 
-		if (dto.getStatus() != null && dto.getStatus() != request.getStatus()) {
-			request.changeStatus(dto.getStatus());
-		}
 
 		return RequestCreateResponseDto.builder().requestId(request.getRequestId()).requestNo(request.getRequestNo())
 				.build();
 	}
 
 	@Transactional
-	public void updateStatus(Long requestId, Request.Status newStatus) {
+	public void updateStatus(Long requestId, Long viewerId, Request.Status newStatus) {
 		Request request = requestRepository.findById(requestId)
 				.orElseThrow(() -> new IllegalArgumentException("해당 요청이 존재하지 않습니다."));
-		request.changeStatus(newStatus);
+		request.changeStatus(newStatus, String.valueOf(viewerId), null);
 	}
 
 	// AS 요청 삭제
