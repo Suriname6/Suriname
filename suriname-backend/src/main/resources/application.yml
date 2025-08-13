@@ -24,6 +24,18 @@ spring:
   sql:
     init:
       mode: never
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: "${GMAIL_ACCOUNT}"
+    password: "${GMAIL_APP_PW}"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
   secret: "${JWT_SECRET}"
@@ -32,3 +44,12 @@ jwt:
 toss:
   secret-key: "${TOSS_SECRET_KEY}"
   client-key: "${TOSS_CLIENT_KEY}"
+
+sms:
+  api:
+    url: https://api.solapi.com/messages/v4/send
+    key: "${SMS_API_KEY}"
+    secret: "${SMS_SECRET_KEY}"
+  sender:
+
+    phone: ""

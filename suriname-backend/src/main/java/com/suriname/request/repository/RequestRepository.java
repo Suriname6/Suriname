@@ -1,9 +1,11 @@
 package com.suriname.request.repository;
 
+import com.suriname.customer.dto.CustomerRequestDto;
 import com.suriname.request.dto.RequestSummaryDto;
 import com.suriname.request.entity.Request;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -98,4 +100,25 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
         		  group by r.status
         		""")
         		java.util.List<Object[]> countByStatusForReceiver(@Param("rid") Long receiverId);
+        		
+        		// 미완료 최신 1건
+        	    @Query("""
+        	            select new com.suriname.customer.dto.CustomerRequestDto(
+        	                c.name, p.productName, r.requestNo
+        	            )
+        	            from Request r
+        	              join r.customer c
+        	              join r.customerProduct cp
+        	              join cp.product p
+        	            where lower(c.name) = lower(:name)
+        	              and r.status <> com.suriname.request.entity.Request.Status.COMPLETED
+        	            order by r.createdAt desc
+        	        """)
+        	        Page<CustomerRequestDto> findOpenBriefsByCustomer(@Param("name") String customerName, Pageable pageable);
+        	
+        	    
+        	    default Optional<CustomerRequestDto> findLatestOpenBriefByCustomer(String customerName) {
+        	        Page<CustomerRequestDto> page = findOpenBriefsByCustomer(customerName, PageRequest.of(0, 1));
+        	        return page.stream().findFirst();
+        	    }
 }

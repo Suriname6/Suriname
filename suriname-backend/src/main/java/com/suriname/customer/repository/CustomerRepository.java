@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.suriname.customer.dto.CustomerRequestDto;
 import com.suriname.customer.entity.Customer;
 import com.suriname.customer.entity.Customer.Status;
 import com.suriname.product.entity.CustomerProduct;
@@ -30,4 +31,5 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSp
 		       "AND LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
 		List<Customer> searchAutoComplete(@Param("keyword")String keyword, @Param("status")Status status);
 
+	
 }

@@ -5,6 +5,7 @@ import styles from "../../css/Repair/RepairWrite.module.css";
 import { X } from "lucide-react";
 import axios from "../../api/axiosInstance";
 import CategoryPresetPicker from "../../components/repairpreset/CategoryPresetPicker";
+import CustomerAutoCompleteProduct from "../../components/AutoComplete/CustomerAutoComplete";
 
 const RepairWritePage = () => {
   const navigate = useNavigate();
@@ -115,7 +116,7 @@ const RepairWritePage = () => {
             ]);
           }
         } catch (error) {
-          console.error("견적서 데이터 파싱 실패:", error);
+          console.error(error);
         }
       }
 
@@ -396,6 +397,10 @@ const RepairWritePage = () => {
     setFormData((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "customerConsent" && !value) next.engineerName = "";
+      if (field === "customerName" && !value) {
+        next.productName = "";
+        next.requestNo = "";
+      }
       return next;
     });
 
@@ -588,6 +593,34 @@ const RepairWritePage = () => {
       navigate(-1);
   };
 
+  const fetchFromListFirst = async ({ customerName }) => {
+    try {
+      const params = {
+        page: 0,
+        size: 1,
+        sort: "requestId,desc",
+        customerName,
+      };
+
+      const { data } = await axios.get("/api/requests", { params });
+      const row = Array.isArray(data?.content) ? data.content[0] : null;
+
+      if (!row) {
+        setFormData((prev) => ({ ...prev, productName: "", requestNo: "" }));
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        requestNo: row.requestNo,
+        productName: row.productName ?? prev.productName, // 목록 DTO에 있으면 사용
+      }));
+    } catch (e) {
+      console.warn("목록 1건 조회 실패:", e);
+      setFormData((prev) => ({ ...prev, productName: "", requestNo: "" }));
+    }
+  };
+
   return (
     <div className={styles.customerContainer}>
       <SidebarNavigation />
@@ -595,7 +628,7 @@ const RepairWritePage = () => {
       <div className={styles.tabNavigation}>
         <div className={styles.tabContainer}>
           <button className={`${styles.tabButton} ${styles.active}`}>
-            {editMode ? "수리 내역 수정" : "수리 등록"}
+            {editMode ? "수리 내역 수정" : "수리 내역 작성"}
           </button>
         </div>
       </div>
@@ -631,16 +664,28 @@ const RepairWritePage = () => {
           <div className={styles.inputGroup}>
             <div className={styles.inputField} style={{ flex: 1 }}>
               <label className={styles.inputLabel}>고객명</label>
-              <input
-                type="text"
-                className={styles.inputControl}
+
+              <CustomerAutoCompleteProduct
                 value={formData.customerName}
-                onChange={(e) =>
-                  handleInputChange("customerName", e.target.value)
-                }
+                onChange={(val) => {
+                  handleInputChange("customerName", val);
+                }}
+                onSelect={(customer) => {
+                  const id = customer.customerId ?? customer.id;
+                  setFormData((prev) => ({
+                    ...prev,
+                    customerName: customer.name,
+                    customerId: id,
+                  }));
+                  fetchFromListFirst({
+                    customerId: id,
+                    customerName: customer.name,
+                  });
+                }}
                 placeholder="고객명을 입력하세요"
               />
             </div>
+
             <div className={styles.inputField} style={{ flex: 1 }}>
               <label className={styles.inputLabel}>제품명</label>
               <input

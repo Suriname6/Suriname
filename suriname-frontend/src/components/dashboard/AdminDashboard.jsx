@@ -73,41 +73,12 @@ const Input = ({ className = "", ...props }) => {
   );
 };
 
-// 샘플 데이터
-const dailyTrendData = [
-  { date: '01/01', count: 15, completed: 12 },
-  { date: '01/02', count: 23, completed: 19 },
-  { date: '01/03', count: 18, completed: 15 },
-  { date: '01/04', count: 32, completed: 28 },
-  { date: '01/05', count: 28, completed: 25 },
-  { date: '01/06', count: 19, completed: 16 },
-  { date: '01/07', count: 25, completed: 22 },
-];
-
-const monthlyTrendData = [
-  { month: '1월', count: 450, revenue: 12500 },
-  { month: '2월', count: 520, revenue: 15200 },
-  { month: '3월', count: 480, revenue: 13800 },
-  { month: '4월', count: 590, revenue: 18900 },
-  { month: '5월', count: 620, revenue: 21200 },
-  { month: '6월', count: 580, revenue: 19800 },
-];
-
 const statusDistributionData = [
   { name: '접수', key: 'receivedCount', value: 0, count: 0, color: '#3B82F6' },
   { name: '수리중', key: 'repairingCount', value: 0, count: 0, color: '#F59E0B' },
   { name: '입금대기', key: 'waitingForPaymentCount', value: 0, count: 0, color: '#EF4444' },
   { name: '배송대기', key: 'waitingForDeliveryCount', value: 0, count: 0, color: '#8B5CF6' },
   { name: '완료', key: 'completedCount', value: 0, count: 0, color: '#10B981' }
-];
-
-const productRankingData = [
-  { product: '삼성 세탁기', count: 45, trend: 'up' },
-  { product: 'LG 냉장고', count: 38, trend: 'up' },
-  { product: '삼성 에어컨', count: 32, trend: 'down' },
-  { product: 'LG 세탁기', count: 28, trend: 'up' },
-  { product: '삼성 TV', count: 25, trend: 'down' },
-  { product: 'LG 에어컨', count: 22, trend: 'up' },
 ];
 
 const statisticsData = [
@@ -403,57 +374,6 @@ export default function AdminDashboard() {
       </Card>
   );
 
-// // Modern Area Chart
-//   const ModernAreaChart = ({ data, title, dataKeys }) => (
-//       <Card className="p-6">
-//         <div className="flex items-center justify-between mb-6">
-//           <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-//           <div className="flex gap-4">
-//             {dataKeys.map((key, index) => (
-//                 <div key={key.key} className="flex items-center gap-2">
-//                   <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: key.color }} />
-//                   <span className="text-sm font-medium text-gray-600">{key.name}</span>
-//                 </div>
-//             ))}
-//           </div>
-//         </div>
-//         <ResponsiveContainer width="100%" height={300}>
-//           <AreaChart data={data}>
-//             <defs>
-//               <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-//                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-//                 <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-//               </linearGradient>
-//               <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-//                 <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-//                 <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-//               </linearGradient>
-//             </defs>
-//             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-//             <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
-//             <YAxis stroke="#6B7280" fontSize={12} />
-//             <Tooltip content={<CustomTooltip />} />
-//             <Area
-//                 type="monotone"
-//                 dataKey="count"
-//                 stroke="#3B82F6"
-//                 strokeWidth={3}
-//                 fillOpacity={1}
-//                 fill="url(#colorCount)"
-//             />
-//             <Area
-//                 type="monotone"
-//                 dataKey="completed"
-//                 stroke="#10B981"
-//                 strokeWidth={3}
-//                 fillOpacity={1}
-//                 fill="url(#colorCompleted)"
-//             />
-//           </AreaChart>
-//         </ResponsiveContainer>
-//       </Card>
-//   );
-
 // Modern Bar Chart with Trends
 const ModernBarChart = ({ data, title }) => {
   const maxCount = Math.max(...data.map(item => item.count)); // 최대값 찾기
@@ -494,7 +414,6 @@ const ModernBarChart = ({ data, title }) => {
             {cardData.map((stat, index) => {
               const IconComponent = stat.icon;
               if (!IconComponent) { // 만약을 대비해서 아이콘이 없는 경우 처리
-                console.warn(`아이콘 컴포넌트가 없어! stat: ${stat.title}`);
                 return null; // 렌더링 안 함
               }
               return (
@@ -583,12 +502,12 @@ const ModernBarChart = ({ data, title }) => {
   };
 
   return (
-      <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-row justify-center w-full min-h-screen">
+      <div className="via-indigo-50 to-purple-50 flex flex-row justify-center w-full min-h-screen">
         <div className="bg-transparent w-full max-w-[1440px] relative">
           <div className="flex">
             <main className="flex-1 p-6">
               <StatisticsSection /><br/>
-              <ChartSection />
+              <ChartSection className="chartSection" />
             </main>
           </div>
         </div>

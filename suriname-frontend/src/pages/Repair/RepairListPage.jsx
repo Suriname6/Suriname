@@ -56,10 +56,8 @@ const RepairListPage = () => {
         }
       });
 
-      console.log('Fetching quotes with params:', params);
 
       const data = await getQuotes(params);
-      console.log('Response data:', data);
       
       if (!data) {
               throw new Error('서버에서 데이터를 받지 못했습니다');
@@ -75,7 +73,6 @@ const RepairListPage = () => {
         last: data.last !== false
       });
     } catch (error) {
-      console.error('Error fetching quotes:', error);
       alert(`데이터 로드 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
     setLoading(false);
@@ -98,7 +95,6 @@ const RepairListPage = () => {
       setSelectAll(false);
       fetchQuotes();
     } catch (error) {
-      console.error('Error deleting quotes:', error);
       alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
     }
   };
@@ -179,16 +175,13 @@ const RepairListPage = () => {
   };
 
   const getPaymentStatus = (quote) => {
-    console.log('getPaymentStatus - quote:', quote.requestNo, 'statusChange:', quote.statusChange, 'paymentStatus:', quote.paymentStatus);
     
     // statusChange를 기반으로 입금상태 결정
     if (quote.statusChange === 'AWAITING_PAYMENT') {
       // 입금대기 상태에서 가상계좌가 발급된 경우 구분
       if (quote.paymentStatus === '입금대기') {
-        console.log('Returning VIRTUAL_ACCOUNT_ISSUED for', quote.requestNo);
         return 'VIRTUAL_ACCOUNT_ISSUED'; // 가상계좌 발급 완료
       } else {
-        console.log('Returning AWAITING_PAYMENT for', quote.requestNo);
         return 'AWAITING_PAYMENT'; // 가상계좌 발급 필요
       }
     } else if (quote.statusChange === 'IN_PROGRESS' || !quote.statusChange) {
@@ -260,7 +253,6 @@ const RepairListPage = () => {
 
   const handleRowClick = (quote) => {
     // 수리 내역 작성 페이지로 이동하면서 데이터 전달
-    console.log('클릭된 견적:', quote);
     navigate('/repair/write', { 
       state: { 
         quote: quote,
