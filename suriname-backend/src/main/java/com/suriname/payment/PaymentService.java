@@ -201,7 +201,7 @@ public class PaymentService {
             
             payment.setAccountAndBank(defaultAccount, defaultBank);
             payment.setStatus(Payment.Status.PENDING); // PENDING 상태 유지
-            payment.setMemo("가상계좌 발급 완료 (기본값 적용)");
+            payment.setMemo("가상계좌 발급");
             payment = paymentRepository.save(payment);
             
             
@@ -252,9 +252,13 @@ public class PaymentService {
                     }
                 } catch (Exception e) {}
             } else if ("CANCELED".equals(status)) {
-                payment.setStatus(Payment.Status.FAILED);
-                payment.setMemo("입금 취소로 인한 결제 실패");
-                paymentRepository.save(payment);
+                // 관리자가 직접 처리한 경우가 아닌 경우만 실패 처리
+                if (payment.getStatus() != Payment.Status.SUCCESS) {
+                    payment.setStatus(Payment.Status.FAILED);
+                    payment.setMemo("입금 취소");
+                    paymentRepository.save(payment);
+                }
+                // 이미 SUCCESS인 경우는 관리자가 직접 처리한 것이므로 무시
             }
             return;
         }
@@ -316,8 +320,12 @@ public class PaymentService {
                 }
             }
             case "PAYMENT_CANCELED" -> {
-                payment.setStatus(Payment.Status.FAILED);
-                payment.setMemo("입금 취소로 인한 결제 실패");
+                // 관리자가 직접 처리한 경우가 아닌 경우만 실패 처리
+                if (payment.getStatus() != Payment.Status.SUCCESS) {
+                    payment.setStatus(Payment.Status.FAILED);
+                    payment.setMemo("입금 취소");
+                }
+                // 이미 SUCCESS인 경우는 관리자가 직접 처리한 것이므로 무시
             }
             default -> {
                 return;
@@ -370,6 +378,40 @@ public class PaymentService {
             case "92" -> "토스뱅크";
             default -> "기타(" + bankCode + ")";
         };
+    }
+
+    // 입금완료 전환 (입금대기 -> 입금완료)
+    @Transactional
+    public void completePayment(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 결제가 존재하지 않습니다."));
+        
+        if (payment.getStatus() != Payment.Status.PENDING) {
+            throw new IllegalArgumentException("입금대기 상태인 결제만 완료 처리할 수 있습니다.");
+        }
+        
+        // 1. 먼저 토스페이먼츠에서 결제를 취소 처리
+        try {
+            tossPaymentsClient.cancelPaymentByOrderId(payment.getMerchantUid(), "관리자 입금완료 처리");
+        } catch (Exception e) {
+            throw new RuntimeException("토스페이먼츠 취소 처리 실패: " + e.getMessage());
+        }
+        
+        // 2. 토스페이먼츠 취소가 성공하면 로컬 DB를 입금완료로 변경
+        payment.markCompleted();
+        payment.setMemo("수동 입금완료");
+        paymentRepository.save(payment);
+        
+        // 3. Request 상태를 배송대기로 변경
+        try {
+            Request request = payment.getRequest();
+            if (request != null) {
+                request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+                requestRepository.save(request);
+            }
+        } catch (Exception e) {
+            // Request 상태 업데이트 실패해도 Payment 처리는 성공으로 유지
+        }
     }
 
     // Payment 생성 및 저장

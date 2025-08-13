@@ -52,4 +52,4 @@ sms:
     secret: "${SMS_SECRET_KEY}"
   sender:
 
-    phone: ""
+    phone: "010-9158-3790"

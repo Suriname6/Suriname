@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SidebarNavigation from '../../components/SidebarNavigation';
-import { getPayments, deletePayments } from '../../api/payment';
+import { getPayments, deletePayments, completePayment } from '../../api/payment';
 import styles from '../../css/Payment/PaymentList.module.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -86,6 +86,20 @@ const PaymentListPage = () => {
       fetchPayments();
     } catch (error) {
       alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+    }
+  };
+
+  const handlePaymentClick = async (payment) => {
+    if (payment.depositStatus === '입금대기') {
+      if (confirm('입금완료로 전환하시겠습니까?')) {
+        try {
+          await completePayment(payment.paymentId);
+          alert('입금완료로 전환되었습니다.');
+          fetchPayments();
+        } catch (error) {
+          alert(`입금완료 전환 중 오류가 발생했습니다: ${error.response?.data?.message || error.message || '알 수 없는 오류'}`);
+        }
+      }
     }
   };
 
@@ -355,7 +369,13 @@ const PaymentListPage = () => {
                     <td>{payment.virtualAccountNumber || '-'}</td>
                     <td>{payment.bankName || '-'}</td>
                     <td>{formatCurrency(payment.paymentAmount)}</td>
-                    <td>{payment.depositStatus}</td>
+                    <td 
+                      className={payment.depositStatus === '입금대기' ? styles.clickableStatus : ''}
+                      onClick={() => handlePaymentClick(payment)}
+                      style={payment.depositStatus === '입금대기' ? { cursor: 'pointer', color: '#007bff' } : {}}
+                    >
+                      {payment.depositStatus}
+                    </td>
                     <td>{formatDateTime(payment.confirmedAt)}</td>
                     <td>{payment.memo || '-'}</td>
                   </tr>
