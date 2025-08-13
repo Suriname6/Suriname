@@ -1,4 +1,5 @@
 name: Frontend Deploy
+
 on:
   push:
     branches: [ "main" ]
@@ -7,17 +8,22 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    concurrency: { group: fe-cd-prod, cancel-in-progress: true }
+    concurrency:
+      group: fe-cd-prod
+      cancel-in-progress: true
 
     steps:
+      # 1. 소스 체크아웃
       - uses: actions/checkout@v4
 
+      # 2. Node.js 설정
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: suriname-frontend/package-lock.json
 
+      # 3. 빌드 (환경변수 주입 + 패키징)
       - name: Build (env 주입 + 패키징)
         working-directory: suriname-frontend
         env:
@@ -31,15 +37,17 @@ jobs:
           npm run build
           test -f dist/index.html
           test -d dist/assets
-          # dist.tgz를 suriname-frontend 바깥이 아니라 현재 폴더에 생성
+          # 빌드 결과를 루트로 압축 (경로 혼동 방지)
           tar -czf dist.tgz -C dist .
 
-      - name: Debug dist.tgz 생성 여부
+      # 4. dist.tgz 위치/시간 확인 (경로 디버그)
+      - name: Debug dist.tgz path
         working-directory: suriname-frontend
         run: |
-          echo "=== dist.tgz 존재 여부 ==="
-          ls -lh --time-style=long-iso dist.tgz || echo "dist.tgz 없음"
+          echo "=== dist.tgz 위치 확인 ==="
+          ls -lh --time-style=long-iso dist.tgz
 
+      # 5. EC2로 dist.tgz 업로드
       - name: Upload dist.tgz to EC2 (/tmp)
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -50,6 +58,7 @@ jobs:
           target: "/tmp/"
           overwrite: true
 
+      # 6. 압축 해제 → Nginx 경로 이동 → Reload
       - name: Unpack → Move to Nginx root → Reload
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -61,18 +70,21 @@ jobs:
             ROOT_DIR=${{ secrets.FRONTEND_DIR }}
             TMP_DIR="/tmp/suriname-dist"
 
-            # 배포 전에 이전 파일 삭제
+            # dist.tgz 존재 여부 확인
+            ls -lh --time-style=long-iso /tmp/dist.tgz
+
+            # 기존 배포 폴더 제거
             sudo rm -rf "$TMP_DIR"
             sudo mkdir -p "$TMP_DIR"
 
             # dist.tgz 압축 해제
             sudo tar -xzf /tmp/dist.tgz -C "$TMP_DIR"
 
-            # nginx root로 복사
+            # Nginx 루트에 덮어쓰기
             sudo mkdir -p "$ROOT_DIR"
             sudo rsync -a --delete "$TMP_DIR"/ "$ROOT_DIR"/
             sudo chown -R www-data:www-data "$ROOT_DIR"
 
-            # nginx reload
+            # Nginx 설정 테스트 & Reload
             sudo nginx -t
             sudo systemctl reload nginx
