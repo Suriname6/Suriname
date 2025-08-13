@@ -31,12 +31,14 @@ jobs:
           npm run build
           test -f dist/index.html
           test -d dist/assets
-          tar -czf dist.tgz -C dist .   # ../ 제거 → 경로 일치
+          # dist.tgz를 suriname-frontend 바깥이 아니라 현재 폴더에 생성
+          tar -czf dist.tgz -C dist .
 
-      - name: Debug dist.tgz path
+      - name: Debug dist.tgz 생성 여부
+        working-directory: suriname-frontend
         run: |
-          echo "=== dist.tgz 위치 및 시간 확인 ==="
-          find . -name dist.tgz -exec ls -lh --time-style=long-iso {} \;
+          echo "=== dist.tgz 존재 여부 ==="
+          ls -lh --time-style=long-iso dist.tgz || echo "dist.tgz 없음"
 
       - name: Upload dist.tgz to EC2 (/tmp)
         uses: appleboy/scp-action@v0.1.7
@@ -59,15 +61,18 @@ jobs:
             ROOT_DIR=${{ secrets.FRONTEND_DIR }}
             TMP_DIR="/tmp/suriname-dist"
 
-            sudo rm -f /tmp/dist.tgz
+            # 배포 전에 이전 파일 삭제
             sudo rm -rf "$TMP_DIR"
-
             sudo mkdir -p "$TMP_DIR"
+
+            # dist.tgz 압축 해제
             sudo tar -xzf /tmp/dist.tgz -C "$TMP_DIR"
 
+            # nginx root로 복사
             sudo mkdir -p "$ROOT_DIR"
             sudo rsync -a --delete "$TMP_DIR"/ "$ROOT_DIR"/
             sudo chown -R www-data:www-data "$ROOT_DIR"
 
+            # nginx reload
             sudo nginx -t
             sudo systemctl reload nginx
