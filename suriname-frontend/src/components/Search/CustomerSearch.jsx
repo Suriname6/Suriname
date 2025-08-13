@@ -28,20 +28,8 @@ const CustomerSearch = ({ data, setData, setTotalPages, itemsPerPage, setCurrent
   // 디바운스를 위한 타이머
   const [searchTimer, setSearchTimer] = useState(null);
 
-  // 기본 검색 수행 (Algolia 대신 백엔드 API 사용)
+  // 기본 클라이언트 사이드 검색 수행 (Algolia 대신)
   const performSearch = useCallback(async () => {
-    // 검색 조건이 모두 비어있으면 검색하지 않음
-    const hasSearchTerm = query.customerName || query.address || query.productName || 
-                         query.modelCode || query.phone || query.email || 
-                         query.manufacturers.length > 0;
-    
-    if (!hasSearchTerm) {
-      setData([]);
-      setTotalPages(0);
-      setSearchStats({ totalHits: 0, processingTime: 0 });
-      return;
-    }
-
     try {
       // API 요청으로 고객 데이터 가져오기 (기본 검색)
       const response = await fetch('/api/customers/search', {
