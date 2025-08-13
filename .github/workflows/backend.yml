@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    concurrency: { group: be-cd-prod, cancel-in-progress: true }
 
     steps:
       - uses: actions/checkout@v4
@@ -16,25 +17,25 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
+          cache-dependency-path: suriname-backend/.gradle
 
-      - name: Build (no tests)
+      - name: Build JAR
         working-directory: suriname-backend
         run: |
           chmod +x gradlew
           ./gradlew clean build -x test
-          ls -al build/libs
+          ls -al build/libs || true
 
-      - name: Upload JARs to EC2
+      - name: Upload jar to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           source: "suriname-backend/build/libs/*.jar"
-          target: "/home/ubuntu/Suriname/suriname-backend/build/libs/"
-          overwrite: true
+          target: "${{ secrets.BACKEND_DIR }}/build/libs/"
 
-      - name: Restart (nohup + env.properties)
+      - name: Deploy & Restart Backend
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -42,19 +43,14 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             set -e
-            cd /home/ubuntu/Suriname/suriname-backend
-
+            cd ${{ secrets.BACKEND_DIR }}
             pkill -f 'java .*build/libs' || true
-
             JAR=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1)
             echo "Using JAR: $JAR"
-
             ln -sfn "$JAR" build/libs/app.jar
-
             nohup java -Dserver.address=127.0.0.1 -Dserver.port=8081 \
               -jar build/libs/app.jar \
-              --spring.config.additional-location=file:/home/ubuntu/Suriname/suriname-backend/.env.properties \
+              --spring.config.additional-location=file:${{ secrets.BACKEND_DIR }}/.env.properties \
               > ~/app.log 2>&1 &
-
             sleep 2
-            pgrep -f 'java .*build/libs/app\.jar' >/dev/null && echo "Backend started ✅" || (echo "Start failed ❌"; exit 1)
+            pgrep -f 'java .*build/libs/app\.jar' >/dev/null && echo "Backend started" || (echo "Start failed"; exit 1)
