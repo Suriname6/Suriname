@@ -8,6 +8,10 @@ on:
       - ".github/workflows/backend.yml"
   workflow_dispatch: {}
 
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   BACKEND_DIR: ${{ secrets.BACKEND_DIR }}
 
@@ -16,7 +20,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup JDK 21
         uses: actions/setup-java@v4
@@ -84,7 +89,7 @@ jobs:
               --spring.config.additional-location="file:${PWD}/.env.properties" \
               > ~/app.log 2>&1 &
 
-            echo "[5] Verify"
+            echo "[5] Verify process"
             sleep 3
             if pgrep -f "java .*build/libs/app\.jar" >/dev/null; then
               echo "Backend started"
@@ -94,8 +99,9 @@ jobs:
               exit 1
             fi
 
+            echo "[6] Port check"
             (command -v ss >/dev/null && ss -lntp | grep 8081) || \
             (command -v netstat >/dev/null && netstat -lntp | grep 8081) || true
 
-            echo "[6] Last logs"
-            tail -n 60 ~/app.log || true
+            echo "[7] Recent logs"
+            tail -n 80 ~/app.log || true
