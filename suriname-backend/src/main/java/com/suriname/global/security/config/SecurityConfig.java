@@ -3,6 +3,7 @@ package com.suriname.global.security.config;
 import com.suriname.global.security.filter.JwtAuthenticationFilter;
 import com.suriname.global.security.provider.JwtTokenProvider;
 import com.suriname.global.security.service.EmployeeDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,8 +47,13 @@ public class SecurityConfig {
                     config.setAllowCredentials(true);
                     return config;
                 }))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                        .accessDeniedHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN))
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users", "/api/payments/webhook/toss").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/repair-presets/category/*/active").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/visible").permitAll()
