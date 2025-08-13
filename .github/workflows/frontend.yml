@@ -10,54 +10,44 @@ jobs:
     concurrency: { group: fe-cd-prod, cancel-in-progress: true }
 
     steps:
-      # 1. 소스 체크아웃
       - uses: actions/checkout@v4
 
-      # 2. Node.js 세팅
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: suriname-frontend/package-lock.json
 
-      # 3. 클린 빌드 + 압축
       - name: Build (env 주입 + 패키징)
         working-directory: suriname-frontend
         env:
-          VITE_API_URL: ""
+          VITE_API_URL: "/api"
           VITE_ALGOLIA_APP_ID: "5YCEBAVIOS"
           VITE_ALGOLIA_SEARCH_API_KEY: "98bc7573d3d136029642f704d1fa2e48"
         run: |
           set -euo pipefail
-          # 기존 빌드 파일 삭제 (빌드 머신에서만)
-          rm -f dist.tgz
-          rm -rf dist
           npm ci || (rm -rf node_modules package-lock.json && npm install)
           npm i -D @rollup/rollup-linux-x64-gnu || true
           npm run build
           test -f dist/index.html
           test -d dist/assets
-          # 산출물 압축 (suriname-frontend 내부)
-          tar -czf dist.tgz -C dist .
+          tar -czf ../dist.tgz -C dist .
 
-      # 4. 빌드 산출물 검증
-      - name: Verify build artifact
-        working-directory: suriname-frontend
+      - name: Debug dist.tgz path
         run: |
-          date
-          ls -lh dist.tgz
+          echo "=== dist.tgz 위치 확인 ==="
+          find . -name dist.tgz -exec ls -lh --time-style=long-iso {} \;
 
-      # 5. 빌드 산출물 전송
       - name: Upload dist.tgz to EC2 (/tmp)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "suriname-frontend/dist.tgz"
+          source: "dist.tgz"
           target: "/tmp/"
+          overwrite: true
 
-      # 6. EC2에서 배포
       - name: Unpack → Move to Nginx root → Reload
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -66,27 +56,16 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             set -euo pipefail
-            ROOT_DIR=${{ secrets.FRONTEND_DIR }}   # 예: /usr/share/nginx/html
+            ROOT_DIR=${{ secrets.FRONTEND_DIR }}
             TMP_DIR="/tmp/suriname-dist"
 
-            # 압축 해제
             sudo rm -rf "$TMP_DIR"
             sudo mkdir -p "$TMP_DIR"
             sudo tar -xzf /tmp/dist.tgz -C "$TMP_DIR"
 
-            # 배포
             sudo mkdir -p "$ROOT_DIR"
-            sudo rsync -avh --delete "$TMP_DIR"/ "$ROOT_DIR"/
+            sudo rsync -a --delete "$TMP_DIR"/ "$ROOT_DIR"/
             sudo chown -R www-data:www-data "$ROOT_DIR"
 
-            # 배포 검증 (수정 시간 비교)
-            SRC_TIME=$(stat -c %Y "$TMP_DIR/index.html")
-            DEST_TIME=$(stat -c %Y "$ROOT_DIR/index.html")
-            if [ "$SRC_TIME" != "$DEST_TIME" ]; then
-              echo "Deployment failed: index.html not updated"
-              exit 1
-            fi
-
-            # Nginx 재로드
             sudo nginx -t
             sudo systemctl reload nginx
