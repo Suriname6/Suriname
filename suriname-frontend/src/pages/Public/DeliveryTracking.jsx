@@ -170,18 +170,9 @@ const DeliveryTracking = () => {
         setDeliveryInfo(null);
       }
     } catch (error) {
-      console.log("API 호출 실패, Mock 데이터 사용:", error);
-      
-      // API 실패시 Mock 데이터 사용
-      const mockData = mockDeliveryData[requestNo.trim()];
-      
-      if (mockData) {
-        setDeliveryInfo(mockData);
-        setError("");
-      } else {
-        setError("접수번호를 확인해주세요. 배송 정보를 찾을 수 없습니다.");
-        setDeliveryInfo(null);
-      }
+      console.error("배송 조회 실패:", error);
+      setError("접수번호를 확인해주세요. 배송 정보를 찾을 수 없습니다.");
+      setDeliveryInfo(null);
     } finally {
       setLoading(false);
     }

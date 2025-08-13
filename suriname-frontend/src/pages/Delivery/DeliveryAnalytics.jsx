@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, Package, Truck, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import styles from '../../css/Delivery/DeliveryAnalytics.module.css';
@@ -8,66 +9,26 @@ const DeliveryAnalytics = () => {
     const [loading, setLoading] = useState(true);
     const [selectedTimeframe, setSelectedTimeframe] = useState('30days');
 
-    // Mock 데이터 (백엔드 연결 전 테스트용)
-    const mockData = {
-        totalDeliveries: 1247,
-        recentDeliveries: 156,
-        pendingCount: 23,
-        shippedCount: 89,
-        deliveredCount: 1135,
-        carrierStats: {
-            distribution: {
-                'CJ대한통운': 512,
-                '롯데택배': 387,
-                '한진택배': 234,
-                '우체국택배': 114
-            },
-            topCarrier: 'CJ대한통운'
-        },
-        performanceMetrics: {
-            completionRate: 91.2,
-            averageDeliveryTime: 2.3,
-            onTimeDeliveryRate: 87.5
-        },
-        dailyStats: {
-            dailyCounts: {
-                '08-01': 23,
-                '08-02': 19,
-                '08-03': 31,
-                '08-04': 27,
-                '08-05': 35,
-                '08-06': 21
-            },
-            averagePerDay: 26
-        },
-        regionStats: {
-            '서울': 445,
-            '경기': 312,
-            '부산': 198,
-            '대구': 145,
-            '인천': 87,
-            '광주': 60
-        }
-    };
 
     useEffect(() => {
-        // API 호출 시뮬레이션
+        // 실제 API 호출
         const fetchDashboardData = async () => {
             try {
                 setLoading(true);
-                // 실제 API 호출 (현재는 Mock 데이터 사용)
-                // const response = await axios.get('/api/delivery/analytics/dashboard');
-                // setDashboardData(response.data.data);
+                const response = await axios.get('/api/delivery/analytics/dashboard', {
+                    params: { timeframe: selectedTimeframe }
+                });
                 
-                // Mock 데이터 사용
-                setTimeout(() => {
-                    setDashboardData(mockData);
-                    setLoading(false);
-                }, 1000);
-                
+                if (response.data.status === 200) {
+                    setDashboardData(response.data.data);
+                } else {
+                    console.error('API 응답 오류:', response.data.message);
+                    setDashboardData(null);
+                }
             } catch (error) {
                 console.error('대시보드 데이터 로딩 실패:', error);
-                setDashboardData(mockData); // 오류 시 Mock 데이터 사용
+                setDashboardData(null);
+            } finally {
                 setLoading(false);
             }
         };
