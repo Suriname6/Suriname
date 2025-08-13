@@ -19,8 +19,8 @@ import { saveAs } from "file-saver"; // ✨ file-saver 임포트 ✨
 // // 인덱스 객체 생성
 // const index = searchClient.initIndex('products');
 
-const categories = ["스마트폰", "태블릿", "냉장고", "세탁기"];
-const manufacturers = ["삼성", "LG", "Apple"];
+const categories = ['냉장고', '세탁기', '에어컨', '전자레인지', 'TV', '데스크톱', '노트북', '프린터', '모니터', '스마트폰', '태블릿', '네비게이션', '블랙박스', '오디오시스템', '청소기', '공기청정기'];
+const manufacturers = ["Samsung", "LG", "Apple", "ASUS"];
 
 const ProductSearch = ({
   data,
@@ -63,9 +63,9 @@ const ProductSearch = ({
         body: JSON.stringify({
           productName: query.productName || null,
           modelCode: query.modelCode || null,
-          productBrand:
+          manufacturers:
             query.manufacturers.length > 0 ? query.manufacturers : null,
-          categoryName: query.categories.length > 0 ? query.categories : null,
+          categories: query.categories.length > 0 ? query.categories : null,
         }),
       });
 
