@@ -60,4 +60,39 @@ public class TossPaymentsClient {
             throw new RuntimeException("가상계좌 발급 실패: " + e.getMessage(), e);
         }
     }
+
+    public JsonNode cancelPaymentByOrderId(String orderId, String cancelReason) {
+        try {
+            // 1. orderId로 결제 정보 조회
+            String getUrl = TOSS_API_URL + "/payments/orders/" + orderId;
+            
+            HttpHeaders headers = new HttpHeaders();
+            String encodedAuth = Base64.getEncoder().encodeToString(
+                (secretKey + ":").getBytes(StandardCharsets.UTF_8)
+            );
+            headers.set("Authorization", "Basic " + encodedAuth);
+            headers.set("TossPayments-API-Version", API_VERSION);
+            
+            HttpEntity<Void> getEntity = new HttpEntity<>(headers);
+            ResponseEntity<String> getResponse = rest.exchange(getUrl, HttpMethod.GET, getEntity, String.class);
+            JsonNode paymentInfo = objectMapper.readTree(getResponse.getBody());
+            
+            // 2. paymentKey 추출
+            String paymentKey = paymentInfo.get("paymentKey").asText();
+            
+            // 3. 결제 취소
+            String cancelUrl = TOSS_API_URL + "/payments/" + paymentKey + "/cancel";
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("cancelReason", cancelReason);
+            
+            HttpEntity<Map<String, Object>> cancelEntity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<String> cancelResponse = rest.postForEntity(cancelUrl, cancelEntity, String.class);
+            
+            return objectMapper.readTree(cancelResponse.getBody());
+        } catch (Exception e) {
+            throw new RuntimeException("결제 취소 실패: " + e.getMessage(), e);
+        }
+    }
 }

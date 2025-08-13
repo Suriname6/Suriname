@@ -65,6 +65,17 @@ public class PaymentController {
         return ResponseEntity.ok(res);
     }
 
+    // 입금완료 전환 (입금대기 -> 입금완료)
+    @PutMapping("/{paymentId}/complete")
+    public ResponseEntity<?> completePayment(@PathVariable Long paymentId) {
+        try {
+            paymentService.completePayment(paymentId);
+            return ResponseEntity.ok(java.util.Map.of("status", 200, "message", "입금완료로 전환되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(java.util.Map.of("status", 400, "message", e.getMessage()));
+        }
+    }
+
     // 토스페이먼츠 webhook 수신
     @PostMapping("/webhook/toss")
     public ResponseEntity<Void> tossWebhook(@RequestBody String payload,

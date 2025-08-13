@@ -41,6 +41,16 @@ export const deletePayments = async (paymentIds) => {
   }
 };
 
+// 입금완료 전환
+export const completePayment = async (paymentId) => {
+  try {
+    const response = await axiosInstance.put(`/api/payments/${paymentId}/complete`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // 가상계좌 발급
 export const createVirtualAccount = async (data) => {
   try {
