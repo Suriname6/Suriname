@@ -18,16 +18,21 @@ jobs:
           java-version: 21
           cache: gradle
 
-      - name: Build
+      - name: Build (no tests)
         working-directory: suriname-backend
         run: |
           chmod +x gradlew
           ./gradlew clean build -x test
+          ls -al build/libs || true
 
       - name: Find JAR
         id: jar
         working-directory: suriname-backend
-        run: echo "file=$(ls build/libs/*-SNAPSHOT.jar | head -n1)" >> $GITHUB_OUTPUT
+        run: |
+          # SNAPSHOT이 아닐 수도 있으니 *.jar로 탐색
+          FILE=$(ls build/libs/*.jar | head -n1)
+          echo "file=$FILE" >> $GITHUB_OUTPUT
+          echo "Found JAR: $FILE"
 
       - name: Upload JAR to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -35,7 +40,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "${{ steps.jar.outputs.file }}"
+          source: "suriname-backend/${{ steps.jar.outputs.file }}"
           target: "${{ secrets.BACKEND_DIR }}/build/libs/"
           strip_components: 2
 
@@ -46,6 +51,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            set -e
             sudo systemctl daemon-reload || true
             sudo systemctl restart ${{ secrets.SERVICE_NAME }}
             sudo systemctl status ${{ secrets.SERVICE_NAME }} --no-pager -n 20 || true
