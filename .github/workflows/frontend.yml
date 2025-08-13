@@ -2,24 +2,21 @@ name: Deploy Frontend to EC2
 
 on:
   push:
-    branches: [ main ] # 배포할 브랜치
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 코드 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Node.js 설정
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # 3. .env 생성
       - name: Create .env file
         run: |
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
@@ -27,14 +24,12 @@ jobs:
           echo "ALGOLIA_SEARCH_API_KEY=${{ secrets.ALGOLIA_SEARCH_API_KEY }}" >> .env
           echo "ALGOLIA_ADMIN_KEY=${{ secrets.ALGOLIA_ADMIN_KEY }}" >> .env
 
-      # 4. 의존성 설치 & 빌드
       - name: Install dependencies & Build
         run: |
           npm install
           npm run build
           tar -czf dist.tgz -C dist .
 
-      # 5. EC2로 파일 전송
       - name: Copy dist.tgz to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -44,7 +39,6 @@ jobs:
           source: "dist.tgz"
           target: "/tmp/dist.tgz"
 
-      # 6. EC2에서 배포 실행
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -56,7 +50,6 @@ jobs:
             ROOT_DIR="/usr/share/nginx/html"
             TMP_DIR="/tmp/suriname-dist"
 
-            sudo rm -rf "$ROOT_DIR"/*
             sudo rm -rf "$TMP_DIR"
             sudo mkdir -p "$TMP_DIR"
 
