@@ -30,17 +30,19 @@ jobs:
       - name: Build (subdir)
         working-directory: ${{ secrets.BACKEND_DIR }}
         run: |
+          set -e
           chmod +x gradlew || true
           ./gradlew clean build -x test
 
-      - name: Pick latest JAR
+      - name: Pick latest JAR (non-plain first)
         id: jar
         working-directory: ${{ secrets.BACKEND_DIR }}
         run: |
-          JAR=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1)
-          test -n "$JAR"
-          echo "file=$GITHUB_WORKSPACE/${{ secrets.BACKEND_DIR }}/$JAR" >> $GITHUB_OUTPUT
-          echo "Found: $JAR"
+          set -e
+          LATEST=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1)
+          test -n "$LATEST"
+          echo "file=$GITHUB_WORKSPACE/${{ secrets.BACKEND_DIR }}/$LATEST" >> $GITHUB_OUTPUT
+          echo "Found: $LATEST"
 
       - name: Upload JAR to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -58,4 +60,4 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          script: 'cd "${{ secrets.BACKEND_REMOTE_DIR }}" && mkdir -p build/libs && (command -v fuser >/dev/null && fuser -k 8081/tcp || true) && pkill -f "java .*build/libs" || true && LATEST=$(ls -1t build/libs/*.jar 2>/dev/null | head -n1) && nohup java -Dserver.address=127.0.0.1 -Dserver.port=8081 -jar "$LATEST" --spring.config.additional-location="file:${{ secrets.BACKEND_REMOTE_DIR }}/.env.properties" > ~/app.log 2>&1 &'
+          script: 'cd "${{ secrets.BACKEND_REMOTE_DIR }}" && mkdir -p build/libs && (command -v fuser >/dev/null && fuser -k 8081/tcp || true) && pkill -f "java .*build/libs" || true && LATEST=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1) && echo "Using JAR: $LATEST" && nohup java -Dserver.address=127.0.0.1 -Dserver.port=8081 -jar "$LATEST" --spring.config.additional-location="file:${{ secrets.BACKEND_REMOTE_DIR }}/.env.properties" > ~/app.log 2>&1 &'
