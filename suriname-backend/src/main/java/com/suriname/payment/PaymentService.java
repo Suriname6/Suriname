@@ -201,7 +201,7 @@ public class PaymentService {
             
             payment.setAccountAndBank(defaultAccount, defaultBank);
             payment.setStatus(Payment.Status.PENDING); // PENDING 상태 유지
-            payment.setMemo("가상계좌 발급 완료 (기본값 적용)");
+            payment.setMemo("가상계좌 발급");
             payment = paymentRepository.save(payment);
             
             
@@ -255,7 +255,7 @@ public class PaymentService {
                 // 관리자가 직접 처리한 경우가 아닌 경우만 실패 처리
                 if (payment.getStatus() != Payment.Status.SUCCESS) {
                     payment.setStatus(Payment.Status.FAILED);
-                    payment.setMemo("입금 취소로 인한 결제 실패");
+                    payment.setMemo("입금 취소");
                     paymentRepository.save(payment);
                 }
                 // 이미 SUCCESS인 경우는 관리자가 직접 처리한 것이므로 무시
@@ -323,7 +323,7 @@ public class PaymentService {
                 // 관리자가 직접 처리한 경우가 아닌 경우만 실패 처리
                 if (payment.getStatus() != Payment.Status.SUCCESS) {
                     payment.setStatus(Payment.Status.FAILED);
-                    payment.setMemo("입금 취소로 인한 결제 실패");
+                    payment.setMemo("입금 취소");
                 }
                 // 이미 SUCCESS인 경우는 관리자가 직접 처리한 것이므로 무시
             }
@@ -399,7 +399,7 @@ public class PaymentService {
         
         // 2. 토스페이먼츠 취소가 성공하면 로컬 DB를 입금완료로 변경
         payment.markCompleted();
-        payment.setMemo("관리자에 의한 입금완료 처리 (토스페이먼츠 취소됨)");
+        payment.setMemo("수동 입금완료");
         paymentRepository.save(payment);
         
         // 3. Request 상태를 배송대기로 변경
