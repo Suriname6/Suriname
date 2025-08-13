@@ -31,11 +31,11 @@ jobs:
           npm run build
           test -f dist/index.html
           test -d dist/assets
-          tar -czf ../dist.tgz -C dist .
+          tar -czf dist.tgz -C dist .   # ../ 제거 → 경로 일치
 
       - name: Debug dist.tgz path
         run: |
-          echo "=== dist.tgz 위치 확인 ==="
+          echo "=== dist.tgz 위치 및 시간 확인 ==="
           find . -name dist.tgz -exec ls -lh --time-style=long-iso {} \;
 
       - name: Upload dist.tgz to EC2 (/tmp)
@@ -44,7 +44,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "dist.tgz"
+          source: "suriname-frontend/dist.tgz"
           target: "/tmp/"
           overwrite: true
 
@@ -59,7 +59,9 @@ jobs:
             ROOT_DIR=${{ secrets.FRONTEND_DIR }}
             TMP_DIR="/tmp/suriname-dist"
 
+            sudo rm -f /tmp/dist.tgz
             sudo rm -rf "$TMP_DIR"
+
             sudo mkdir -p "$TMP_DIR"
             sudo tar -xzf /tmp/dist.tgz -C "$TMP_DIR"
 

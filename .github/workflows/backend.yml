@@ -1,4 +1,4 @@
-name: Deploy Backend (minimal & port-safe)
+name: Backend Deploy
 
 on:
   push:
