@@ -18,6 +18,7 @@ jobs:
           node-version: '18'
 
       - name: Create .env file
+        working-directory: ./suriname-frontend
         run: |
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
           echo "ALGOLIA_APP_ID=${{ secrets.ALGOLIA_APP_ID }}" >> .env
@@ -30,15 +31,15 @@ jobs:
           npm ci
           npm install --no-save @rollup/rollup-linux-x64-gnu
           npm run build
-          tar -czf ../dist.tgz -C dist .
+          tar -czf dist.tgz -C dist .
 
       - name: Copy dist.tgz to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "dist.tgz"
+          key: ${{ secrets.EC2_KEY }}
+          source: "suriname-frontend/dist.tgz"
           target: "/tmp/dist.tgz"
 
       - name: Deploy on EC2
@@ -46,7 +47,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.EC2_KEY }}
           script: |
             set -euo pipefail
             ROOT_DIR="/usr/share/nginx/html"
