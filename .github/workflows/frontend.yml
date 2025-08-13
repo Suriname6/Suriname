@@ -25,6 +25,7 @@ jobs:
           echo "ALGOLIA_ADMIN_KEY=${{ secrets.ALGOLIA_ADMIN_KEY }}" >> .env
 
       - name: Install dependencies & Build
+        working-directory: ./suriname-frontend
         run: |
           npm install
           npm run build
