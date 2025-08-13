@@ -6,7 +6,7 @@ import { saveAs } from "file-saver";
 // Temporarily disable Algolia for development
 // TODO: Re-enable when Algolia is properly configured
 
-const manufacturers = ["삼성", "LG", "Apple"];
+const manufacturers = ["Samsung", "LG", "Apple"];
 
 const CustomerSearch = ({
   data,
@@ -205,7 +205,7 @@ const CustomerSearch = ({
 
     // 파일 다운로드
     // saveAs(데이터, '파일이름.확장자')
-    saveAs(dataBlob, `제품목록_${new Date().toLocaleDateString("ko-KR")}.xlsx`);
+    saveAs(dataBlob, `고객목록_${new Date().toLocaleDateString("ko-KR")}.xlsx`);
 
     alert("엑셀 파일을 생성하고 다운로드를 시작합니다!");
   }, [data]);
