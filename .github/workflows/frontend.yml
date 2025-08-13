@@ -28,6 +28,7 @@ jobs:
         working-directory: ./suriname-frontend
         run: |
           npm ci
+          npm install --no-save @rollup/rollup-linux-x64-gnu
           npm run build
           tar -czf ../dist.tgz -C dist .
 
