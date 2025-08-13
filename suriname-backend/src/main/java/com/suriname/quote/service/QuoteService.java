@@ -272,8 +272,8 @@ public class QuoteService {
             default:
                 return; // 알 수 없는 상태는 업데이트하지 않음
         }
-        
-        request.changeStatus(newStatus);
+
+        request.changeStatus(newStatus, request.getEmployee().getEmployeeId().toString(), request.getStatus() + " -> " + newStatus);
         requestRepository.save(request);
         System.out.println("Request 상태 업데이트: " + request.getRequestNo() + " -> " + newStatus);
     }

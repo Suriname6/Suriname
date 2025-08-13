@@ -247,7 +247,7 @@ public class PaymentService {
                 try {
                     Request request = payment.getRequest();
                     if (request != null) {
-                        request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+                        request.changeStatus(Request.Status.WAITING_FOR_DELIVERY, "SYSTEM:TOSS", "입금 확인 → 배송 대기");
                         requestRepository.save(request);
                     }
                 } catch (Exception e) {}
@@ -312,7 +312,7 @@ public class PaymentService {
                 try {
                     Request request = payment.getRequest();
                     if (request != null) {
-                        request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+                        request.changeStatus(Request.Status.WAITING_FOR_DELIVERY, "SYSTEM:TOSS", "입금 확인 → 배송 대기");
                         requestRepository.save(request);
                     }
                 } catch (Exception e) {
@@ -406,7 +406,11 @@ public class PaymentService {
         try {
             Request request = payment.getRequest();
             if (request != null) {
-                request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+                request.changeStatus(
+                        Request.Status.WAITING_FOR_DELIVERY,
+                        "ADMIN:MANUAL",
+                        "수동 입금완료 → 배송 대기"
+                );
                 requestRepository.save(request);
             }
         } catch (Exception e) {

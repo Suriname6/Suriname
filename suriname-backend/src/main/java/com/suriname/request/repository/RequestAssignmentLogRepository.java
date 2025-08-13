@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +22,19 @@ public interface RequestAssignmentLogRepository extends JpaRepository<RequestAss
     @Transactional
     @Query("DELETE FROM RequestAssignmentLog ral WHERE ral.request.requestId IN :requestIds")
     void deleteAllByRequestRequestIdIn(@Param("requestIds") List<Long> requestIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update RequestAssignmentLog l
+           set l.status = :expired,
+               l.statusChangedAt = :now
+         where l.status = :pending
+           and l.assignedAt < :threshold
+    """)
+    int expireAllPendingOlderThan(
+            @Param("threshold") LocalDateTime threshold,
+            @Param("pending") RequestAssignmentLog.AssignmentStatus pending,
+            @Param("expired") RequestAssignmentLog.AssignmentStatus expired,
+            @Param("now") LocalDateTime now
+    );
 }

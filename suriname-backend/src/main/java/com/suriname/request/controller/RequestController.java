@@ -210,7 +210,7 @@ public class RequestController {
                         ));
                 }
                 
-                request.get().changeStatus(requestStatus);
+                request.get().changeStatus(requestStatus, "SYSTEM:API", request.get().getStatus() + " -> " + requestStatus);
                 requestRepository.save(request.get());
                 
                 return ResponseEntity.ok(java.util.Map.of(
@@ -264,7 +264,11 @@ public class RequestController {
 	            @PathVariable("id") Long id,
 	            @RequestParam Request.Status status
 	    ) {
-	        requestService.updateStatus(id, status);
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			EmployeeDetails employeeDetails = (EmployeeDetails) authentication.getPrincipal();
+			Long viewerId = employeeDetails.getEmployee().getEmployeeId();
+
+	        requestService.updateStatus(id, viewerId, status);
 	        return ResponseEntity.noContent().build();
 	    }
 

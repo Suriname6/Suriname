@@ -10,6 +10,7 @@ import com.suriname.delivery.repository.DeliveryRepository;
 import com.suriname.employee.entity.Employee;
 import com.suriname.employee.repository.EmployeeRepository;
 import com.suriname.request.entity.Request;
+import com.suriname.request.repository.RequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,7 @@ public class CompletionService {
     private final CompletionRepository completionRepository;
     private final DeliveryRepository deliveryRepository;
     private final EmployeeRepository employeeRepository;
+    private final RequestRepository requestRepository;
 
     /**
      * 완료 처리 등록
@@ -64,7 +66,9 @@ public class CompletionService {
 
         // Request 상태를 COMPLETED로 변경
         Request request = delivery.getRequest();
-        request.changeStatus(Request.Status.COMPLETED);
+        request.changeStatus(Request.Status.COMPLETED, String.valueOf(employee.getEmployeeId()), "배송 완료 확인 → 완료 처리");
+
+        requestRepository.save(request);
 
         log.info("완료 처리 등록 - 접수번호: {}, 완료 타입: {}", 
             request.getRequestNo(), dto.getCompletionType());

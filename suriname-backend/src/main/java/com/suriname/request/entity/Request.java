@@ -8,6 +8,7 @@ import com.suriname.payment.Payment;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.List;
 @Table(name = "request")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter @Setter
-public class Request {
+public class Request extends AbstractAggregateRoot<Request> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -96,12 +97,18 @@ public class Request {
     }
 
     //상태 변경 시 완료시간 자동 세팅
-    public void changeStatus(Status newStatus) {
+    public void changeStatus(Status newStatus, String changedBy, String notes) {
+        Status old = this.status;
         this.status = newStatus;
+
         if (newStatus == Status.COMPLETED && this.completedAt == null) {
             this.completedAt = LocalDateTime.now();
         }
         if (newStatus != Status.COMPLETED) this.completedAt = null;
+
+        registerEvent(new RequestStatusChangedEvent(
+                this.requestId, old, newStatus, changedBy, notes
+        ));
     }
 
     public static Request of(Long requestId) {
@@ -115,4 +122,10 @@ public class Request {
 
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> requestImages = new ArrayList<>();
+
+    public void publishStatusInitialized(String changedBy, String notes) {
+        registerEvent(new RequestStatusChangedEvent(
+                this.getRequestId(), null, this.status, changedBy, notes
+        ));
+    }
 }
