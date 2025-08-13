@@ -1,35 +1,38 @@
-name: Deploy Backend (nohup)
+name: Deploy Backend (nohup same as manual)
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - "backend/**"
+      - "suriname-backend/**"
       - ".github/workflows/backend.yml"
   workflow_dispatch: {}
 
+env:
+  BACKEND_DIR: ${{ secrets.BACKEND_DIR }}
+  REMOTE_DIR:  ${{ secrets.BACKEND_REMOTE_DIR }}
+  JAR_NAME:    suriname-backend-0.0.1-SNAPSHOT.jar
+
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Build with Gradle
-        working-directory: backend
-        run: |
-          chmod +x gradlew || true
-          ./gradlew clean build -x test
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
 
-      - name: Find artifact JAR
-        id: jar
-        working-directory: backend
+      - name: Build in subdir
+        working-directory: ${{ env.BACKEND_DIR }}
         run: |
           set -e
-          FILE=$(ls build/libs/*-SNAPSHOT.jar | grep -v plain || ls build/libs/*-SNAPSHOT.jar | head -n1)
-          echo "file=$FILE" >> $GITHUB_OUTPUT
-          echo "Found: $FILE"
+          chmod +x gradlew || true
+          ./gradlew clean build -x test
+          test -f "build/libs/${{ env.JAR_NAME }}" || { echo "JAR not found"; ls -l build/libs; exit 1; }
 
       - name: Upload JAR to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -37,42 +40,31 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: "${{ steps.jar.outputs.file }}"
-          target: "${{ secrets.BACKEND_REMOTE_DIR }}/build/libs/"
+          source: "${{ env.BACKEND_DIR }}/build/libs/${{ env.JAR_NAME }}"
+          target: "${{ env.REMOTE_DIR }}/build/libs/"
           timeout: 60s
 
-      - name: Restart backend with nohup
+      - name: Run nohup command on EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           timeout: 1m
-          command_timeout: 15m
+          command_timeout: 10m
           script: |
-            set -e
-            cd "${{ secrets.BACKEND_REMOTE_DIR }}"
+            set -euo pipefail
+            cd "${{ env.REMOTE_DIR }}"
 
-            pkill -f "java .*build/libs/app\.jar" || true
-            sleep 1
+            echo "[1] Stop old process"
+            pkill -f "java .*${{ env.JAR_NAME }}" || true
+            pkill -f "java .*build/libs" || true
 
-            LATEST=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1)
-            if [ -z "$LATEST" ]; then
-              echo "No JAR found in build/libs"; exit 1
-            fi
-            echo "Using JAR: $LATEST"
-            ln -sfn "$LATEST" build/libs/app.jar
-
+            echo "[2] Start backend (same as manual)"
             nohup java -Dserver.address=127.0.0.1 -Dserver.port=8081 \
-              -jar build/libs/app.jar \
-              --spring.config.additional-location=file:${{ secrets.BACKEND_REMOTE_DIR }}/.env.properties \
+              -jar build/libs/${{ env.JAR_NAME }} \
+              --spring.config.additional-location="file:${PWD}/.env.properties" \
               > ~/app.log 2>&1 &
 
-            sleep 2
-            if pgrep -f "java .*build/libs/app\.jar" > /dev/null; then
-              echo "Backend started"
-            else
-              echo "Start failed"; tail -n 200 ~/app.log || true; exit 1
-            fi
-
-            ss -lntp | grep 8081 || (echo "Port 8081 not listening yet"; tail -n 200 ~/app.log || true; exit 1)
+            sleep 3
+            pgrep -f "java .*${{ env.JAR_NAME }}" >/dev/null && echo "Backend started ✅" || (echo "Start failed ❌"; tail -n 200 ~/app.log || true; exit 1)
