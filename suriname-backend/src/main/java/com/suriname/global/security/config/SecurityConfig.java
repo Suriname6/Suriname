@@ -49,8 +49,18 @@ public class SecurityConfig {
                 }))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e
-                        .authenticationEntryPoint((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
-                        .accessDeniedHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN))
+                        .authenticationEntryPoint((req, res, ex) -> {
+                            System.out.println("인증 실패: " + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write("{\"error\": \"" + ex.getMessage() + "\"}");
+                        })
+                        .accessDeniedHandler((req, res, ex) -> {
+                            System.out.println("인가 실패: " + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write("{\"error\": \"" + ex.getMessage() + "\"}");
+                        })
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
