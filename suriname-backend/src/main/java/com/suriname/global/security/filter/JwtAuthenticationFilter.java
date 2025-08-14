@@ -20,12 +20,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        boolean shouldSkip = path.startsWith("/api/auth/login")
-                || path.startsWith("/api/auth/refresh")
+        /*
+         * return path.equals("/api/auth/login") || path.equals("/api/auth/refresh") ||
+         * (path.equals("/api/users") && method.equals("POST"));
+         */
+
+        boolean shouldSkip = path.equals("/api/auth/login") || path.equals("/api/auth/refresh")
                 || (path.equals("/api/users") && method.equals("POST"));
 
         System.out.println("=== JWT FILTER ===");
