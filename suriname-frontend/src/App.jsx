@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import SidebarNavigation from "./components/SidebarNavigation";
 
-import Home from "./pages/Home";
+import Home from "./pages/Main/FirstMain.jsx";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
@@ -80,7 +80,6 @@ function LayoutWithSidebar() {
 
 function RoleBasedHome() {
   const role = getUserRole();
-
   switch (role) {
     case "ADMIN":
       return <AdminMain />;
@@ -98,71 +97,79 @@ function ProtectedLayout() {
   return <LayoutWithSidebar />;
 }
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Routes>
-        {/* 사이드바 숨김 페이지 */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
-        {/* 공개 페이지 (고객용) */}
+        {/* 공개(고객용) 페이지 */}
         <Route path="/tracking" element={<DeliveryTracking />} />
         <Route path="/survey/:completionId" element={<SatisfactionSurvey />} />
 
-        {/* 사이드바 포함 페이지 */}
-        <Route element={<ProtectedLayout />}>
+        <Route path="/app" element={<ProtectedLayout />}>
           <Route index element={<RoleBasedHome />} />
-          <Route path="/" element={<Home />} />
 
-          <Route path="/customer/list" element={<CustomerList />} />
+          {/* 사이드바 포함 내부 페이지들 */}
+          <Route path="customer/list" element={<CustomerList />} />
           <Route
-            path="/customer/register/excel"
+            path="customer/register/excel"
             element={<CustomerExcelAdd />}
           />
-          <Route path="/customer/register" element={<CustomerAdd />} />
-          <Route path="/customer/detail/:id" element={<CustomerDetail />} />
-          <Route path="/dashboard/statistics" element={<DashboardPage />} />
-          <Route path="/dashboard/performance" element={<EmployeePerformancePage />} />
-          <Route path="/dashboard/report" element={<ReportPage />} />
+          <Route path="customer/register" element={<CustomerAdd />} />
+          <Route path="customer/detail/:id" element={<CustomerDetail />} />
 
-          <Route path="/payment/list" element={<PaymentListPage />} />
+          <Route path="dashboard/statistics" element={<DashboardPage />} />
           <Route
-            path="/payment/virtualaccount"
+            path="dashboard/performance"
+            element={<EmployeePerformancePage />}
+          />
+          <Route path="dashboard/report" element={<ReportPage />} />
+
+          <Route path="payment/list" element={<PaymentListPage />} />
+          <Route
+            path="payment/virtualaccount"
             element={<PaymentVirtualAccountPage />}
           />
-          <Route path="/product/list" element={<ProductList />} />
-          <Route path="/product/register" element={<ProductAdd />} />
-          <Route path="/product/register/excel" element={<ProductExcelAdd />} />
-          <Route path="/product/detail/:id" element={<ProductDetail />} />
 
-          <Route path="/staff/list" element={<StaffListPage />} />
-          <Route path="/staff/requests" element={<StaffRequestPage />} />
+          <Route path="product/list" element={<ProductList />} />
+          <Route path="product/register" element={<ProductAdd />} />
+          <Route path="product/register/excel" element={<ProductExcelAdd />} />
+          <Route path="product/detail/:id" element={<ProductDetail />} />
+
+          <Route path="staff/list" element={<StaffListPage />} />
+          <Route path="staff/requests" element={<StaffRequestPage />} />
           <Route
-            path="/staff/approval/:employeeId"
+            path="staff/approval/:employeeId"
             element={<StaffApprovalPage />}
           />
           <Route
-            path="/staff/detail/:employeeId"
+            path="staff/detail/:employeeId"
             element={<StaffDetailPage />}
           />
-          <Route path="/repair/list" element={<RepairListPage />} />
-          <Route path="/repair/preset" element={<RepairPresetPage />} />
-          <Route path="/repair/write" element={<RepairWritePage />} />
-          <Route path="/delivery/list" element={<DeliveryList />} />
-          <Route path="/delivery/register" element={<DeliveryRegister />} />
-          <Route path="/delivery/analytics" element={<DeliveryAnalytics />} />
-          <Route path="/completion/list" element={<CompletionList />} />
-          <Route path="/completion/register" element={<CompletionRegister />} />
 
-          <Route path="/request/list" element={<RequestList />} />
-          <Route path="/request/register" element={<RequestForm />} />
-          <Route path="/request/:id" element={<RequestDetail />} />
-          <Route path="/request/edit/:id" element={<RequestEdit />} />
+          <Route path="repair/list" element={<RepairListPage />} />
+          <Route path="repair/preset" element={<RepairPresetPage />} />
+          <Route path="repair/write" element={<RepairWritePage />} />
+
+          <Route path="delivery/list" element={<DeliveryList />} />
+          <Route path="delivery/register" element={<DeliveryRegister />} />
+          <Route path="delivery/analytics" element={<DeliveryAnalytics />} />
+
+          <Route path="completion/list" element={<CompletionList />} />
+          <Route path="completion/register" element={<CompletionRegister />} />
+
+          <Route path="request/list" element={<RequestList />} />
+          <Route path="request/register" element={<RequestForm />} />
+          <Route path="request/:id" element={<RequestDetail />} />
+          <Route path="request/edit/:id" element={<RequestEdit />} />
         </Route>
+
+        {/* optional: 잘못된 경로는 루트로 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
 }
-
-export default App;
