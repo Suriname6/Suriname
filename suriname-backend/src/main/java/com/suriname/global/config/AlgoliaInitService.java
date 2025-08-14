@@ -5,7 +5,6 @@ import com.algolia.model.search.IndexSettings;
 // Ranking enum은 문자열로 직접 사용
 import com.suriname.customer.dto.CustomerListDto;
 import com.suriname.product.dto.ProductListDto;
-import com.suriname.product.dto.ProductSearchDto;
 import com.suriname.product.repository.CustomerProductRepository;
 import com.suriname.product.repository.ProductRepository;
 import io.github.cdimascio.dotenv.Dotenv;
