@@ -89,4 +89,16 @@ public interface SatisfactionRepository extends JpaRepository<Satisfaction, Long
            "GROUP BY YEAR(s.createdAt), MONTH(s.createdAt) " +
            "ORDER BY year DESC, month DESC")
     List<Object[]> getMonthlySatisfactionStats(@Param("startDate") LocalDateTime startDate);
+
+    //모델별 평균 평점
+    @Query("""
+        SELECT p.productName,
+               AVG((s.overallRating + s.serviceQualityRating + s.responseTimeRating + s.deliveryRating + s.staffKindnessRating) / 5.0)
+        FROM Satisfaction s
+        JOIN s.request r
+        JOIN r.customerProduct cp
+        JOIN cp.product p
+        GROUP BY p.productName
+    """)
+    List<Object[]> avgRatingByModel();
 }
