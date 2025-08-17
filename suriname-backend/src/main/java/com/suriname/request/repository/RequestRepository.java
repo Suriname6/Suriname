@@ -1,13 +1,17 @@
 package com.suriname.request.repository;
 
 import com.suriname.customer.dto.CustomerRequestDto;
+import com.suriname.request.dto.RequestDto;
+import com.suriname.request.dto.RequestListResponseDto;
 import com.suriname.request.dto.RequestSummaryDto;
 import com.suriname.request.entity.Request;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface RequestRepository extends JpaRepository<Request, Long> {
+public interface RequestRepository extends JpaRepository<Request, Long>, JpaSpecificationExecutor<Request> {
     
     // 접수번호로 Request 조회
     Optional<Request> findByRequestNo(String requestNo);
@@ -121,4 +125,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
         	        Page<CustomerRequestDto> page = findOpenBriefsByCustomer(customerName, PageRequest.of(0, 1));
         	        return page.stream().findFirst();
         	    }
+
+	Page<Request> findAll(Specification<Request> search, Pageable pageable);
 }
