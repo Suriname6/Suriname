@@ -30,9 +30,11 @@ jobs:
           echo "VITE_ALGOLIA_SEARCH_API_KEY=${{ secrets.ALGOLIA_SEARCH_API_KEY }}" >> .env
           echo "VITE_ALGOLIA_ADMIN_KEY=${{ secrets.ALGOLIA_ADMIN_KEY }}" >> .env
 
-      - name: Install dependencies
+      - name: Install dependencies (with fallback)
         working-directory: suriname-frontend
-        run: npm ci
+        run: |
+          npm ci || npm install
+          npm rebuild
 
       - name: Build project (Vite)
         working-directory: suriname-frontend
