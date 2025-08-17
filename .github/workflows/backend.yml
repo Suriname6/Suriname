@@ -43,7 +43,7 @@ jobs:
             pkill -f "java .*suriname-backend" || true
 
             echo ">>> Start new process"
-            LATEST=$(ls -1t build/libs/*.jar | head -n1)
+            LATEST=$(ls -1t build/libs/*-SNAPSHOT.jar | grep -v 'plain' | head -n1)
             nohup java -Dserver.address=0.0.0.0 -Dserver.port=8081 \
               -jar "$LATEST" \
               --spring.config.additional-location=file:/home/ubuntu/Suriname/suriname-backend/.env.properties \
