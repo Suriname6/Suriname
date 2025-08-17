@@ -44,8 +44,9 @@ jobs:
 
             echo ">>> Start new process"
             LATEST=$(ls -1t build/libs/*-SNAPSHOT.jar | grep -v 'plain' | head -n1)
-            nohup java -Dserver.address=0.0.0.0 -Dserver.port=8081 \
-              -jar "$LATEST" \
+            nohup java -jar "$LATEST" \
               --spring.config.additional-location=file:/home/ubuntu/Suriname/suriname-backend/.env.properties \
+              --server.port=8081 \
+              --server.address=0.0.0.0 \
               > ~/app.log 2>&1 &
           EOF
