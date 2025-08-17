@@ -127,4 +127,15 @@ public interface RequestRepository extends JpaRepository<Request, Long>, JpaSpec
         	    }
 
 	Page<Request> findAll(Specification<Request> search, Pageable pageable);
+
+        //최근 한 달간 모델별 수리 건수 집계
+        @Query("""
+            SELECT p.productName, COUNT(r)
+            FROM Request r
+            JOIN r.customerProduct cp
+            JOIN cp.product p
+            WHERE r.createdAt >= :startDate
+            GROUP BY p.productName
+        """)
+        List<Object[]> countRepairsByModel(LocalDateTime startDate);
 }
