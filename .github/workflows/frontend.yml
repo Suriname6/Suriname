@@ -1,75 +1,53 @@
-name: Deploy Frontend to EC2
+name: Frontend Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 리포지토리 체크아웃
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-      # 2. Node.js 설정
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 20
+          cache: npm
 
-      # 3. 환경변수 파일 생성
       - name: Create .env file
-        working-directory: ./suriname-frontend
         run: |
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
-          echo "ALGOLIA_APP_ID=${{ secrets.ALGOLIA_APP_ID }}" >> .env
-          echo "ALGOLIA_SEARCH_API_KEY=${{ secrets.ALGOLIA_SEARCH_API_KEY }}" >> .env
-          echo "ALGOLIA_ADMIN_KEY=${{ secrets.ALGOLIA_ADMIN_KEY }}" >> .env
+          echo "VITE_ALGOLIA_APP_ID=${{ secrets.ALGOLIA_APP_ID }}" >> .env
+          echo "VITE_ALGOLIA_SEARCH_API_KEY=${{ secrets.ALGOLIA_SEARCH_API_KEY }}" >> .env
+          echo "VITE_ALGOLIA_ADMIN_KEY=${{ secrets.ALGOLIA_ADMIN_KEY }}" >> .env
 
-      # 4. 의존성 설치 & 빌드 & dist.tgz 생성 (루트에 생성)
-      - name: Install dependencies & Build
-        working-directory: ./suriname-frontend
-        run: |
-          npm ci
-          npm install --no-save @rollup/rollup-linux-x64-gnu
-          npm run build
-          tar -czf dist.tgz -C dist .
-          mv dist.tgz ../dist.tgz
+      - name: Install dependencies
+        run: npm ci
 
-      # 5. dist.tgz를 EC2로 복사
-      - name: Copy dist.tgz to EC2
-        uses: appleboy/scp-action@v0.1.4
+      - name: Build project (Vite)
+        run: npm run build
+
+      - name: Archive dist
+        run: tar -czf dist.tgz -C dist .
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "dist.tgz"
-          target: "/tmp/dist.tgz"
+          ssh-private-key: ${{ secrets.EC2_KEY }}
 
-      # 6. EC2에서 배포
+      - name: Upload dist.tgz to EC2
+        run: scp -o StrictHostKeyChecking=no dist.tgz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/dist.tgz
+
       - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            set -euo pipefail
-            ROOT_DIR="/usr/share/nginx/html"
-            TMP_DIR="/tmp/suriname-dist"
-
-            sudo rm -rf "$TMP_DIR"
-
-            sudo mkdir -p "$TMP_DIR"
-
-            sudo tar -xzf /tmp/dist.tgz -C "$TMP_DIR"
-
-            sudo rsync -a --delete "$TMP_DIR"/ "$ROOT_DIR"/
-
-            sudo chown -R www-data:www-data "$ROOT_DIR"
-
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            sudo rm -rf /usr/share/nginx/html/*
+            sudo tar -xzf /tmp/dist.tgz -C /usr/share/nginx/html/
+            sudo chown -R www-data:www-data /usr/share/nginx/html
             sudo nginx -t
             sudo systemctl reload nginx
-
+          EOF

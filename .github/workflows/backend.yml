@@ -6,7 +6,7 @@ on:
     paths:
       - "suriname-backend/**"
       - ".github/workflows/backend.yml"
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 concurrency:
   group: deploy-backend-${{ github.ref }}
@@ -20,44 +20,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup JDK 21
-        uses: actions/setup-java@v4
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
         with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
+          ssh-private-key: ${{ secrets.EC2_KEY }}
 
-      - name: Build (subdir)
-        working-directory: ${{ secrets.BACKEND_DIR }}
+      - name: Deploy on EC2
         run: |
-          set -e
-          chmod +x gradlew || true
-          ./gradlew clean build -x test
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            cd ~/Suriname/suriname-backend
 
-      - name: Pick latest JAR (non-plain first)
-        id: jar
-        working-directory: ${{ secrets.BACKEND_DIR }}
-        run: |
-          set -e
-          LATEST=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1)
-          test -n "$LATEST"
-          echo "file=$GITHUB_WORKSPACE/${{ secrets.BACKEND_DIR }}/$LATEST" >> $GITHUB_OUTPUT
-          echo "Found: $LATEST"
+            echo ">>> Git pull"
+            git pull origin main
 
-      - name: Upload JAR to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "${{ steps.jar.outputs.file }}"
-          target: "${{ secrets.BACKEND_REMOTE_DIR }}/build/libs/"
-          timeout: 60s
+            echo ">>> Gradle build"
+            chmod +x gradlew || true
+            ./gradlew clean build -x test
 
-      - name: Start backend (kill 8081 & run latest)
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script: 'cd "${{ secrets.BACKEND_REMOTE_DIR }}" && mkdir -p build/libs && (command -v fuser >/dev/null && fuser -k 8081/tcp || true) && pkill -f "java .*build/libs" || true && LATEST=$(ls -1t build/libs/*.jar 2>/dev/null | grep -v plain | head -n1 || ls -1t build/libs/*.jar | head -n1) && echo "Using JAR: $LATEST" && nohup java -Dserver.address=127.0.0.1 -Dserver.port=8081 -jar "$LATEST" --spring.config.additional-location="file:${{ secrets.BACKEND_REMOTE_DIR }}/.env.properties" > ~/app.log 2>&1 &'
+            echo ">>> Kill old process on 8081"
+            (command -v fuser >/dev/null && fuser -k 8081/tcp) || true
+            pkill -f "java .*suriname-backend" || true
+
+            echo ">>> Start new process"
+            LATEST=$(ls -1t build/libs/*.jar | head -n1)
+            nohup java -Dserver.address=0.0.0.0 -Dserver.port=8081 \
+              -jar "$LATEST" \
+              --spring.config.additional-location=file:/home/ubuntu/Suriname/suriname-backend/.env.properties \
+              > ~/app.log 2>&1 &
+          EOF
