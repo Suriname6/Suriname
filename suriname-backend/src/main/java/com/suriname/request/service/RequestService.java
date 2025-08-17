@@ -7,6 +7,7 @@ import com.suriname.employee.repository.EmployeeRepository;
 import com.suriname.image.entity.Image;
 import com.suriname.product.entity.CustomerProduct;
 import com.suriname.product.entity.Product;
+import com.suriname.request.entity.RequestSpecification;
 import com.suriname.product.repository.CustomerProductRepository;
 import com.suriname.request.dto.*;
 import com.suriname.request.entity.Request;
@@ -24,7 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -198,6 +202,62 @@ public class RequestService {
 		requestAssignmentLogRepository.deleteAllByRequestRequestIdIn(requestIds);
 
 		requestRepository.deleteAllByIdInBatch(requestIds);
+	}
+
+	// 검색
+	public Page<RequestDto> searchProducts(RequestSearchDto dto, Pageable pageable) {
+		Page<Request> result = requestRepository.findAll(RequestSpecification.search(dto), pageable);
+
+		// request ID 리스트 수집
+    List<Long> requestIds = result.getContent().stream()
+        .map(Request::getRequestId)
+        .collect(Collectors.toList());
+    
+    // 최신 assignment log들을 한 번에 조회
+    Map<Long, RequestAssignmentLog.AssignmentStatus> assignmentStatusMap =
+        requestAssignmentLogRepository.findLatestByRequestIds(requestIds)
+            .stream()
+            .collect(Collectors.toMap(
+                log -> log.getRequest().getRequestId(),
+                RequestAssignmentLog::getStatus
+            ));
+
+		return result.map(request -> {
+			String engineerName = null;
+			if (request.getEmployee() != null) {
+				engineerName = request.getEmployee().getName();
+			}
+
+			// assignment status 가져오기
+			String assignmentStatus = null;
+			RequestAssignmentLog.AssignmentStatus status = assignmentStatusMap.get(request.getRequestId());
+			if (status != null) {
+				assignmentStatus = status.name();
+			}
+
+			RequestDto dtoResult = new RequestDto(
+				request.getRequestId(),
+				request.getRequestNo(),
+				request.getCustomer().getName(),
+				request.getCustomerProduct().getProduct().getProductName(),
+				request.getCustomerProduct().getProduct().getModelCode(),
+				request.getCreatedAt(),
+				assignmentStatus,
+//				request.getStatus().name(),
+				engineerName
+			);
+			System.out.println("===== [RequestDto 검사] =====");
+			System.out.println("requestId: " + dtoResult.getRequestId());
+			System.out.println("requestNo: " + dtoResult.getRequestNo());
+			System.out.println("customerName: " + dtoResult.getCustomerName());
+			System.out.println("productName: " + dtoResult.getProductName());
+			System.out.println("modelCode: " + dtoResult.getModelCode());
+			System.out.println("createdAt: " + dtoResult.getCreatedAt());
+			System.out.println("status: " + dtoResult.getStatus());
+			System.out.println("engineerName: " + dtoResult.getEngineerName());
+			System.out.println("===========================");
+			return dtoResult;
+		});
 	}
 
 	// 내가 수리한 내역

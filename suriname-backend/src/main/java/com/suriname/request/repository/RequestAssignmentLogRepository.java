@@ -37,4 +37,12 @@ public interface RequestAssignmentLogRepository extends JpaRepository<RequestAss
             @Param("expired") RequestAssignmentLog.AssignmentStatus expired,
             @Param("now") LocalDateTime now
     );
+
+    // 각 request별 최신 assignment log 조회
+    @Query("SELECT ral FROM RequestAssignmentLog ral " +
+           "WHERE ral.request.requestId IN :requestIds " +
+           "AND ral.assignedAt = (SELECT MAX(ral2.assignedAt) " +
+           "                      FROM RequestAssignmentLog ral2 " +
+           "                      WHERE ral2.request.requestId = ral.request.requestId)")
+    List<RequestAssignmentLog> findLatestByRequestIds(@Param("requestIds") List<Long> requestIds);
 }
