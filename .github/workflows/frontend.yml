@@ -3,6 +3,9 @@ name: Frontend Deploy
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - "suriname-frontend/**"
+      - ".github/workflows/frontend.yml"
   workflow_dispatch:
 
 jobs:
@@ -20,18 +23,22 @@ jobs:
           cache: npm
 
       - name: Create .env file
+        working-directory: suriname-frontend
         run: |
           echo "VITE_ALGOLIA_APP_ID=${{ secrets.ALGOLIA_APP_ID }}" >> .env
           echo "VITE_ALGOLIA_SEARCH_API_KEY=${{ secrets.ALGOLIA_SEARCH_API_KEY }}" >> .env
           echo "VITE_ALGOLIA_ADMIN_KEY=${{ secrets.ALGOLIA_ADMIN_KEY }}" >> .env
 
       - name: Install dependencies
+        working-directory: suriname-frontend
         run: npm ci
 
       - name: Build project (Vite)
+        working-directory: suriname-frontend
         run: npm run build
 
       - name: Archive dist
+        working-directory: suriname-frontend
         run: tar -czf dist.tgz -C dist .
 
       - name: Setup SSH
@@ -40,6 +47,7 @@ jobs:
           ssh-private-key: ${{ secrets.EC2_KEY }}
 
       - name: Upload dist.tgz to EC2
+        working-directory: suriname-frontend
         run: scp -o StrictHostKeyChecking=no dist.tgz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/dist.tgz
 
       - name: Deploy on EC2
