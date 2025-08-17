@@ -21,7 +21,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: suriname-frontend/package-lock.json
 
       - name: Create .env file
         working-directory: suriname-frontend
@@ -30,11 +29,9 @@ jobs:
           echo "VITE_ALGOLIA_SEARCH_API_KEY=${{ secrets.ALGOLIA_SEARCH_API_KEY }}" >> .env
           echo "VITE_ALGOLIA_ADMIN_KEY=${{ secrets.ALGOLIA_ADMIN_KEY }}" >> .env
 
-      - name: Install dependencies (with fallback)
+      - name: Install dependencies
         working-directory: suriname-frontend
-        run: |
-          npm ci || npm install
-          npm rebuild
+        run: npm ci
 
       - name: Build project (Vite)
         working-directory: suriname-frontend
