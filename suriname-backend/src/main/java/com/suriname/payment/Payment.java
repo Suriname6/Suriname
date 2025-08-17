@@ -60,6 +60,7 @@ public class Payment {
 
     public void markCompleted() {
         this.status = Status.SUCCESS;
+        this.memo = "입금완료";
         this.confirmedAt = LocalDateTime.now();
     }
 

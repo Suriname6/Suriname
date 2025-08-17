@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState, forwardRef} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import {TrendingUp, TrendingDown, Users, Clock, DollarSign, AlertCircle, CheckCircle, Target} from 'lucide-react';
@@ -73,41 +73,12 @@ const Input = ({ className = "", ...props }) => {
   );
 };
 
-// 샘플 데이터
-const dailyTrendData = [
-  { date: '01/01', count: 15, completed: 12 },
-  { date: '01/02', count: 23, completed: 19 },
-  { date: '01/03', count: 18, completed: 15 },
-  { date: '01/04', count: 32, completed: 28 },
-  { date: '01/05', count: 28, completed: 25 },
-  { date: '01/06', count: 19, completed: 16 },
-  { date: '01/07', count: 25, completed: 22 },
-];
-
-const monthlyTrendData = [
-  { month: '1월', count: 450, revenue: 12500 },
-  { month: '2월', count: 520, revenue: 15200 },
-  { month: '3월', count: 480, revenue: 13800 },
-  { month: '4월', count: 590, revenue: 18900 },
-  { month: '5월', count: 620, revenue: 21200 },
-  { month: '6월', count: 580, revenue: 19800 },
-];
-
 const statusDistributionData = [
   { name: '접수', key: 'receivedCount', value: 0, count: 0, color: '#3B82F6' },
   { name: '수리중', key: 'repairingCount', value: 0, count: 0, color: '#F59E0B' },
   { name: '입금대기', key: 'waitingForPaymentCount', value: 0, count: 0, color: '#EF4444' },
   { name: '배송대기', key: 'waitingForDeliveryCount', value: 0, count: 0, color: '#8B5CF6' },
   { name: '완료', key: 'completedCount', value: 0, count: 0, color: '#10B981' }
-];
-
-const productRankingData = [
-  { product: '삼성 세탁기', count: 45, trend: 'up' },
-  { product: 'LG 냉장고', count: 38, trend: 'up' },
-  { product: '삼성 에어컨', count: 32, trend: 'down' },
-  { product: 'LG 세탁기', count: 28, trend: 'up' },
-  { product: '삼성 TV', count: 25, trend: 'down' },
-  { product: 'LG 에어컨', count: 22, trend: 'up' },
 ];
 
 const statisticsData = [

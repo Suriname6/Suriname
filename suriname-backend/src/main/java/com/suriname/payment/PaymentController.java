@@ -33,19 +33,12 @@ public class PaymentController {
             @RequestParam(required = false) String endDate) {
         
         try {
-            System.out.println("Payment API called with params: page=" + page + ", size=" + size + 
-                             ", customerName=" + customerName + ", receptionNumber=" + receptionNumber + 
-                             ", bankName=" + bankName + ", paymentAmount=" + paymentAmount + 
-                             ", status=" + status + ", startDate=" + startDate + ", endDate=" + endDate);
             
             PaymentPageResponse response = paymentService.getPaymentsWithSearch(
                 page, size, customerName, receptionNumber, bankName, paymentAmount, status, startDate, endDate);
             
-            System.out.println("Payment API response: " + response.getTotalElements() + " elements found");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("Error in getPayments controller: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500).body(new PaymentPageResponse(
                 java.util.Collections.emptyList(), 0, 0, page, size, true, true));
         }
@@ -72,13 +65,22 @@ public class PaymentController {
         return ResponseEntity.ok(res);
     }
 
+    // 입금완료 전환 (입금대기 -> 입금완료)
+    @PutMapping("/{paymentId}/complete")
+    public ResponseEntity<?> completePayment(@PathVariable Long paymentId) {
+        try {
+            paymentService.completePayment(paymentId);
+            return ResponseEntity.ok(java.util.Map.of("status", 200, "message", "입금완료로 전환되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(java.util.Map.of("status", 400, "message", e.getMessage()));
+        }
+    }
+
     // 토스페이먼츠 webhook 수신
     @PostMapping("/webhook/toss")
     public ResponseEntity<Void> tossWebhook(@RequestBody String payload,
                                            @RequestHeader(value = "X-Toss-Signature", required = false) String signature) {
         try {
-            System.out.println("토스페이먼츠 웹훅 수신: " + payload);
-            System.out.println("토스페이먼츠 웹훅 서명: " + signature);
 
             // 웹훅 서명 검증 (테스트 환경에서는 스킵)
             if (signature != null) {
@@ -93,20 +95,7 @@ public class PaymentController {
             
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            System.err.println("토스페이먼츠 웹훅 처리 오류: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
-    }
-
-    private String getRawBody(HttpServletRequest request) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = request.getReader()) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-        }
-        return sb.toString();
     }
 }

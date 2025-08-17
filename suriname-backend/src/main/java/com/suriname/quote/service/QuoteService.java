@@ -36,15 +36,6 @@ public class QuoteService {
         this.customerRepository = customerRepository;
         this.employeeRepository = employeeRepository;
         this.requestRepository = requestRepository;
-        System.out.println("QuoteService initialized successfully!");
-    }
-
-    public List<Quote> getAllQuotes() {
-        return quoteRepository.findAll();
-    }
-    
-    public long getQuoteCount() {
-        return quoteRepository.count();
     }
 
     @Transactional(readOnly = true)
@@ -53,18 +44,14 @@ public class QuoteService {
             String employeeName, String startDate, String endDate, String progressStatus, String paymentStatus) {
         
         try {
-            System.out.println("=== QuoteService.getQuotesWithSearch ===");
-            System.out.println("Request params: page=" + page + ", size=" + size);
             
             Pageable pageable = PageRequest.of(page, size, Sort.by("quoteId").descending());
             Page<Quote> quotePage;
             
             // 먼저 전체 Quote 개수 확인
             long totalQuotes = quoteRepository.count();
-            System.out.println("Total quotes in database: " + totalQuotes);
             
             if (hasSearchCriteria(customerName, requestNo, productName, serialNumber, isApproved, employeeName, startDate, endDate, progressStatus, paymentStatus)) {
-                System.out.println("Using filtered search with progressStatus: " + progressStatus + ", paymentStatus: " + paymentStatus);
                 quotePage = quoteRepository.findWithFilters(customerName, requestNo, productName, 
                         serialNumber, parseApprovalStatus(isApproved), employeeName, 
                         parseDate(startDate), parseDate(endDate), pageable);
@@ -76,26 +63,18 @@ public class QuoteService {
                 
                 // 입금상태 필터링 (메모리에서 처리)
                 if (paymentStatus != null && !paymentStatus.trim().isEmpty()) {
-                    System.out.println("입금상태 필터링 시작 - paymentStatus: " + paymentStatus);
-                    System.out.println("필터링 전 Quote 개수: " + quotePage.getContent().size());
                     quotePage = filterByPaymentStatus(quotePage, paymentStatus, pageable);
-                    System.out.println("필터링 후 Quote 개수: " + quotePage.getContent().size());
                 }
             } else {
-                System.out.println("Using findAll (no filters)");
                 quotePage = quoteRepository.findAll(pageable);
             }
             
-            System.out.println("Found " + quotePage.getContent().size() + " quotes in current page");
-            System.out.println("Total elements: " + quotePage.getTotalElements());
             
             List<QuoteDto> quoteDtos = quotePage.getContent().stream()
                     .map(quote -> {
                         try {
                             return new QuoteDto(quote);
                         } catch (Exception e) {
-                            System.err.println("Failed to convert quote to DTO: " + quote.getQuoteId() + ", Error: " + e.getMessage());
-                            e.printStackTrace();
                             return null;
                         }
                     })
@@ -112,8 +91,6 @@ public class QuoteService {
                     quotePage.isLast()
             );
         } catch (Exception e) {
-            System.err.println("Error in getQuotesWithSearch: " + e.getMessage());
-            e.printStackTrace();
             
             return new QuotePageResponse(
                     java.util.Collections.emptyList(),
@@ -138,22 +115,14 @@ public class QuoteService {
     // 견적서 생성
     @Transactional
     public Long createQuote(QuoteCreateDto dto) {
-        System.out.println("=== 견적서 생성 시작 ===");
-        System.out.println("고객명: " + dto.getCustomerName());
-        System.out.println("접수번호: " + dto.getRequestNo());
-        System.out.println("고객동의: " + dto.getCustomerConsent());
-        System.out.println("수리기사: " + dto.getEngineerName());
-        System.out.println("수리기사ID: " + dto.getEngineerId());
         
         // 고객 검증
         Customer customer = customerRepository.findByName(dto.getCustomerName())
             .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 고객입니다: " + dto.getCustomerName()));
-        System.out.println("고객 검증 완료: " + customer.getName());
             
         // 접수번호 검증
         Request request = requestRepository.findByRequestNo(dto.getRequestNo())
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 접수번호입니다: " + dto.getRequestNo()));
-        System.out.println("접수번호 검증 완료: " + request.getRequestNo());
             
         // 수리기사 처리 (고객 동의 시)
         Employee engineer = null;
@@ -232,12 +201,10 @@ public class QuoteService {
         // 고객 검증
         Customer customer = customerRepository.findByName(dto.getCustomerName())
             .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 고객입니다: " + dto.getCustomerName()));
-        System.out.println("고객 검증 완료: " + customer.getName());
             
         // 접수번호 검증
         Request request = requestRepository.findByRequestNo(dto.getRequestNo())
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 접수번호입니다: " + dto.getRequestNo()));
-        System.out.println("접수번호 검증 완료: " + request.getRequestNo());
             
         // 수리기사 처리 (고객 동의 시)
         Employee engineer = null;
@@ -305,8 +272,8 @@ public class QuoteService {
             default:
                 return; // 알 수 없는 상태는 업데이트하지 않음
         }
-        
-        request.changeStatus(newStatus);
+
+        request.changeStatus(newStatus, request.getEmployee().getEmployeeId().toString(), request.getStatus() + " -> " + newStatus);
         requestRepository.save(request);
         System.out.println("Request 상태 업데이트: " + request.getRequestNo() + " -> " + newStatus);
     }

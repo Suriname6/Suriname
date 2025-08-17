@@ -10,13 +10,13 @@ export default function SidebarNavigation() {
 
   const routeMap = {
     "고객 목록": "/customer/list",
-    "고객 등록": "/customer/upload",
+    "고객 등록": "/customer/register",
     "제품 목록": "/product/list",
-    "제품 등록": "/product/upload",
+    "제품 등록": "/product/register",
     "접수 목록": "/request/list",
     "접수 등록": "/request/register",
-    "수리 내역": "/repair/list",
-    "수리 내역 작성": "/repair/write",
+    "수리 목록": "/repair/list",
+    "수리 등록": "/repair/write",
     "프리셋 등록": "/repair/preset",
     "입금 상태 목록": "/payment/list",
     "가상 계좌 발급 요청": "/payment/virtualaccount",
@@ -45,9 +45,6 @@ export default function SidebarNavigation() {
     setIsLoggedIn(!!accessToken);
   }, [location.pathname]);
 
-  // URL과 메뉴 매핑
-  const urlToMenuMapping = {};
-
   // URL 변경 시 선택된 메뉴 상태 업데이트
   useEffect(() => {
     const currentPath = location.pathname;
@@ -63,7 +60,7 @@ export default function SidebarNavigation() {
     "고객 관리": ["고객 목록", "고객 등록"],
     "제품 관리": ["제품 목록", "제품 등록"],
     "A/S 접수": ["접수 목록", "접수 등록"],
-    "수리 처리": ["수리 내역", "수리 내역 작성", "프리셋 등록"],
+    "수리 관리": ["수리 목록", "수리 등록", "프리셋 등록"],
     "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
     "배송 관리": ["배송 목록", "배송 등록", "배송 분석"],
     "완료 처리": ["완료 처리 목록", "완료 처리 등록"],
@@ -73,6 +70,18 @@ export default function SidebarNavigation() {
     filteredMenu["직원 관리"] = ["직원 목록", "직원 가입 요청 목록"];
     filteredMenu["대시 보드"] = ["통계", "담당자별 성과", "리포트"];
   }
+
+  const urlToMenuMapping = {};
+  Object.entries(routeMap).forEach(([label, path]) => {
+    for (const [parent, subItems] of Object.entries(filteredMenu)) {
+      if (subItems.includes(label)) {
+        urlToMenuMapping[path] = {
+          parentMenu: parent,
+          subItem: label,
+        };
+      }
+    }
+  });
 
   const handleSubItemClick = (subItem, parentMenu) => {
     setSelectedSubItem(subItem);

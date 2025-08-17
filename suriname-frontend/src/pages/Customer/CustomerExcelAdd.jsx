@@ -10,7 +10,7 @@ const CustomerExcelAdd = () => {
 
   const handleTabClick = (tab) => {
     if (tab === "general") {
-      navigate("/customer/upload");
+      navigate("/customer/register");
     }
   };
 
@@ -39,7 +39,10 @@ const CustomerExcelAdd = () => {
     formData.append("file", uploadedFiles[0]);
 
     try {
-      const response = await api.post("/api/customers/upload/excel", formData);
+      const response = await api.post(
+        "/api/customers/register/excel",
+        formData
+      );
       const { successCount, failures } = response.data.data;
 
       // 성공 메시지

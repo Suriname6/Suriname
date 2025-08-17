@@ -41,6 +41,7 @@ public class RequestQueryRepositoryImpl implements RequestQueryRepository {
         QCategory category = QCategory.category;
         QEmployee employee = QEmployee.employee;
         QRequestAssignmentLog log = QRequestAssignmentLog.requestAssignmentLog;
+        QRequestAssignmentLog log2 = new QRequestAssignmentLog("log2");
 
         // 조건 빌더
         BooleanBuilder builder = new BooleanBuilder();
@@ -82,13 +83,23 @@ public class RequestQueryRepositoryImpl implements RequestQueryRepository {
             // 제약 없음
         }
 
-        NumberExpression<Integer> statusPriority = new CaseBuilder()
-                .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.EXPIRED)).then(0)
-                .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.REJECTED)).then(1)
-                .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.CANCELLED)).then(2)
-                .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.ACCEPTED)).then(3)
-                .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.PENDING)).then(4)
-                .otherwise(5);
+        NumberExpression<Integer> statusPriority =
+                "ENGINEER".equals(role)
+                        ? new CaseBuilder()
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.PENDING)).then(0)
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.ACCEPTED)).then(1)
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.REJECTED)).then(2)
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.EXPIRED)).then(3)
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.CANCELLED)).then(4)
+                        .otherwise(99)
+                        : new CaseBuilder()
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.EXPIRED)).then(0)
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.REJECTED)).then(1)
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.CANCELLED)).then(2)
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.PENDING)).then(3)
+                        .when(log.status.eq(RequestAssignmentLog.AssignmentStatus.ACCEPTED)).then(4)
+                        .otherwise(99);
+
 
         // 메인 쿼리
         List<RequestListResponseDto> content = queryFactory
@@ -122,7 +133,7 @@ public class RequestQueryRepositoryImpl implements RequestQueryRepository {
                         )
                 )
                 .where(builder)
-                .orderBy(request.createdAt.desc())
+                .orderBy(statusPriority.asc(), request.createdAt.desc(), request.requestId.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -136,6 +147,15 @@ public class RequestQueryRepositoryImpl implements RequestQueryRepository {
                 .leftJoin(cp.product, product)
                 .leftJoin(product.category, category)
                 .leftJoin(request.employee, employee)
+                .leftJoin(log)
+                .on(
+                        log.request.eq(request),
+                        log.assignedAt.eq(
+                                JPAExpressions.select(log2.assignedAt.max())
+                                        .from(log2)
+                                        .where(log2.request.eq(request))
+                        )
+                )
                 .where(builder)
                 .fetchOne();
 

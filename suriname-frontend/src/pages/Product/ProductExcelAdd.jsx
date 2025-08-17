@@ -11,7 +11,7 @@ const ProductExcelAdd = () => {
 
   const handleTabClick = (tab) => {
     if (tab === "general") {
-      navigate("/product/upload");
+      navigate("/product/register");
     }
   };
 
@@ -38,7 +38,7 @@ const ProductExcelAdd = () => {
     formData.append("file", uploadedFiles[0]);
 
     try {
-      const response = await api.post("/api/products/upload/excel", formData);
+      const response = await api.post("/api/products/register/excel", formData);
       alert("업로드 성공!");
       console.log(response.data);
     } catch (error) {

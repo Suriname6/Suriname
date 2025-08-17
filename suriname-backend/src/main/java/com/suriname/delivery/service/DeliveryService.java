@@ -53,7 +53,7 @@ public class DeliveryService {
 
         // Request 상태를 배송대기로 변경
         if (request.getStatus() != Request.Status.WAITING_FOR_DELIVERY) {
-            request.changeStatus(Request.Status.WAITING_FOR_DELIVERY);
+            request.changeStatus(Request.Status.WAITING_FOR_DELIVERY, "SYSTEM:DELIVERY", "배송 정보 등록 → 배송 대기");
             requestRepository.save(request);
         }
 
@@ -142,7 +142,7 @@ public class DeliveryService {
         // 배송 완료 시 Request 상태도 완료로 변경
         if (dto.getStatus() == Delivery.Status.DELIVERED) {
             Request request = delivery.getRequest();
-            request.changeStatus(Request.Status.COMPLETED);
+            request.changeStatus(Request.Status.COMPLETED, "SYSTEM:DELIVERY", "배송 완료 확인 → 요청 완료");
             requestRepository.save(request);
         }
     }

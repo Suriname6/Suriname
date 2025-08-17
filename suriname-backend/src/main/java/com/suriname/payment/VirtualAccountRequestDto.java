@@ -16,4 +16,5 @@ public class VirtualAccountRequestDto {
     private Integer amount;         // 입금 금액
     private String vbankHolder;     // 예금주 이름
     private String vbankDue;        // 입금 마감일 (ISO 8601: "2025-08-07T15:00:00")
+    private String customerPhone;   // 고객 휴대폰 번호
 }

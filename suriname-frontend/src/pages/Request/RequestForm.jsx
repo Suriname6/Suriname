@@ -2,422 +2,539 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../css/Request/RequestForm.module.css";
 import axios from "../../api/axiosInstance";
+import CustomerAutoCompleteProduct from "../../components/AutoComplete/CustomerAutoComplete";
 
 export default function RequestForm() {
-    const [formData, setFormData] = useState({
-        customerId: "",
-        customerProductId: "",
-        employeeId: "",
-        content: "",
-    });
+  const [formData, setFormData] = useState({
+    customerId: "",
+    customerProductId: "",
+    employeeId: "",
+    content: "",
+    modelCode: "",
+  });
 
-    const navigate = useNavigate();
-    const role = localStorage.getItem("role");
+  const navigate = useNavigate();
+  const role = localStorage.getItem("role");
 
-    const [searchCustomer, setSearchCustomer] = useState("");
+  // 자동완성은 컴포넌트에 위임, 이 값만 유지
+  const [searchCustomer, setSearchCustomer] = useState("");
 
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [selectedEngineer, setSelectedEngineer] = useState(null);
+  // 선택 값
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedEngineer, setSelectedEngineer] = useState(null);
 
-    const [uploadedFiles, setUploadedFiles] = useState([]);
+  // 파일 업로드 상태
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
-    const [customerOptions, setCustomerOptions] = useState([]);
-    const [custLoading, setCustLoading] = useState(false);
+  // 고객 제품/엔지니어 목록
+  const [customerProducts, setCustomerProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(false);
 
-    const [customerProducts, setCustomerProducts] = useState([]);
-    const [productsLoading, setProductsLoading] = useState(false);
+  const [engineerOptions, setEngineerOptions] = useState([]);
+  const [engLoading, setEngLoading] = useState(false);
+  const [engError, setEngError] = useState(null);
 
-    const [engineerOptions, setEngineerOptions] = useState([]);
-    const [engLoading, setEngLoading] = useState(false);
-    const [engError, setEngError] = useState(null);
+  // 권한 체크
+  useEffect(() => {
+    if (!(role === "ADMIN" || role === "STAFF")) {
+      navigate("/request/list", { replace: true });
+    }
+  }, [role, navigate]);
 
-    const [isCustomerFocused, setIsCustomerFocused] = useState(false);
-
-    useEffect(() => {
-        if (!searchCustomer.trim()) {
-            setCustomerOptions([]);
-            return;
-        }
-
-        const controller = new AbortController();
-        const t = setTimeout(async () => {
-            try {
-                setCustLoading(true);
-                const res = await axios.get("/api/customers/autocomplete", {
-                    params: { keyword: searchCustomer },
-                    signal: controller.signal,
-                });
-                setCustomerOptions(Array.isArray(res.data) ? res.data : []);
-            } catch (err) {
-                if (err?.name !== "CanceledError" && err?.code !== "ERR_CANCELED") {
-                    console.error("고객 자동완성 호출 실패:", err);
-                }
-            } finally {
-                setCustLoading(false);
-            }
-        }, 250);
-
-        return () => {
-            controller.abort();
-            clearTimeout(t);
-        };
-    }, [searchCustomer]);
-
-    useEffect(() => {
-        const fetchEngineers = async () => {
-            try {
-                setEngLoading(true);
-                setEngError(null);
-                const res = await axios.get("/api/users/engineers", { params: { page: 0, size: 100 }});
-                const list = Array.isArray(res.data?.content) ? res.data.content : [];
-                const mapped = list.map(e => ({
-                    id: e.employeeId,
-                    name: e.name,
-                    birth: e.birth,
-                    address: e.address,
-                    email: e.email,
-                    phone: e.phone
-                })).filter(e => e.id != null);
-                setEngineerOptions(mapped);
-            } catch (err) {
-                console.error("엔지니어 목록 조회 실패:", err);
-                setEngError("목록을 불러오지 못했습니다.");
-            } finally {
-                setEngLoading(false);
-            }
-        };
-
-        fetchEngineers();
-    }, []);
-
-    useEffect(() => {
-        if (!(role === "ADMIN" || role === "STAFF")) {
-            navigate("/request/list", { replace: true });
-        }
-    }, [role, navigate]);
-
-    const handleSelectCustomer = async (customer) => {
-        setSelectedCustomer(customer);
-        setSelectedProduct(null);
-        setFormData((prev) => ({
-            ...prev,
-            customerId: customer.customerId,
-            customerProductId: "",
-        }));
-        setSearchCustomer("");
-        setCustomerOptions([]);
-
-        setProductsLoading(true);
-        try {
-            const res = await axios.get(`/api/customers/${customer.customerId}/products`);
-            const list = (Array.isArray(res.data) ? res.data : []).map((p) => ({
-                id: p.customerProductId ?? p.id,
-                name: p.productName ?? p.name,
-                model: p.modelCode ?? p.model,
-                serial: p.serialNumber ?? p.serial,
-            }));
-            setCustomerProducts(list);
-        } catch (err) {
-            console.error("고객 제품 목록 조회 실패:", err);
-            setCustomerProducts([]);
-        } finally {
-            setProductsLoading(false);
-        }
-    };
-
-    const handleSelectProduct = (product) => {
-        setSelectedProduct(product);
-        setFormData((prev) => ({
-            ...prev,
-            customerProductId: product.id,
-        }));
-    };
-
-    const handleSelectEngineer = (engineer) => {
-        setSelectedEngineer(engineer);
-        setFormData((prev) => ({
-            ...prev,
-            employeeId: engineer.id,
-        }));
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleFileUpload = (event) => {
-        const files = Array.from(event.target.files);
-        files.forEach((file) => {
-            if (file.size <= 25 * 1024 * 1024) {
-                setUploadedFiles((prev) => [
-                    ...prev,
-                    {
-                        id: Date.now() + Math.random(),
-                        name: file.name,
-                        file: file,
-                    },
-                ]);
-            } else {
-                alert("파일 크기가 25MB를 초과합니다.");
-            }
+  // 엔지니어 목록
+  useEffect(() => {
+    const fetchEngineers = async () => {
+      try {
+        setEngLoading(true);
+        setEngError(null);
+        const res = await axios.get("/api/users/engineers", {
+          params: { page: 0, size: 100 },
         });
+        const payload = res?.data?.data ?? res?.data;
+        const rawList = Array.isArray(payload?.content)
+          ? payload.content
+          : Array.isArray(payload)
+          ? payload
+          : [];
+        const mapped = rawList
+          .map((e) => ({
+            id: e.employeeId ?? e.id,
+            name: e.name,
+            birth: e.birth,
+            address: e.address,
+            email: e.email,
+            phone: e.phone,
+            department: e.department,
+          }))
+          .filter((e) => e.id != null);
+        setEngineerOptions(mapped);
+      } catch (err) {
+        console.error("엔지니어 목록 조회 실패:", err);
+        setEngError("목록을 불러오지 못했습니다.");
+      } finally {
+        setEngLoading(false);
+      }
     };
-    const removeFile = (id) => {
-        setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+    fetchEngineers();
+  }, []);
+
+  // 고객 선택 시 처리 (자동완성 컴포넌트의 onSelect에서 호출)
+  const handleSelectCustomer = async (customer) => {
+    setSelectedCustomer(customer);
+    setSelectedProduct(null);
+    setSearchCustomer(customer.name); // 인풋 표시용
+
+    // 선택 바꾸면 폼 초기화
+    setFormData((prev) => ({
+      ...prev,
+      customerId: customer.customerId ?? customer.id,
+      customerProductId: "",
+      modelCode: "",
+    }));
+
+    // 고객 소유 제품 조회
+    setProductsLoading(true);
+    try {
+      const res = await axios.get(
+        `/api/customers/${customer.customerId ?? customer.id}/products`
+      );
+      const payload = res?.data?.data ?? res?.data;
+      const array = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.content)
+        ? payload.content
+        : [];
+
+      const list = array.map((p) => ({
+        id: p.customerProductId ?? p.id,
+        name: p.productName ?? p.name,
+        model: p.modelCode ?? p.model,
+        serial: p.serialNumber ?? p.serial,
+      }));
+
+      setCustomerProducts(list);
+
+      // 제품이 있으면 첫 번째 자동 선택
+      if (list.length > 0) {
+        const first = list[0];
+        setSelectedProduct(first);
+        setFormData((prev) => ({
+          ...prev,
+          customerProductId: first.id,
+          modelCode: first.model ?? "",
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          customerProductId: "",
+          modelCode: "",
+        }));
+      }
+    } catch (err) {
+      console.error("고객 제품 목록 조회 실패:", err);
+      setCustomerProducts([]);
+      setFormData((prev) => ({
+        ...prev,
+        customerProductId: "",
+        modelCode: "",
+      }));
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  // 제품 선택
+  const handleSelectProduct = (product) => {
+    setSelectedProduct(product);
+    setFormData((prev) => ({
+      ...prev,
+      customerProductId: product.id,
+      modelCode: product.model ?? "",
+    }));
+  };
+
+  // 담당자 선택
+  const handleSelectEngineer = (engineer) => {
+    setSelectedEngineer(engineer);
+    setFormData((prev) => ({
+      ...prev,
+      employeeId: engineer.id,
+    }));
+  };
+
+  // 공통 입력 처리
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // 파일 선택
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files ?? []);
+    const next = [];
+    files.forEach((file) => {
+      if (file.size <= 25 * 1024 * 1024) {
+        next.push({
+          id: `${Date.now()}_${Math.random()}`,
+          name: file.name,
+          file,
+        });
+      } else {
+        alert("파일 크기가 25MB를 초과합니다.");
+      }
+    });
+    if (next.length) {
+      setUploadedFiles((prev) => [...prev, ...next]);
+    }
+  };
+
+  const removeFile = (id) => {
+    setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+  };
+
+  // 파일 업로드 (예시)
+  const handleFileSubmit = async () => {
+    if (uploadedFiles.length === 0) {
+      alert("업로드할 파일이 없습니다.");
+      return;
+    }
+    const form = new FormData();
+    uploadedFiles.forEach((f) => {
+      form.append("files", f.file);
+    });
+    try {
+      const res = await axios.post("/api/files/upload", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      console.log("파일 업로드 성공:", res.data);
+      alert("파일 업로드 성공");
+    } catch (err) {
+      console.error("파일 업로드 실패:", err);
+      alert("파일 업로드 실패");
+    }
+  };
+
+  // 저장
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.customerId) {
+      alert("고객을 선택해 주세요.");
+      return;
+    }
+    if (!formData.customerProductId) {
+      alert("제품을 선택해 주세요.");
+      return;
+    }
+
+    const requestData = {
+      employeeId: formData.employeeId || null,
+      customerId: formData.customerId,
+      customerProductId: formData.customerProductId,
+      content: formData.content?.trim() || "",
+      modelCode: formData.modelCode?.trim() || null,
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    try {
+      const res = await axios.post("/api/requests", requestData);
+      console.log("요청 등록 성공:", res.data);
+      alert("수리 요청이 저장되었습니다!");
+      navigate("/request/list");
+    } catch (err) {
+      console.error("요청 등록 실패:", err);
+      alert("저장 중 오류가 발생했습니다.");
+    }
+  };
 
-        const requestData = {
-            employeeId: formData.employeeId,
-            customerId: formData.customerId,
-            customerProductId: formData.customerProductId,
-            content: formData.content,
-        };
+  const handleCancel = () => {
+    navigate("/request/list");
+  };
 
-        try {
-            const res = await axios.post("/api/requests", requestData);
-            console.log("요청 등록 성공:", res.data);
-            alert("수리 요청이 저장되었습니다!");
-            navigate("/request/list");
-        } catch (err) {
-            console.error("요청 등록 실패:", err);
-            alert("저장 중 오류가 발생했습니다.");
-        }
-    };
-
-    const handleCancel = () => {
-        navigate("/request/list");
-    };
-
-    return (
-        <div className={styles.customerContainer}>
-            <div className={styles.tabNavigation}>
-                <div className={styles.tabContainer}>
-                    <button className={`${styles.tabButton} ${styles.active}`}>A/S 요청 등록</button>
-                </div>
-            </div>
-
-            <div className={styles.sectionContainer}>
-                {/* 고객 정보 섹션 */}
-                <div className={styles.sectionContent}>
-                    <h2 className={styles.sectionTitle}>고객 정보</h2>
-
-                    <div className={styles.customerInfoRow}>
-                        {!selectedCustomer ? (
-                            <div className={styles.customerInfoBox} style={{ flex: 1, position: "relative" }}>
-                                <span className={styles.infoLabel}>고객명</span>
-                                <div className={styles.inputWrapper}>
-                                    <input
-                                        type="text"
-                                        value={searchCustomer}
-                                        onChange={(e) => setSearchCustomer(e.target.value)}
-                                        onFocus={() => setIsCustomerFocused(true)}
-                                        onBlur={() => setTimeout(() => setIsCustomerFocused(false), 150)}
-                                        className={styles.inputControl}
-                                        placeholder="고객명을 입력하세요"
-                                        autoComplete="off"
-                                    />
-                                    {searchCustomer && isCustomerFocused && (custLoading || customerOptions.length > 0) && (
-                                        <ul className={styles.suggestionList}>
-                                            {custLoading && <li className={styles.suggestionItem}>불러오는 중...</li>}
-                                            {!custLoading &&
-                                                customerOptions.map((customer) => (
-                                                    <li
-                                                        key={customer.id}
-                                                        className={styles.suggestionItem}
-                                                        onMouseDown={(e) => e.preventDefault()} // blur 전에 클릭 반영
-                                                        onClick={() => handleSelectCustomer(customer)}
-                                                    >
-                                                        {customer.name} {customer.phone ? `(${customer.phone})` : ""}
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <div className={styles.customerInfoBox} style={{ flex: 1 }}>
-                                    <span className={styles.infoLabel}>고객명</span>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                        <span className={styles.infoValue}>{selectedCustomer.name}</span>
-                                        <button
-                                            type="button"
-                                            className={styles.editButton}
-                                            onClick={() => {
-                                                setSelectedCustomer(null);
-                                                setSearchCustomer("");
-                                                setCustomerOptions([]);
-                                                setCustomerProducts([]);
-                                                setSelectedProduct(null);
-                                                setFormData((prev) => ({ ...prev, customerId: "", customerProductId: "" }));
-                                            }}
-                                        >
-                                            변경
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className={styles.customerInfoBox} style={{ flex: 1 }}>
-                                    <span className={styles.infoLabel}>생년월일</span>
-                                    <span className={styles.infoValue}>{selectedCustomer.birth || "-"}</span>
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    {/* 고정 정보들 */}
-                    <div className={styles.customerInfoRow}>
-                        <div className={styles.customerInfoBox}>
-                            <span className={styles.infoLabel}>전화번호</span>
-                            <span className={styles.infoValue}>{selectedCustomer?.phone || ""}</span>
-                        </div>
-                        <div className={styles.customerInfoBox}>
-                            <span className={styles.infoLabel}>이메일</span>
-                            <span className={styles.infoValue}>{selectedCustomer?.email || ""}</span>
-                        </div>
-                    </div>
-                    <div className={styles.customerInfoRow}>
-                        <div className={styles.customerInfoBox} style={{ flex: 1 }}>
-                            <span className={styles.infoLabel}>주소</span>
-                            <span className={styles.infoValue}>{selectedCustomer?.address || ""}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {selectedCustomer && (
-                    <div className={styles.sectionContent}>
-                        <h2 className={styles.sectionTitle}>제품 정보</h2>
-
-                        {productsLoading ? (
-                            <div className={styles.inputField}>
-                                <label className={styles.inputLabel}>제품 선택</label>
-                                <div className={styles.inputControl}>불러오는 중...</div>
-                            </div>
-                        ) : (
-                            <div className={styles.inputField}>
-                                <label className={styles.inputLabel}>제품 선택</label>
-                                <select
-                                    className={styles.inputControl}
-                                    value={selectedProduct?.id || ""}
-                                    onChange={(e) => {
-                                        const val = Number(e.target.value);
-                                        const selected = customerProducts.find((p) => p.id === val);
-                                        if (selected) handleSelectProduct(selected);
-                                    }}
-                                >
-                                    <option value="" disabled>
-                                        {customerProducts.length ? "제품을 선택하세요" : "등록된 제품이 없습니다"}
-                                    </option>
-                                    {customerProducts.map((product) => (
-                                        <option key={product.id} value={product.id}>
-                                            {product.name} ({product.model})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-
-                <div className={styles.sectionContent}>
-                    <h2 className={styles.sectionTitle}>담당자 정보</h2>
-
-                    <div className={styles.inputField}>
-                        <label className={styles.inputLabel}>수리 담당자</label>
-
-                        {engLoading ? (
-                            <div className={styles.inputControl}>불러오는 중...</div>
-                        ) : engError ? (
-                            <div className={styles.inputControl}>{engError}</div>
-                        ) : (
-                            <select
-                                className={styles.inputControl}
-                                value={selectedEngineer?.id ?? ""}
-                                onChange={(e) => {
-                                    const val = Number(e.target.value);
-                                    const eng = engineerOptions.find(x => x.id === val);
-                                    if (eng) handleSelectEngineer(eng);
-                                }}
-                            >
-                                <option value="" disabled>
-                                    {engineerOptions.length ? "담당자를 선택하세요" : "등록된 담당자가 없습니다"}
-                                </option>
-                                {engineerOptions.map(eng => (
-                                    <option key={eng.id} value={eng.id}>
-                                        {eng.name}{eng.department ? ` (${eng.department})` : ""}
-                                    </option>
-                                ))}
-                            </select>
-                        )}
-                    </div>
-                </div>
-
-
-                {/* 요청 내용 */}
-                <div className={styles.sectionContent}>
-                    <h2 className={styles.sectionTitle}>요청 내용</h2>
-                    <div className={styles.inputField}>
-                        <label className={styles.inputLabel}>내용</label>
-                        <textarea
-                            name="content"
-                            rows={4}
-                            value={formData.content}
-                            onChange={handleChange}
-                            className={styles.inputControl}
-                            placeholder="고장 증상, 요청 사항 등을 입력하세요"
-                        />
-                    </div>
-                </div>
-
-                {/* 사진 첨부 (그대로) */}
-                <div className={styles.sectionContent}>
-                    <h2 className={styles.sectionTitle}>사진 첨부</h2>
-                    <div className={styles.fileUpload}>
-                        <p className={styles.fileInfo}>
-                            Please upload files in png, jpg, pdf format and make sure the file size is under 25 MB.
-                        </p>
-
-                        <div className={styles.dropZone}>
-                            <input type="file" multiple accept=".png,.jpg,.jpeg,.pdf" onChange={handleFileUpload} className={styles.fileInput} />
-                            <div className={styles.dropText}>Drop file or Browse</div>
-                            <div className={styles.formatText}>Format: png, jpg, pdf | Max file size: 25 MB</div>
-                        </div>
-
-                        {uploadedFiles.length > 0 && (
-                            <div className={styles.uploadedFiles}>
-                                {uploadedFiles.map((file) => (
-                                    <div key={file.id} className={styles.fileItem}>
-                                        <span className={styles.fileName}>📎 {file.name}</span>
-                                        <button className={styles.removeFileBtn} onClick={() => removeFile(file.id)}>
-                                            🗑️
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className={styles.uploadActions}>
-                            <button className={styles.uploadBtn}>업로드</button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 버튼 */}
-                <div className={styles.buttonGroup}>
-                    <button type="button" className={styles.cancelButton} onClick={handleCancel}>
-                        취소
-                    </button>
-                    <button type="button" className={styles.submitButton} onClick={handleSubmit}>
-                        저장
-                    </button>
-                </div>
-            </div>
+  return (
+    <div className={styles.customerContainer}>
+      <div className={styles.tabNavigation}>
+        <div className={styles.tabContainer}>
+          <button className={`${styles.tabButton} ${styles.active}`}>
+            A/S 요청 등록
+          </button>
         </div>
-    );
+      </div>
+
+      <div className={styles.sectionContainer}>
+        {/* 고객 정보 섹션 */}
+        <div className={styles.sectionContent}>
+          <h2 className={styles.sectionTitle}>고객 정보</h2>
+
+          <div className={styles.customerInfoRow}>
+            {!selectedCustomer ? (
+              <div
+                className={styles.customerInfoBox}
+                style={{ flex: 1, position: "relative" }}
+              >
+                <span className={styles.infoLabel}>고객명</span>
+                <div className={styles.inputWrapper}>
+                  {/* 🔽 자동완성 컴포넌트만 사용 */}
+                  <CustomerAutoCompleteProduct
+                    value={searchCustomer}
+                    onChange={(val) => setSearchCustomer(val)}
+                    onSelect={(customer) => handleSelectCustomer(customer)}
+                    placeholder="고객명을 입력하세요"
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className={styles.customerInfoBox} style={{ flex: 1 }}>
+                  <span className={styles.infoLabel}>고객명</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
+                    <span className={styles.infoValue}>
+                      {selectedCustomer.name}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.editButton}
+                      onClick={() => {
+                        setSelectedCustomer(null);
+                        setSearchCustomer("");
+                        setCustomerProducts([]);
+                        setSelectedProduct(null);
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerId: "",
+                          customerProductId: "",
+                          modelCode: "",
+                        }));
+                      }}
+                    >
+                      변경
+                    </button>
+                  </div>
+                </div>
+
+                <div className={styles.customerInfoBox} style={{ flex: 1 }}>
+                  <span className={styles.infoLabel}>생년월일</span>
+                  <span className={styles.infoValue}>
+                    {selectedCustomer.birth || "-"}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* 고정 정보들 */}
+          <div className={styles.customerInfoRow}>
+            <div className={styles.customerInfoBox}>
+              <span className={styles.infoLabel}>전화번호</span>
+              <span className={styles.infoValue}>
+                {selectedCustomer?.phone || ""}
+              </span>
+            </div>
+            <div className={styles.customerInfoBox}>
+              <span className={styles.infoLabel}>이메일</span>
+              <span className={styles.infoValue}>
+                {selectedCustomer?.email || ""}
+              </span>
+            </div>
+          </div>
+          <div className={styles.customerInfoRow}>
+            <div className={styles.customerInfoBox} style={{ flex: 1 }}>
+              <span className={styles.infoLabel}>주소</span>
+              <span className={styles.infoValue}>
+                {selectedCustomer?.address || ""}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 제품 정보 섹션 */}
+        {selectedCustomer && (
+          <div className={styles.sectionContent}>
+            <h2 className={styles.sectionTitle}>제품 정보</h2>
+
+            {productsLoading ? (
+              <div className={styles.inputField}>
+                <label className={styles.inputLabel}>제품 선택</label>
+                <div className={styles.inputControl}>불러오는 중...</div>
+              </div>
+            ) : (
+              <>
+                <div className={styles.inputField}>
+                  <label className={styles.inputLabel}>제품 선택</label>
+                  <select
+                    className={styles.inputControl}
+                    value={String(selectedProduct?.id ?? "")}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const selected = customerProducts.find(
+                        (p) => String(p.id) === val
+                      );
+                      if (selected) handleSelectProduct(selected);
+                    }}
+                  >
+                    <option value="" disabled>
+                      {customerProducts.length
+                        ? "제품을 선택하세요"
+                        : "등록된 제품이 없습니다"}
+                    </option>
+                    {customerProducts.map((product) => (
+                      <option key={product.id} value={String(product.id)}>
+                        {product.name}{" "}
+                        {product.model ? `(${product.model})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.inputField} style={{ marginTop: 12 }}>
+                  <label className={styles.inputLabel}>모델코드</label>
+                  <input
+                    type="text"
+                    className={styles.inputControl}
+                    placeholder="모델코드"
+                    value={formData.modelCode}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        modelCode: e.target.value,
+                      }))
+                    }
+                    disabled={!selectedProduct}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* 담당자 정보 */}
+        <div className={styles.sectionContent}>
+          <h2 className={styles.sectionTitle}>담당자 정보</h2>
+
+          <div className={styles.inputField}>
+            <label className={styles.inputLabel}>수리 담당자</label>
+
+            {engLoading ? (
+              <div className={styles.inputControl}>불러오는 중...</div>
+            ) : engError ? (
+              <div className={styles.inputControl}>{engError}</div>
+            ) : (
+              <select
+                className={styles.inputControl}
+                value={String(selectedEngineer?.id ?? "")}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const eng = engineerOptions.find((x) => String(x.id) === val);
+                  if (eng) handleSelectEngineer(eng);
+                }}
+              >
+                <option value="" disabled>
+                  {engineerOptions.length
+                    ? "담당자를 선택하세요"
+                    : "등록된 담당자가 없습니다"}
+                </option>
+                {engineerOptions.map((eng) => (
+                  <option key={eng.id} value={String(eng.id)}>
+                    {eng.name}
+                    {eng.department ? ` (${eng.department})` : ""}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+
+        {/* 요청 내용 */}
+        <div className={styles.sectionContent}>
+          <h2 className={styles.sectionTitle}>요청 내용</h2>
+          <div className={styles.inputField}>
+            <label className={styles.inputLabel}>내용</label>
+            <textarea
+              name="content"
+              rows={4}
+              value={formData.content}
+              onChange={handleChange}
+              className={styles.inputControl}
+              placeholder="고장 증상, 요청 사항 등을 입력하세요"
+            />
+          </div>
+        </div>
+
+        {/* 사진 첨부 */}
+        <div className={styles.sectionContent}>
+          <h2 className={styles.sectionTitle}>사진 첨부</h2>
+          <div className={styles.fileUpload}>
+            <p className={styles.fileInfo}>
+              Please upload files in png, jpg, pdf format and make sure the file
+              size is under 25 MB.
+            </p>
+
+            <div className={styles.dropZone}>
+              <input
+                type="file"
+                multiple
+                accept=".png,.jpg,.jpeg,.pdf"
+                onChange={handleFileUpload}
+                className={styles.fileInput}
+              />
+              <div className={styles.dropText}>Drop file or Browse</div>
+              <div className={styles.formatText}>
+                Format: png, jpg, pdf | Max file size: 25 MB
+              </div>
+            </div>
+
+            {uploadedFiles.length > 0 && (
+              <div className={styles.uploadedFiles}>
+                {uploadedFiles.map((file) => (
+                  <div key={file.id} className={styles.fileItem}>
+                    <span className={styles.fileName}>📎 {file.name}</span>
+                    <button
+                      type="button"
+                      className={styles.removeFileBtn}
+                      onClick={() => removeFile(file.id)}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className={styles.uploadActions}>
+              <button
+                type="button"
+                className={styles.uploadBtn}
+                onClick={handleFileSubmit}
+              >
+                업로드
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 버튼 */}
+        <div className={styles.buttonGroup}>
+          <button
+            type="button"
+            className={styles.cancelButton}
+            onClick={handleCancel}
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            className={styles.submitButton}
+            onClick={handleSubmit}
+          >
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

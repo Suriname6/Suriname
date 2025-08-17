@@ -1,10 +1,10 @@
 package com.suriname.product.controller;
 
-import com.suriname.product.repository.CustomerProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,7 +29,6 @@ public class ProductController {
 	private final ProductService productService;
 	private final CategoryRepository categoryRepository;
 	private final ProductRepository productRepository;
-	private final CustomerProductRepository customerProductRepository;
 
 	// 전체 조회
 	@GetMapping
@@ -62,14 +61,13 @@ public class ProductController {
 		productService.deleteProduct(id);
 		return ResponseEntity.ok(Map.of("status", 200, "message", "제품이 삭제되었습니다."));
 	}
-	
+
 	// 다건 삭제
 	@PostMapping("/delete")
 	public ResponseEntity<?> deleteMultiple(@RequestBody List<Long> productIds) {
-	    productIds.forEach(productService::softDelete);
-	    return ResponseEntity.ok(Map.of("status", 200, "message", productIds.size() + "개 항목 삭제 완료"));
+		productIds.forEach(productService::softDelete);
+		return ResponseEntity.ok(Map.of("status", 200, "message", productIds.size() + "개 항목 삭제 완료"));
 	}
-
 
 	// 상세
 	@GetMapping("/{id}")
@@ -89,22 +87,19 @@ public class ProductController {
 	// 자동완성
 	@GetMapping("/autocomplete")
 	public ResponseEntity<List<ProductDto>> autocompleteProducts(@RequestParam("keyword") String keyword) {
-		List<Product> products = productRepository.findAll(ProductSpecification.containsKeyword(keyword), PageRequest.of(0, 10)).getContent();
-	    
-		List<ProductDto> result = products.stream()
-	        .map(ProductDto::fromEntity)
-	        .toList();
+		List<Product> products = productRepository
+				.findAll(ProductSpecification.containsKeyword(keyword), PageRequest.of(0, 10)).getContent();
 
-	    return ResponseEntity.ok(result);
+		List<ProductDto> result = products.stream().map(ProductDto::fromEntity).toList();
+
+		return ResponseEntity.ok(result);
 	}
 
 	// 엑셀
-	@PostMapping("upload/excel")
+	@PostMapping("register/excel")
 	public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
 		productService.importFromExcel(file);
 		return ResponseEntity.ok(Map.of("status", 200, "message", "엑셀 등록이 완료되었습니다."));
 	}
-	
-	
 
 }

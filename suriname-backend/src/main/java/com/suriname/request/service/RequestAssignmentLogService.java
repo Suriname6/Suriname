@@ -34,13 +34,14 @@ public class RequestAssignmentLogService {
 
         if (dto.getStatus() == RequestAssignmentLog.AssignmentStatus.REJECTED) {
             log.setRejectionReason(dto.getReason());
+            return;
         }
 
         if (dto.getStatus() == RequestAssignmentLog.AssignmentStatus.ACCEPTED) {
             Request request = log.getRequest();
-            request.changeStatus(Request.Status.REPAIRING);
+            request.changeStatus(Request.Status.REPAIRING, request.getEmployee().getEmployeeId().toString(), "배정 수락 -> 수리 중");
+            requestRepository.saveAndFlush(request);
         }
-
 
     }
 
@@ -55,6 +56,8 @@ public class RequestAssignmentLogService {
 
         Employee receiver = employeeRepository.findById(viewerId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 접수담당자가 존재하지 않습니다."));
+
+        request.setEmployee(newEngineer);
 
         RequestAssignmentLog newLog = RequestAssignmentLog.builder()
                 .request(request)

@@ -45,69 +45,54 @@ public class TossPaymentsClient {
         requestBody.put("customerName", dto.getVbankHolder());
         requestBody.put("bank", "신한"); // 가상계좌 은행 (신한, 국민, 하나, 기업, 농협, 우리 등)
         requestBody.put("validHours", 168); // 7일(168시간) 유효 (최대 720시간)
+        requestBody.put("customerMobilePhone", dto.getCustomerPhone());
 
-        System.out.println("토스페이먼츠 가상계좌 발급 요청 (API v2022-11-16): " + requestBody);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
         
         try {
             ResponseEntity<String> response = rest.postForEntity(url, entity, String.class);
-            System.out.println("토스페이먼츠 응답: " + response.getBody());
             
             JsonNode responseNode = objectMapper.readTree(response.getBody());
             return responseNode;
             
         } catch (Exception e) {
-            System.err.println("토스페이먼츠 가상계좌 발급 실패: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("가상계좌 발급 실패: " + e.getMessage(), e);
         }
     }
 
-    public JsonNode confirmPayment(String paymentKey, String orderId, Long amount) {
-        String url = TOSS_API_URL + "/payments/confirm";
-
-        HttpHeaders headers = new HttpHeaders();
-        String encodedAuth = Base64.getEncoder().encodeToString(
-            (secretKey + ":").getBytes(StandardCharsets.UTF_8)
-        );
-        headers.set("Authorization", "Basic " + encodedAuth);
-        headers.set("TossPayments-API-Version", API_VERSION);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("paymentKey", paymentKey);
-        requestBody.put("orderId", orderId);
-        requestBody.put("amount", amount);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-        
+    public JsonNode cancelPaymentByOrderId(String orderId, String cancelReason) {
         try {
-            ResponseEntity<String> response = rest.postForEntity(url, entity, String.class);
-            return objectMapper.readTree(response.getBody());
+            // 1. orderId로 결제 정보 조회
+            String getUrl = TOSS_API_URL + "/payments/orders/" + orderId;
+            
+            HttpHeaders headers = new HttpHeaders();
+            String encodedAuth = Base64.getEncoder().encodeToString(
+                (secretKey + ":").getBytes(StandardCharsets.UTF_8)
+            );
+            headers.set("Authorization", "Basic " + encodedAuth);
+            headers.set("TossPayments-API-Version", API_VERSION);
+            
+            HttpEntity<Void> getEntity = new HttpEntity<>(headers);
+            ResponseEntity<String> getResponse = rest.exchange(getUrl, HttpMethod.GET, getEntity, String.class);
+            JsonNode paymentInfo = objectMapper.readTree(getResponse.getBody());
+            
+            // 2. paymentKey 추출
+            String paymentKey = paymentInfo.get("paymentKey").asText();
+            
+            // 3. 결제 취소
+            String cancelUrl = TOSS_API_URL + "/payments/" + paymentKey + "/cancel";
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("cancelReason", cancelReason);
+            
+            HttpEntity<Map<String, Object>> cancelEntity = new HttpEntity<>(requestBody, headers);
+            ResponseEntity<String> cancelResponse = rest.postForEntity(cancelUrl, cancelEntity, String.class);
+            
+            return objectMapper.readTree(cancelResponse.getBody());
         } catch (Exception e) {
-            System.err.println("결제 승인 실패: " + e.getMessage());
-            throw new RuntimeException("결제 승인 실패: " + e.getMessage(), e);
-        }
-    }
-
-    public JsonNode getPayment(String paymentKey) {
-        String url = TOSS_API_URL + "/payments/" + paymentKey;
-
-        HttpHeaders headers = new HttpHeaders();
-        String encodedAuth = Base64.getEncoder().encodeToString(
-            (secretKey + ":").getBytes(StandardCharsets.UTF_8)
-        );
-        headers.set("Authorization", "Basic " + encodedAuth);
-
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-        
-        try {
-            ResponseEntity<String> response = rest.exchange(url, HttpMethod.GET, entity, String.class);
-            return objectMapper.readTree(response.getBody());
-        } catch (Exception e) {
-            System.err.println("결제 조회 실패: " + e.getMessage());
-            throw new RuntimeException("결제 조회 실패: " + e.getMessage(), e);
+            throw new RuntimeException("결제 취소 실패: " + e.getMessage(), e);
         }
     }
 }

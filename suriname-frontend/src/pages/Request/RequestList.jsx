@@ -4,6 +4,9 @@ import styles from '../../css/Request/RequestList.module.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
+import StatusBadge from "../../components/Request/StatusBadge";
+import StatusSelect from "../../components/Request/StatusSelect";
+
 export default function RequestList() {
     const [requests, setRequests] = useState([]);
     const [searchData, setSearchData] = useState({
@@ -31,28 +34,25 @@ export default function RequestList() {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const [role, setRole] = useState(localStorage.getItem("role") || "");
+    const [role] = useState(localStorage.getItem("role") || "ADMIN");
 
-    const statusConfig = {
-        EXPIRED:   { priority: 0, color: 'yellow', label: '만료됨' },
-        REJECTED:  { priority: 1, color: 'red',    label: '거절됨' },
-        CANCELLED: { priority: 2, color: 'brown',  label: '취소됨' },
-        PENDING:   { priority: 3, color: 'black',  label: '접수 대기' },
-        ACCEPTED:  { priority: 4, color: 'green',  label: '접수 완료' }
-    };
-
-
-    // 컴포넌트 마운트 시 데이터 로드
+    // 초기 로드 & 페이지 변경 시
     useEffect(() => {
         fetchRequests();
     }, [pagination.currentPage]);
 
-    const fetchRequests = async (searchParams = null) => {
+    const fetchRequests = async () => {
         setLoading(true);
         try {
-            const res = await axios.get("/api/requests",{
-                params: searchParams || {}
-            });
+            const cleaned = Object.fromEntries(
+                Object.entries(searchData).filter(([, v]) => v !== "")
+            );
+            const params = {
+                    ...cleaned,
+                page: pagination.currentPage,   // 0-base (Spring Data Pageable)
+                size: pagination.size
+            };
+            const res = await axios.get("/api/requests", { params });
 
             const {
                 content,
@@ -64,12 +64,16 @@ export default function RequestList() {
                 last
             } = res.data;
 
-            content.sort((a, b) => {
-                return statusConfig[a.assignmentStatus].priority - statusConfig[b.assignmentStatus].priority;
-            });
+            if (content.length === 0 && totalElements > 0 && pagination.currentPage > 0) {
+                setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }));
+                return; // 이번 렌더는 중단하고 useEffect로 재조회
+           }
+
+            // 역할별 우선순위 정렬
             setRequests(content);
             setPagination({ currentPage, totalPages, totalElements, size, first, last });
-
+            setSelectedRequests([])
+            setSelectAll(false);
         } catch (err) {
             console.error("요청 목록 불러오기 실패:", err);
         } finally {
@@ -78,20 +82,13 @@ export default function RequestList() {
     };
 
     const deleteSelectedRequests = async () => {
-        console.log(selectedRequests)
         if (selectedRequests.length === 0) {
             alert('선택된 항목이 없습니다.');
             return;
         }
-
-        if (!confirm(`선택된 ${selectedRequests.length}개 항목을 삭제하시겠습니까?`)) {
-            return;
-        }
-
+        if (!window.confirm(`선택된 ${selectedRequests.length}개 항목을 삭제하시겠습니까?`)) return;
         try {
-            await axios.delete("/api/requests", {
-                data: { ids: selectedRequests },
-            });
+            await axios.delete("/api/requests", { data: { ids: selectedRequests } });
             alert('선택된 항목이 삭제되었습니다.');
             setSelectedRequests([]);
             setSelectAll(false);
@@ -104,15 +101,15 @@ export default function RequestList() {
 
     // 검색 입력 처리
     const handleInputChange = (field, value) => {
-        setSearchData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        setSearchData(prev => ({ ...prev, [field]: value }));
     };
 
     const handleSearch = () => {
-        setPagination(prev => ({ ...prev, currentPage: 0 }));
-        fetchRequests(searchData);
+        if (pagination.currentPage !== 0) {
+            setPagination(prev => ({ ...prev, currentPage: 0 }));
+        } else {
+            fetchRequests();
+        }
     };
 
     const handlePageChange = (page) => {
@@ -123,29 +120,26 @@ export default function RequestList() {
         if (selectAll) {
             setSelectedRequests([]);
         } else {
-            setSelectedRequests(requests.map(Request => Request.requestId));
+            setSelectedRequests(requests.map(r => r.requestId));
         }
         setSelectAll(!selectAll);
     };
 
-    const handleSelectRequest = (RequestId) => {
+    const handleSelectRequest = (requestId) => {
         setSelectedRequests(prev => {
-            if (prev.includes(RequestId)) {
-                const newSelected = prev.filter(id => id !== RequestId);
+            if (prev.includes(requestId)) {
+                const next = prev.filter(id => id !== requestId);
                 setSelectAll(false);
-                return newSelected;
+                return next;
             } else {
-                const newSelected = [...prev, RequestId];
-                setSelectAll(newSelected.length === requests.length);
-                return newSelected;
+                const next = [...prev, requestId];
+                setSelectAll(next.length === requests.length);
+                return next;
             }
         });
     };
 
-    const toggleSearchVisible = () => {
-        setSearchVisible(!searchVisible);
-    };
-
+    const toggleSearchVisible = () => setSearchVisible(!searchVisible);
 
     function formatDate(dateStr) {
         if (!dateStr) return '-';
@@ -163,8 +157,7 @@ export default function RequestList() {
         try {
             await axios.put(`/api/requests/${requestId}/assignment-status`, { status, reason });
             alert("상태가 변경되었습니다.");
-            // 방금 검색조건 유지한 채로 다시 조회
-            fetchRequests(searchData);
+            fetchRequests();
         } catch (err) {
             console.error("상태 변경 실패", err);
             alert("상태 변경에 실패했습니다.");
@@ -176,7 +169,7 @@ export default function RequestList() {
             alert("대기 상태(PENDING)에서만 접수가 가능합니다.");
             return;
         }
-        if (!confirm(`[${request.requestNo}]를 접수(ACCEPTED) 상태로 변경할까요?`)) return;
+        if (!window.confirm(`[${request.requestNo}]를 접수(ACCEPTED) 상태로 변경할까요?`)) return;
         updateAssignmentStatus(request.requestId, "ACCEPTED");
     };
 
@@ -255,26 +248,18 @@ export default function RequestList() {
                                     onChange={(e) => handleInputChange('modelCode', e.target.value)}
                                 />
                             </div>
-
                         </div>
 
                         <div className={styles.searchRow}>
                             <div className={styles.searchField}>
                                 <label>접수 상태</label>
-                                <select
+                                <StatusSelect
+                                    role={role}
                                     value={searchData.status}
-                                    onChange={(e) => handleInputChange('status', e.target.value)}
-                                >
-                                    <option value="">전체</option>
-                                    {Object.entries(statusConfig)
-                                        .sort(([, a], [, b]) => b.priority - a.priority) // priority 내림차순
-                                        .map(([key, { label }]) => (
-                                            <option key={key} value={key}>{label}</option>
-                                        ))
-                                    }
-                                </select>
-
+                                    onChange={(v) => handleInputChange('status', v)}
+                                  />
                             </div>
+
                             <div className={styles.searchField}>
                                 <label>시작 날짜</label>
                                 <input
@@ -303,25 +288,24 @@ export default function RequestList() {
                         </div>
                     </div>
                 </div>
-
-
             )}
+
             {(role === "ADMIN" || role === "STAFF") && (
-            <div className={styles.tableHeader}>
-                <div>
-                    <input
-                        type="checkbox"
-                        checked={selectAll}
-                        onChange={handleSelectAll}
-                    />
-                    <span>전체 선택</span>
+                <div className={styles.tableHeader}>
+                    <div>
+                        <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                        />
+                        <span>전체 선택</span>
+                    </div>
+                    <div className={styles.deleteButtonWrapper}>
+                        <button onClick={deleteSelectedRequests} className={styles.deleteButton}>
+                            삭제
+                        </button>
+                    </div>
                 </div>
-                <div className={styles.deleteButtonWrapper}>
-                    <button onClick={deleteSelectedRequests} className={styles.deleteButton}>
-                        삭제
-                    </button>
-                </div>
-            </div>
             )}
 
             <div className={styles.tableWrapper}>
@@ -348,23 +332,27 @@ export default function RequestList() {
                         <tbody>
                         {requests.length === 0 ? (
                             <tr>
-                                <td colSpan="9" className={styles.emptyState}>
+                                <td colSpan={role === 'ENGINEER' ? 10 : 9} className={styles.emptyState}>
                                     <h3>데이터가 없습니다</h3>
                                     <p>검색 조건에 맞는 수리 내역이 접수되지 않았습니다.</p>
                                 </td>
                             </tr>
                         ) : (
                             requests.map((request) => (
-                                <tr key={request.requestId} className={request.assignmentStatus === "ACCEPTED" ? styles.acceptedRow : undefined} >
+                                <tr
+                                    key={request.requestId}
+                                    className={request.assignmentStatus === "ACCEPTED" ? styles.acceptedRow : undefined}
+                                >
                                     {(role === "ADMIN" || role === "STAFF") && (
-                                    <td className={styles.narrowTd}>
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedRequests.includes(request.requestId)}
-                                            onChange={() => handleSelectRequest(request.requestId)}
-                                        />
-                                    </td>
+                                        <td className={styles.narrowTd}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedRequests.includes(request.requestId)}
+                                                onChange={() => handleSelectRequest(request.requestId)}
+                                            />
+                                        </td>
                                     )}
+
                                     {role === "ENGINEER" && (
                                         <td>
                                             <button
@@ -377,13 +365,14 @@ export default function RequestList() {
                                             </button>
                                         </td>
                                     )}
+
                                     <td>{request.requestNo}</td>
                                     <td>{request.customerName}</td>
                                     <td>{request.productName}</td>
                                     <td>{request.modelCode}</td>
                                     <td>{formatDate(request.createdAt)}</td>
-                                    <td style={{ color: statusConfig[request.assignmentStatus].color }}>
-                                        {statusConfig[request.assignmentStatus].label}
+                                    <td>
+                                        <StatusBadge role={role} status={request.assignmentStatus} />
                                     </td>
                                     <td>{request.engineerName}</td>
                                     <td>
@@ -433,7 +422,4 @@ export default function RequestList() {
             </div>
         </div>
     );
-};
-
-
-
+}
