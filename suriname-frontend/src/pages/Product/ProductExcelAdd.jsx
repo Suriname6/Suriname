@@ -19,13 +19,26 @@ const ProductExcelAdd = () => {
     setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
   };
 
-  const downloadTemplate = () => {
-    const link = document.createElement("a");
-    link.href = "/ProductListTemplate.xlsx";
-    link.download = "ProductListTemplate2025.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadTemplate = async () => {
+    try {
+      const resp = await api.get("/api/products/template", {
+        responseType: "blob",
+      });
+      const blob = new Blob([resp.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ProductListTemplate.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      alert("템플릿 다운로드 실패");
+    }
   };
 
   const handleUpload = async () => {
@@ -38,14 +51,73 @@ const ProductExcelAdd = () => {
     formData.append("file", uploadedFiles[0]);
 
     try {
-      const response = await api.post("/api/products/register/excel", formData);
-      alert("업로드 성공!");
-      console.log(response.data);
+      const resp = await api.post("/api/products/register/excel", formData);
+      const payload = resp?.data;
+      const data = payload?.data;
+
+      const totalCount =
+        typeof data?.totalCount === "number"
+          ? data.totalCount
+          : typeof payload?.totalCount === "number"
+          ? payload.totalCount
+          : null;
+
+      const successCount =
+        typeof data?.successCount === "number"
+          ? data.successCount
+          : typeof payload?.successCount === "number"
+          ? payload.successCount
+          : null;
+
+      let failures = Array.isArray(data?.failures)
+        ? data.failures
+        : Array.isArray(payload?.failures)
+        ? payload.failures
+        : [];
+
+      const failureCount =
+        typeof data?.failureCount === "number"
+          ? data.failureCount
+          : typeof payload?.failureCount === "number"
+          ? payload.failureCount
+          : failures.length;
+
+      const total =
+        typeof totalCount === "number"
+          ? totalCount
+          : typeof successCount === "number"
+          ? successCount + failureCount
+          : null;
+
+      let msg;
+      if (typeof total === "number" && typeof successCount === "number") {
+        msg = `총 ${total}건 중 ${successCount}건 성공, ${failureCount}건 실패`;
+      } else if (typeof successCount === "number") {
+        msg = `총 ${successCount}건 성공`;
+      } else if (typeof payload?.message === "string") {
+        msg = payload.message;
+      } else {
+        msg = "업로드 처리 결과를 확인했습니다.";
+      }
+
+      if (failures.length > 0) {
+        msg += `\n\n[등록 실패 항목]`;
+        failures.forEach((f) => {
+          msg += `\n- ${f.row}행: ${f.reason}`;
+        });
+      }
+
+      alert(msg);
+      setUploadedFiles([]);
     } catch (error) {
       console.error("업로드 실패:", error);
-      alert(
-        "업로드 실패: " + (error.response?.data?.message || "알 수 없는 오류")
-      );
+      const serverMsg =
+        error?.response?.data?.message ??
+        (typeof error?.response?.data === "string"
+          ? error.response.data
+          : null) ??
+        error.message;
+      alert("업로드 실패: " + serverMsg);
     }
   };
 
@@ -87,9 +159,9 @@ const ProductExcelAdd = () => {
             <div className={styles.templateInfo}>
               <div className={styles.templateIcon}>📄</div>
               <span className={styles.templateName}>
-                ProductListTemplate 2025.xlsx
+                ProductListTemplate.xlsx
               </span>
-              <span className={styles.templateBadge}>XLS</span>
+              <span className={styles.templateBadge}>XLSX</span>
             </div>
             <button
               className={styles.downloadButton}
