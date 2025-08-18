@@ -26,6 +26,7 @@ import CustomerDetail from "./pages/Customer/CustomerDetail";
 import DashboardPage from "./pages/Dashboard/DashboardPage.jsx";
 import EmployeePerformancePage from "./pages/Dashboard/EmployeePerformancePage.jsx";
 import ReportPage from "./pages/Dashboard/ReportPage.jsx";
+import RecommendationDashboard from "./pages/Dashboard/RecommendationDashboard.jsx";
 
 import ProductList from "./pages/Product/ProductList";
 import ProductAdd from "./pages/Product/ProductAdd";
@@ -134,6 +135,7 @@ function App() {
             element={<EmployeePerformancePage />}
           />
           <Route path="/dashboard/report" element={<ReportPage />} />
+          <Route path="/dashboard/recommendation" element={<RecommendationDashboard />} />
 
           <Route path="/payment/list" element={<PaymentListPage />} />
           <Route
