@@ -1,0 +1,315 @@
+/* 루트 컨테이너 */
+.snPage {
+    background: #fff;
+    min-height: 100vh;
+}
+
+/* 공용 컨테이너 */
+.snContainer {
+    max-width: 1700px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ================= Hero ================= */
+.snHero {
+    position: relative;
+    min-height: 70vh;
+    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 50%, #1E5A8A 100%);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+    padding-top: clamp(60px, 13vh, 180px);
+}
+
+.snHero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><defs><style>.tool{fill:white;opacity:0.1}</style></defs><g class="tool"><path d="M100 100L150 50L200 100L150 150Z"/></g><g class="tool" transform="translate(700,80) rotate(30)"><rect width="60" height="20" rx="10"/></g><g class="tool" transform="translate(150,400) rotate(-15)"><circle cx="0" cy="0" r="25"/></g><g class="tool" transform="translate(800,450) rotate(45)"><polygon points="0,0 30,10 20,40 -10,30"/></g></svg>');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.snHeroContent {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: #fff;
+    max-width: 900px;
+    padding: 0 20px;
+}
+
+.snHeroH1 {
+    font-size: 2rem;
+    letter-spacing: .2em;
+    margin: 0 0 1rem;
+    font-weight: 400;
+}
+
+.snHeroH2 {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0 0 3rem;
+}
+
+.snHeroBtn {
+    background: #3668d6;
+    color: #fff;
+    padding: 15px 25px;
+    border: 0;
+    border-radius: 15px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter .2s;
+}
+
+.snHeroBtn:hover {
+    filter: brightness(0.92);
+}
+
+/* ================= Intro ================= */
+.snContent {
+    background: linear-gradient(70deg, #f5f5f5 0%, #f5f5f5 50%);
+    min-height: clamp(520px, 60vh, 780px);
+    display: grid;
+    place-items: center;
+    padding: 50px 0;
+}
+
+.snIntroGrid {
+    max-width: 1500px;
+    width: min(1500px, 100%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    align-items: center;
+    margin: 0;
+}
+
+.snIntroCard {
+    background: #1656A6;
+    color: #fff;
+    padding: 4rem 3.5rem;
+    border-radius: 20px;
+    margin-right: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.snIntroTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 2rem;
+    line-height: 1.3;
+}
+
+.snIntroDesc {
+    color: rgba(255, 255, 255, .9);
+    margin: 0 0 2.5rem;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.snIntroList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.snIntroLi {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin: 0 0 1.5rem;
+    font-size: 1.5rem;
+}
+
+.snCheckIcon {
+    width: 18px;
+    height: 20px;
+    color: #10B981;
+    flex: 0 0 auto;
+    margin-top: 9px;
+}
+
+.snIntroImageCard {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 20px;
+    margin-left: 2rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .1);
+}
+
+.snIntroImage {
+    width: 100%;
+    height: 480px;
+    border-radius: 15px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+/* ================= Services ================= */
+.snServices {
+    background: #1656A6;
+    padding: 60px 0 80px;
+}
+
+.snServicesTitle {
+    color: #fff;
+    text-align: center;
+    font-size: 4rem;
+    font-weight: 700;
+    margin: 0 0 60px;
+}
+
+.snServicesGrid {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.snServiceItem {
+    text-align: center;
+    color: #fff;
+    flex: 1;
+}
+
+.snDiamond {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 2rem;
+    transform: rotate(45deg);
+    position: relative;
+}
+
+.snDiamondInner {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .15);
+}
+
+.snServiceIcon {
+    transform: rotate(-45deg);
+    width: 40px;
+    height: 40px;
+    color: #1656A6;
+}
+
+.snServiceTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 1rem;
+    color: #fff;
+}
+
+.snServiceDesc {
+    list-style: none;
+    color: #fff;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    margin: 6px 0 0;
+}
+
+.snServiceDesc li {
+    margin-bottom: .5rem;
+}
+
+.snServiceDesc li:last-child {
+    margin-bottom: 0;
+}
+
+/* ================= Footer ================= */
+.snFooter {
+    background: #f8f9fa;
+    padding: 60px 0;
+    border-top: 1px solid #e2e8f0;
+}
+
+
+.snFooterContent {
+    display: grid;
+    grid-template-columns: auto max-content max-content;
+    column-gap: 48px;
+    justify-content: center;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.snFooterBrandWrap {
+    display: flex;
+    align-items: center;
+}
+
+.snFooterBrandImg {
+    height: 90px;
+    width: 100px;
+    max-height: none;
+     max-width: none;
+    display: block;
+    object-fit: contain;
+}
+
+
+.snFooterSection {
+    text-align: left;
+    display: grid;
+    row-gap: 12px;
+}
+
+.snFooterHeading {
+    margin: 0 0 12px;
+    line-height: 28px;
+}
+
+
+.snFooterRow {
+    display: grid;
+    grid-template-columns: 22px 80px 1fr;
+
+    align-items: center;
+    column-gap: 10px;
+    min-height: 28px;
+}
+
+.snFooterIcon {
+    width: 20px;
+    height: 20px;
+}
+
+.snFooterLabel {
+    font-weight: 600;
+    color: #111;
+    line-height: 1;
+}
+
+.snFooterLink,
+.snFooterText {
+    color: #111;
+    font-size: 16px;
+    line-height: 1.3;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.snFooterLink:hover {
+    text-decoration: underline;
+}
+

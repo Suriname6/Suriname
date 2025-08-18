@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import SidebarNavigation from '../../components/SidebarNavigation';
-import { getQuotes, deleteQuotes } from '../../api/quote';
-import styles from '../../css/Repair/RepairList.module.css';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import SidebarNavigation from "../../components/SidebarNavigation";
+import { getQuotes, deleteQuotes } from "../../api/quote";
+import styles from "../../css/Repair/RepairList.module.css";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const RepairListPage = () => {
   const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
-    customerName: '',
-    requestNo: '',
-    productName: '',
-    serialNumber: '',
-    paymentStatus: '',
-    progressStatus: '',
-    employeeName: '',
-    startDate: '',
-    endDate: ''
+    customerName: "",
+    requestNo: "",
+    productName: "",
+    serialNumber: "",
+    paymentStatus: "",
+    progressStatus: "",
+    employeeName: "",
+    startDate: "",
+    endDate: "",
   });
 
   const [quotes, setQuotes] = useState([]);
@@ -26,13 +26,12 @@ const RepairListPage = () => {
     totalElements: 0,
     size: 10,
     first: true,
-    last: true
+    last: true,
   });
   const [selectedQuotes, setSelectedQuotes] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [searchVisible, setSearchVisible] = useState(true);
   const [loading, setLoading] = useState(false);
-
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
@@ -46,23 +45,26 @@ const RepairListPage = () => {
       const params = {
         page: pagination.currentPage,
         size: pagination.size,
-        ...(searchParams || searchData)
+        ...(searchParams || searchData),
       };
 
       // 빈 값 제거
-      Object.keys(params).forEach(key => {
-        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+      Object.keys(params).forEach((key) => {
+        if (
+          params[key] === "" ||
+          params[key] === null ||
+          params[key] === undefined
+        ) {
           delete params[key];
         }
       });
 
-
       const data = await getQuotes(params);
-      
+
       if (!data) {
-              throw new Error('서버에서 데이터를 받지 못했습니다');
-            }
-      
+        throw new Error("서버에서 데이터를 받지 못했습니다");
+      }
+
       setQuotes(data.content || []);
       setPagination({
         currentPage: data.currentPage || 0,
@@ -70,65 +72,73 @@ const RepairListPage = () => {
         totalElements: data.totalElements || 0,
         size: data.size || 10,
         first: data.first !== false,
-        last: data.last !== false
+        last: data.last !== false,
       });
     } catch (error) {
-      alert(`데이터 로드 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
+      alert(
+        `데이터 로드 실패: ${
+          error.message || "알 수 없는 오류가 발생했습니다."
+        }`
+      );
     }
     setLoading(false);
   };
 
   const deleteSelectedQuotes = async () => {
     if (selectedQuotes.length === 0) {
-      alert('삭제할 항목을 선택해주세요.');
+      alert("삭제할 항목을 선택해주세요.");
       return;
     }
 
-    if (!confirm(`선택된 ${selectedQuotes.length}개의 항목을 삭제하시겠습니까?`)) {
+    if (
+      !confirm(`선택된 ${selectedQuotes.length}개의 항목을 삭제하시겠습니까?`)
+    ) {
       return;
     }
 
     try {
       await deleteQuotes(selectedQuotes);
-      alert('선택된 항목이 삭제되었습니다.');
+      alert("선택된 항목이 삭제되었습니다.");
       setSelectedQuotes([]);
       setSelectAll(false);
       fetchQuotes();
     } catch (error) {
-      alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+      alert(
+        `삭제 중 오류가 발생했습니다: ${error.message || "알 수 없는 오류"}`
+      );
     }
   };
 
   // 검색 입력 처리
   const handleInputChange = (field, value) => {
-    setSearchData(prev => ({
+    setSearchData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleSearch = () => {
-    setPagination(prev => ({ ...prev, currentPage: 0 }));
+    setPagination((prev) => ({ ...prev, currentPage: 0 }));
     fetchQuotes(searchData);
   };
 
   const handlePageChange = (page) => {
-    setPagination(prev => ({ ...prev, currentPage: page }));
+    setPagination((prev) => ({ ...prev, currentPage: page }));
   };
 
   const handleSelectAll = () => {
     if (selectAll) {
       setSelectedQuotes([]);
     } else {
-      setSelectedQuotes(quotes.map(quote => quote.quoteId));
+      setSelectedQuotes(quotes.map((quote) => quote.quoteId));
     }
     setSelectAll(!selectAll);
   };
 
   const handleSelectQuote = (quoteId) => {
-    setSelectedQuotes(prev => {
+    setSelectedQuotes((prev) => {
       if (prev.includes(quoteId)) {
-        const newSelected = prev.filter(id => id !== quoteId);
+        const newSelected = prev.filter((id) => id !== quoteId);
         setSelectAll(false);
         return newSelected;
       } else {
@@ -144,141 +154,151 @@ const RepairListPage = () => {
   };
 
   const formatDateTime = (dateTime) => {
-    if (!dateTime) return '-';
+    if (!dateTime) return "-";
     const date = new Date(dateTime);
-    return date.toLocaleString('ko-KR', {
-      year: '2-digit',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(/\./g, '-').replace(/, /g, ' ');
+    return date
+      .toLocaleString("ko-KR", {
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+      .replace(/\./g, "-")
+      .replace(/, /g, " ");
   };
 
   const formatCurrency = (amount) => {
-    if (!amount) return '-';
-    return amount.toLocaleString('ko-KR');
+    if (!amount) return "-";
+    return amount.toLocaleString("ko-KR");
   };
 
   const formatStatus = (status) => {
-    if (!status) return '수리중';
-    
+    if (!status) return "수리중";
+
     const statusMap = {
-        'RECEIVED' : '접수',
-      'IN_PROGRESS': '수리중',
-      'AWAITING_PAYMENT': '입금 대기',
-      'READY_FOR_DELIVERY': '수리완료',
-      'COMPLETED': '수리완료'
+      RECEIVED: "접수",
+      IN_PROGRESS: "수리중",
+      AWAITING_PAYMENT: "입금 대기",
+      READY_FOR_DELIVERY: "수리완료",
+      COMPLETED: "수리완료",
     };
-    
+
     return statusMap[status] || status;
   };
 
   const getPaymentStatus = (quote) => {
-    
     // statusChange를 기반으로 입금상태 결정
-    if (quote.statusChange === 'AWAITING_PAYMENT') {
+    if (quote.statusChange === "AWAITING_PAYMENT") {
       // 입금대기 상태에서 가상계좌가 발급된 경우 구분
-      if (quote.paymentStatus === '입금대기') {
-        return 'VIRTUAL_ACCOUNT_ISSUED'; // 가상계좌 발급 완료
+      if (quote.paymentStatus === "입금대기") {
+        return "VIRTUAL_ACCOUNT_ISSUED"; // 가상계좌 발급 완료
       } else {
-        return 'AWAITING_PAYMENT'; // 가상계좌 발급 필요
+        return "AWAITING_PAYMENT"; // 가상계좌 발급 필요
       }
-    } else if (quote.statusChange === 'IN_PROGRESS' || !quote.statusChange) {
-      return 'AWAITING_PAYMENT';
-    } else if (quote.statusChange === 'READY_FOR_DELIVERY' || quote.statusChange === 'COMPLETED') {
-      return 'COMPLETED';
+    } else if (quote.statusChange === "IN_PROGRESS" || !quote.statusChange) {
+      return "AWAITING_PAYMENT";
+    } else if (
+      quote.statusChange === "READY_FOR_DELIVERY" ||
+      quote.statusChange === "COMPLETED"
+    ) {
+      return "COMPLETED";
     }
-    return 'AWAITING_PAYMENT'; // 기본적으로 입금하기 버튼 표시
+    return "AWAITING_PAYMENT"; // 기본적으로 입금하기 버튼 표시
   };
 
   const handlePaymentClick = (e, quote) => {
     e.stopPropagation(); // 행 클릭 이벤트 방지
-    
+
     // 가상계좌 발급 페이지로 이동하면서 수리내역 정보 전달
-    navigate('/payment/virtualaccount', {
+    navigate("/payment/virtualaccount", {
       state: {
         customerName: quote.customerName,
         requestNo: quote.requestNo,
-        paymentAmount: quote.cost
-      }
+        paymentAmount: quote.cost,
+      },
     });
   };
 
   const renderPaymentButton = (quote) => {
     const paymentStatus = getPaymentStatus(quote);
-    
-    if (paymentStatus === 'AWAITING_PAYMENT') {
+
+    if (paymentStatus === "AWAITING_PAYMENT") {
       return (
-        <button 
+        <button
           className={styles.paymentButton}
           onClick={(e) => handlePaymentClick(e, quote)}
           style={{
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '4px 12px',
-            cursor: 'pointer',
-            fontSize: '12px'
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            padding: "4px 12px",
+            cursor: "pointer",
+            fontSize: "12px",
           }}
         >
           가상계좌발급
         </button>
       );
-    } else if (paymentStatus === 'VIRTUAL_ACCOUNT_ISSUED') {
+    } else if (paymentStatus === "VIRTUAL_ACCOUNT_ISSUED") {
       return (
-        <span style={{
-          color: '#FFA500',
-          fontWeight: 'bold',
-          fontSize: '12px'
-        }}>
+        <span
+          style={{
+            color: "#FFA500",
+            fontWeight: "bold",
+            fontSize: "12px",
+          }}
+        >
           계좌발급완료
         </span>
       );
-    } else if (paymentStatus === 'COMPLETED') {
+    } else if (paymentStatus === "COMPLETED") {
       return (
-        <span style={{
-          color: '#28a745',
-          fontWeight: 'bold',
-          fontSize: '12px'
-        }}>
+        <span
+          style={{
+            color: "#28a745",
+            fontWeight: "bold",
+            fontSize: "12px",
+          }}
+        >
           계좌입금완료
         </span>
       );
     } else {
-      return <span style={{ fontSize: '12px', color: '#6c757d' }}>-</span>;
+      return <span style={{ fontSize: "12px", color: "#6c757d" }}>-</span>;
     }
   };
 
   const handleRowClick = (quote) => {
     // 수리 내역 작성 페이지로 이동하면서 데이터 전달
-    navigate('/repair/write', { 
-      state: { 
+    navigate("/repair/write", {
+      state: {
         quote: quote,
-        mode: 'edit' // 상세보기/편집 모드임을 나타냄
-      } 
+        mode: "edit", // 상세보기/편집 모드임을 나타냄
+      },
     });
   };
 
   return (
     <div className={styles.container}>
       <SidebarNavigation />
-      
+
       {!searchVisible ? (
         <div className={styles.searchToggle}>
-          <button className={styles.searchToggleBtn} onClick={toggleSearchVisible}>
+          <button
+            className={styles.searchToggleBtn}
+            onClick={toggleSearchVisible}
+          >
             검색 조건
           </button>
         </div>
       ) : (
         <div className={styles.searchWrap}>
           <div className={styles.searchCloseBtn}>
-            <button onClick={toggleSearchVisible}>
-              검색 조건 닫기
-            </button>
+            <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
           </div>
-          
+
           <div className={styles.searchFields}>
             <div className={styles.searchRow}>
               <div className={styles.searchField}>
@@ -287,7 +307,9 @@ const RepairListPage = () => {
                   type="text"
                   placeholder="입력"
                   value={searchData.customerName}
-                  onChange={(e) => handleInputChange('customerName', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("customerName", e.target.value)
+                  }
                 />
               </div>
 
@@ -296,17 +318,21 @@ const RepairListPage = () => {
                 <input
                   type="text"
                   value={searchData.productName}
-                  onChange={(e) => handleInputChange('productName', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("productName", e.target.value)
+                  }
                 />
               </div>
-              
+
               <div className={styles.searchField}>
                 <label>제품고유번호</label>
                 <input
                   type="text"
                   placeholder="입력"
                   value={searchData.serialNumber}
-                  onChange={(e) => handleInputChange('serialNumber', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("serialNumber", e.target.value)
+                  }
                 />
               </div>
               <div className={styles.searchField}>
@@ -315,18 +341,21 @@ const RepairListPage = () => {
                   type="text"
                   placeholder="입력"
                   value={searchData.employeeName}
-                  onChange={(e) => handleInputChange('employeeName', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("employeeName", e.target.value)
+                  }
                 />
               </div>
             </div>
-            
-            <div className={styles.searchRow}>
 
+            <div className={styles.searchRow}>
               <div className={styles.searchField}>
                 <label>진행상태</label>
                 <select
                   value={searchData.progressStatus}
-                  onChange={(e) => handleInputChange('progressStatus', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("progressStatus", e.target.value)
+                  }
                 >
                   <option value="">전체</option>
                   <option value="RECEIVED">접수</option>
@@ -335,12 +364,14 @@ const RepairListPage = () => {
                   <option value="READY_FOR_DELIVERY,COMPLETED">수리완료</option>
                 </select>
               </div>
-              
+
               <div className={styles.searchField}>
                 <label>입금상태</label>
                 <select
                   value={searchData.paymentStatus}
-                  onChange={(e) => handleInputChange('paymentStatus', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("paymentStatus", e.target.value)
+                  }
                 >
                   <option value="">전체</option>
                   <option value="AWAITING_PAYMENT">가상계좌발급</option>
@@ -348,27 +379,33 @@ const RepairListPage = () => {
                   <option value="COMPLETED">계좌입금완료</option>
                 </select>
               </div>
-              
+
               <div className={styles.searchField}>
                 <label>접수일자</label>
                 <input
                   type="date"
                   value={searchData.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("startDate", e.target.value)
+                  }
                 />
               </div>
-              
+
               <div className={styles.searchField}>
                 <label>　</label>
                 <input
                   type="date"
                   value={searchData.endDate}
-                  onChange={(e) => handleInputChange('endDate', e.target.value)}
+                  onChange={(e) => handleInputChange("endDate", e.target.value)}
                 />
               </div>
-              
-              <button className={styles.searchButton} onClick={handleSearch} disabled={loading}>
-                {loading ? '검색 중...' : '검색'}
+
+              <button
+                className={styles.searchButton}
+                onClick={handleSearch}
+                disabled={loading}
+              >
+                {loading ? "검색 중..." : "검색"}
               </button>
             </div>
           </div>
@@ -385,7 +422,10 @@ const RepairListPage = () => {
           <span>전체 선택</span>
         </div>
         <div className={styles.deleteButtonWrapper}>
-          <button onClick={deleteSelectedQuotes} className={styles.deleteButton}>
+          <button
+            onClick={deleteSelectedQuotes}
+            className={styles.deleteButton}
+          >
             삭제 ({selectedQuotes.length})
           </button>
         </div>
@@ -393,7 +433,7 @@ const RepairListPage = () => {
 
       <div className={styles.tableWrapper}>
         {loading ? (
-          <div style={{ padding: '20px', textAlign: 'center' }}>
+          <div style={{ padding: "20px", textAlign: "center" }}>
             데이터를 불러오는 중...
           </div>
         ) : (
@@ -423,10 +463,14 @@ const RepairListPage = () => {
                 </tr>
               ) : (
                 quotes.map((quote) => (
-                  <tr key={quote.quoteId} onClick={() => handleRowClick(quote)} style={{cursor: 'pointer'}}>
+                  <tr
+                    key={quote.quoteId}
+                    onClick={() => handleRowClick(quote)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td onClick={(e) => e.stopPropagation()}>
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={selectedQuotes.includes(quote.quoteId)}
                         onChange={() => handleSelectQuote(quote.quoteId)}
                       />
@@ -451,7 +495,9 @@ const RepairListPage = () => {
 
       <div className={styles.pagination}>
         <button
-          onClick={() => handlePageChange(Math.max(0, pagination.currentPage - 1))}
+          onClick={() =>
+            handlePageChange(Math.max(0, pagination.currentPage - 1))
+          }
           disabled={pagination.currentPage === 0}
         >
           <ChevronLeft />
@@ -466,7 +512,11 @@ const RepairListPage = () => {
           </button>
         ))}
         <button
-          onClick={() => handlePageChange(Math.min(pagination.totalPages - 1, pagination.currentPage + 1))}
+          onClick={() =>
+            handlePageChange(
+              Math.min(pagination.totalPages - 1, pagination.currentPage + 1)
+            )
+          }
           disabled={pagination.currentPage === pagination.totalPages - 1}
         >
           <ChevronRight />
