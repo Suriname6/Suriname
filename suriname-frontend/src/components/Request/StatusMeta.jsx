@@ -34,7 +34,7 @@ export const ROLE_COLOR = {
 };
 
 export function getStatusMeta(role, status) {
-    const color = ROLE_COLOR[role]?.[status] || ROLE_COLOR.ADMIN[status];
+    const color = ROLE_COLOR[role]?.[status] || ROLE_COLOR.ADMIN[status] || { fg: '#475569', bg: '#e2e8f0', bd: '#94a3b8' };
     const label = BASE_LABEL[status] || status;
     return { color, label };
 }

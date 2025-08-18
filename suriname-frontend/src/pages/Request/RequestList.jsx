@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import axios from "../../api/axiosInstance";
 import styles from '../../css/Request/RequestList.module.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import StatusBadge from "../../components/Request/StatusBadge";
 import StatusSelect from "../../components/Request/StatusSelect";
+import RequestSearch from "../../components/Search/RequestSearch.jsx"
 
 export default function RequestList() {
     const [requests, setRequests] = useState([]);
@@ -15,7 +16,7 @@ export default function RequestList() {
         category: '',
         brand: '',
         modelCode: '',
-        employeeName: '',
+        employName: '',
         status: '',
         startDate: '',
         endDate: ''
@@ -30,18 +31,12 @@ export default function RequestList() {
     });
     const [selectedRequests, setSelectedRequests] = useState([]);
     const [selectAll, setSelectAll] = useState(false);
-    const [searchVisible, setSearchVisible] = useState(true);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const [role] = useState(localStorage.getItem("role") || "ADMIN");
 
-    // 초기 로드 & 페이지 변경 시
-    useEffect(() => {
-        fetchRequests();
-    }, [pagination.currentPage]);
-
-    const fetchRequests = async () => {
+    const fetchRequests = useCallback( async () => {
         setLoading(true);
         try {
             const cleaned = Object.fromEntries(
@@ -79,7 +74,12 @@ export default function RequestList() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [searchData]);
+
+    // 초기 로드 & 페이지 변경 시
+    useEffect(() => {
+        fetchRequests();
+    }, [fetchRequests]);
 
     const deleteSelectedRequests = async () => {
         if (selectedRequests.length === 0) {
@@ -96,19 +96,6 @@ export default function RequestList() {
         } catch (error) {
             console.error('Error deleting Requests:', error);
             alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
-        }
-    };
-
-    // 검색 입력 처리
-    const handleInputChange = (field, value) => {
-        setSearchData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleSearch = () => {
-        if (pagination.currentPage !== 0) {
-            setPagination(prev => ({ ...prev, currentPage: 0 }));
-        } else {
-            fetchRequests();
         }
     };
 
@@ -139,8 +126,6 @@ export default function RequestList() {
         });
     };
 
-    const toggleSearchVisible = () => setSearchVisible(!searchVisible);
-
     function formatDate(dateStr) {
         if (!dateStr) return '-';
         const date = new Date(dateStr);
@@ -165,7 +150,7 @@ export default function RequestList() {
     };
 
     const handleAccept = (request) => {
-        if (request.assignmentStatus !== "PENDING") {
+        if (request.status !== "PENDING") {
             alert("대기 상태(PENDING)에서만 접수가 가능합니다.");
             return;
         }
@@ -175,120 +160,12 @@ export default function RequestList() {
 
     return (
         <div className={styles.container}>
-            {!searchVisible ? (
-                <div className={styles.searchToggle}>
-                    <button className={styles.searchToggleBtn} onClick={toggleSearchVisible}>
-                        검색 조건
-                    </button>
-                </div>
-            ) : (
-                <div className={styles.searchWrap}>
-                    <div className={styles.searchCloseBtn}>
-                        <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
-                    </div>
-
-                    <div className={styles.searchFields}>
-                        <div className={styles.searchRow}>
-                            <div className={styles.searchField}>
-                                <label>고객명</label>
-                                <input
-                                    type="text"
-                                    placeholder="입력"
-                                    value={searchData.customerName}
-                                    onChange={(e) => handleInputChange('customerName', e.target.value)}
-                                />
-                            </div>
-                            <div className={styles.searchField}>
-                                <label>수리 담당자</label>
-                                <input
-                                    type="text"
-                                    placeholder="입력"
-                                    value={searchData.employeeName}
-                                    onChange={(e) => handleInputChange('employeeName', e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className={styles.searchRow}>
-                            <div className={styles.searchField}>
-                                <label>제품명</label>
-                                <input
-                                    type="text"
-                                    placeholder="입력"
-                                    value={searchData.productName}
-                                    onChange={(e) => handleInputChange('productName', e.target.value)}
-                                />
-                            </div>
-
-                            <div className={styles.searchField}>
-                                <label>카테고리</label>
-                                <input
-                                    type="text"
-                                    placeholder="입력"
-                                    value={searchData.category}
-                                    onChange={(e) => handleInputChange('category', e.target.value)}
-                                />
-                            </div>
-
-                            <div className={styles.searchField}>
-                                <label>브랜드</label>
-                                <input
-                                    type="text"
-                                    placeholder="입력"
-                                    value={searchData.brand}
-                                    onChange={(e) => handleInputChange('brand', e.target.value)}
-                                />
-                            </div>
-                            <div className={styles.searchField}>
-                                <label>모델코드</label>
-                                <input
-                                    type="text"
-                                    placeholder="입력"
-                                    value={searchData.modelCode}
-                                    onChange={(e) => handleInputChange('modelCode', e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className={styles.searchRow}>
-                            <div className={styles.searchField}>
-                                <label>접수 상태</label>
-                                <StatusSelect
-                                    role={role}
-                                    value={searchData.status}
-                                    onChange={(v) => handleInputChange('status', v)}
-                                  />
-                            </div>
-
-                            <div className={styles.searchField}>
-                                <label>시작 날짜</label>
-                                <input
-                                    type="date"
-                                    value={searchData.startDate}
-                                    onChange={(e) => handleInputChange('startDate', e.target.value)}
-                                />
-                            </div>
-
-                            <div className={styles.searchField}>
-                                <label>종료 날짜</label>
-                                <input
-                                    type="date"
-                                    value={searchData.endDate}
-                                    onChange={(e) => handleInputChange('endDate', e.target.value)}
-                                />
-                            </div>
-
-                            <button
-                                className={styles.searchButton}
-                                onClick={handleSearch}
-                                disabled={loading}
-                            >
-                                {loading ? '검색 중...' : '검색'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <RequestSearch
+                requests={requests}
+                setRequests={setRequests}
+                pagination={pagination}
+                setPagination={setPagination}
+            />
 
             {(role === "ADMIN" || role === "STAFF") && (
                 <div className={styles.tableHeader}>
@@ -341,7 +218,7 @@ export default function RequestList() {
                             requests.map((request) => (
                                 <tr
                                     key={request.requestId}
-                                    className={request.assignmentStatus === "ACCEPTED" ? styles.acceptedRow : undefined}
+                                    className={request.status === "ACCEPTED" ? styles.acceptedRow : undefined}
                                 >
                                     {(role === "ADMIN" || role === "STAFF") && (
                                         <td className={styles.narrowTd}>
@@ -357,9 +234,9 @@ export default function RequestList() {
                                         <td>
                                             <button
                                                 onClick={() => handleAccept(request)}
-                                                disabled={request.assignmentStatus !== "PENDING"}
+                                                disabled={request.status !== "PENDING"}
                                                 className={`${styles.btn} ${styles.btnAccept}`}
-                                                title={request.assignmentStatus === "PENDING" ? "접수 가능" : "대기 상태에서만 접수 가능"}
+                                                title={request.status === "PENDING" ? "접수 가능" : "대기 상태에서만 접수 가능"}
                                             >
                                                 접수
                                             </button>
@@ -372,7 +249,7 @@ export default function RequestList() {
                                     <td>{request.modelCode}</td>
                                     <td>{formatDate(request.createdAt)}</td>
                                     <td>
-                                        <StatusBadge role={role} status={request.assignmentStatus} />
+                                        <StatusBadge role={role} status={request.status} />
                                     </td>
                                     <td>{request.engineerName}</td>
                                     <td>

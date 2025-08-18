@@ -2,6 +2,8 @@ package com.suriname.request.controller;
 
 import com.suriname.employee.repository.EmployeeRepository;
 import com.suriname.global.security.principal.EmployeeDetails;
+import com.suriname.product.dto.ProductDto;
+import com.suriname.product.dto.ProductSearchDto;
 import com.suriname.request.dto.*;
 import com.suriname.request.entity.Request;
 import com.suriname.request.repository.RequestRepository;
@@ -12,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -94,6 +97,14 @@ public class RequestController {
 	public ResponseEntity<?> deleteRequests(@RequestBody RequestDeleteDto dto) {
 		requestService.deleteRequests(dto.getIds());
 		return ResponseEntity.noContent().build();
+	}
+
+	// 검색
+	@PostMapping("/search")
+	public ResponseEntity<?> searchProducts(@RequestBody RequestSearchDto dto, @RequestParam("page") int page,
+											@RequestParam("size") int size) {
+		Page<RequestDto> result = requestService.searchProducts(dto, PageRequest.of(page, size));
+		return ResponseEntity.ok(Map.of("status", 200, "data", result));
 	}
 
 	// AS 요청 수리 담당자 배정 상태 처리

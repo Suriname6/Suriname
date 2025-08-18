@@ -8,4 +8,6 @@ import lombok.Getter;
 public class RecommendationDto {
     private String modelName;
     private String message;
+    private long repairCount;
+    private double avgSatisfaction;
 }

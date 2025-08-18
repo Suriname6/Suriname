@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "../../api/axiosInstance";
 import StatusBadge from "../../components/Request/StatusBadge";
-import { BASE_LABEL } from "../../components/Request/statusMeta";
 import styles from "../../css/Request/RequestDetail.module.css";
 
 // 요청 상태 한글 매핑 (enum Status)

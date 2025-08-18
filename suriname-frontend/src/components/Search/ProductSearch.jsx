@@ -69,6 +69,7 @@ const ProductSearch = ({
         }),
       });
 
+
       if (response.ok) {
         const result = await response.json();
         const page = result.data || {};
