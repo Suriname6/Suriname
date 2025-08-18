@@ -9,6 +9,8 @@
 
 /* 탭 네비게이션 */
 .tabNavigation {
+    display: flex;
+    justify-content: center;
     margin-bottom: 32px;
 }
 

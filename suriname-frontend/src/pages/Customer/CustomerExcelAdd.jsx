@@ -20,13 +20,23 @@ const CustomerExcelAdd = () => {
     setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
   };
 
-  const downloadTemplate = () => {
-    const link = document.createElement("a");
-    link.href = "/CustomerListTemplate.xlsx";
-    link.download = "CustomerListTemplate2025.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadTemplate = async () => {
+    try {
+      const res = await api.get("/api/customers/template", {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "CustomerListTemplate.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      alert("템플릿 다운로드에 실패했습니다.");
+    }
   };
 
   const handleUpload = async () => {
@@ -38,32 +48,37 @@ const CustomerExcelAdd = () => {
     const formData = new FormData();
     formData.append("file", uploadedFiles[0]);
 
-    try {
-      const response = await api.post(
-        "/api/customers/register/excel",
-        formData
-      );
-      const { successCount, failures } = response.data.data;
+    const resp = await api.post("/api/customers/register/excel", formData);
+    const body = resp?.data?.data ?? resp?.data ?? {};
+    const { totalCount, successCount, failureCount, failures = [] } = body;
 
-      // 성공 메시지
-      let message = `총 ${successCount}건이 성공적으로 등록되었습니다.`;
+    const total =
+      typeof totalCount === "number"
+        ? totalCount
+        : typeof successCount === "number" && Array.isArray(failures)
+        ? successCount + failures.length
+        : null;
 
-      // 실패한 항목이 있다면 상세 메시지 추가
-      if (failures && failures.length > 0) {
-        message += `\n\n[등록 실패 항목]`;
-        failures.forEach((fail) => {
-          message += `\n- ${fail.row}행: ${fail.reason}`;
-        });
-      }
-
-      alert(message);
-      setUploadedFiles([]);
-    } catch (error) {
-      console.error("업로드 실패:", error);
-      alert(
-        "업로드 실패: " + (error.response?.data?.message || "알 수 없는 오류")
-      );
+    let msg;
+    if (typeof total === "number") {
+      msg = `총 ${total}건 중 ${successCount}건 성공, ${
+        failureCount ?? failures.length
+      }건 실패`;
+    } else if (typeof successCount === "number") {
+      msg = `총 ${successCount}건 성공`;
+    } else {
+      msg = body?.message || "업로드 처리 결과를 확인했습니다.";
     }
+
+    if (failures.length > 0) {
+      msg += `\n\n[등록 실패 항목]`;
+      failures.forEach((f) => {
+        msg += `\n- ${f.row}행: ${f.reason}`;
+      });
+    }
+
+    alert(msg);
+    setUploadedFiles([]);
   };
 
   return (
@@ -96,7 +111,7 @@ const CustomerExcelAdd = () => {
         </div>
       </div>
 
-      {/* Content Container - Centered */}
+      {/* Content Container */}
       <div className={styles.contentContainer}>
         {/* File Template Section */}
         <div className={styles.templateSection}>
@@ -107,9 +122,9 @@ const CustomerExcelAdd = () => {
             <div className={styles.templateInfo}>
               <div className={styles.templateIcon}>📄</div>
               <span className={styles.templateName}>
-                CustomerListTemplate 2025.xlsx
+                CustomerListTemplate.xlsx
               </span>
-              <span className={styles.templateBadge}>XLS</span>
+              <span className={styles.templateBadge}>XLSX</span>
             </div>
             <button
               className={styles.downloadButton}

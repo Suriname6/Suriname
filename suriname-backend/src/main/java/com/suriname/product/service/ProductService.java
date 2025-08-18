@@ -96,12 +96,5 @@ public class ProductService {
                     .collect(Collectors.toList());
     }
 
-
-    // 엑셀
-    public void importFromExcel(MultipartFile file) {
-        productExcelService.importFromExcel(file);
-        
-        
-    }
 }
 

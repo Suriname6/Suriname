@@ -9,7 +9,9 @@
 
 /* 탭 네비게이션 */
 .tabNavigation {
+    display: flex;
     margin-bottom: 32px;
+    justify-content: center;
 }
 
 .tabContainer {
