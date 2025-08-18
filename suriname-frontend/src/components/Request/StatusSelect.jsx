@@ -1,6 +1,6 @@
 import React from "react";
 import StatusBadge from "./StatusBadge";
-import { BASE_LABEL, getStatusMeta } from "./statusMeta";
+import { BASE_LABEL, getStatusMeta } from "./StatusMeta";
 
 export default function StatusSelect({ role, value, onChange, className = "" }) {
   const [open, setOpen] = React.useState(false);
