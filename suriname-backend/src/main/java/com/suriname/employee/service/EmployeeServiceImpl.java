@@ -120,4 +120,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.findByRole(Employee.Role.ENGINEER, pageable)
                 .map(employeeMapper::toDto);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByLoginId(String loginId) {
+        return employeeRepository.existsByLoginId(loginId);
+    }
 }

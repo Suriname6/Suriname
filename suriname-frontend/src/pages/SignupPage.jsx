@@ -19,10 +19,34 @@ function SignupPage() {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [idChecked, setIdChecked] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "loginId") {
+      setIdChecked(false);
+    }
+  };
+
+   const handleCheckLoginId = async () => {
+    if (!formData.loginId.trim()) {
+      alert("아이디를 입력해주세요.");
+      return;
+    }
+    try {
+      const response = await axios.get(`/api/users/validate/loginId/${formData.loginId}`);
+      if (response.data) {
+        alert("이미 사용 중인 아이디입니다.");
+        setIdChecked(false);
+      } else {
+        alert("사용 가능한 아이디입니다.");
+        setIdChecked(true);
+      }
+    } catch (err) {
+      alert("아이디 확인 중 오류가 발생했습니다.");
+      setIdChecked(false);
+    }
   };
 
   const handleSignup = async (e) => {
@@ -62,14 +86,23 @@ function SignupPage() {
 
         <div className="form-group">
           <label htmlFor="loginId">아이디</label>
-          <input
-            type="text"
-            id="loginId"
-            name="loginId"
-            value={formData.loginId}
-            onChange={handleChange}
-            required
-          />
+          <div className="id-check-wrapper">
+            <input
+              type="text"
+              id="loginId"
+              name="loginId"
+              value={formData.loginId}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="check-btn"
+              onClick={handleCheckLoginId}
+            >
+              중복확인
+            </button>
+          </div>
         </div>
 
         <div className="form-group">
@@ -130,6 +163,7 @@ function SignupPage() {
             value={formData.password}
             onChange={handleChange}
             required
+            placeholder="비밀번호는 8자리 이상 입력해주세요"
           />
         </div>
 
