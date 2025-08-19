@@ -17,44 +17,50 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
+	private final JwtTokenProvider jwtTokenProvider;
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        String method = request.getMethod();
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+		String path = request.getRequestURI();
+		String method = request.getMethod();
 
-        /*
-         * return path.equals("/api/auth/login") || path.equals("/api/auth/refresh") ||
-         * (path.equals("/api/users") && method.equals("POST"));
-         */
+		/*
+		 * return path.equals("/api/auth/login") || path.equals("/api/auth/refresh") ||
+		 * (path.equals("/api/users") && method.equals("POST"));
+		 */
 
-        boolean shouldSkip = path.equals("/api/auth/login") || path.equals("/api/auth/refresh")
-                || (path.equals("/api/users") && method.equals("POST"));
+		boolean shouldSkip = path.equals("/api/auth/login") || path.equals("/api/auth/refresh")
+				|| (path.equals("/api/users") && method.equals("POST"));
 
-        System.out.println("=== JWT FILTER ===");
-        System.out.println("URI: " + path);
-        System.out.println("METHOD: " + method);
-        System.out.println("shouldNotFilter: " + shouldSkip);
+		System.out.println("=== JWT FILTER ===");
+		System.out.println("URI: " + path);
+		System.out.println("METHOD: " + method);
+		System.out.println("shouldNotFilter: " + shouldSkip);
 
-        return shouldSkip;
-    }
+		return shouldSkip;
+	}
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+        String authHeader = request.getHeader("Authorization");
         String token = jwtTokenProvider.resolveToken(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
+        System.out.println("=== JWT FILTER doFilterInternal ===");
+        System.out.println("Request URI: " + request.getRequestURI());
+        System.out.println("Authorization Header: " + authHeader);
+        System.out.println("Extracted Token: " + token);
 
-            if (authentication instanceof AbstractAuthenticationToken tokenAuth) {
-                tokenAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            }
+		if (token != null && jwtTokenProvider.validateToken(token)) {
+			Authentication authentication = jwtTokenProvider.getAuthentication(token);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+			if (authentication instanceof AbstractAuthenticationToken tokenAuth) {
+				tokenAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+			}
 
-        filterChain.doFilter(request, response);
-    }
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+		}
+
+		filterChain.doFilter(request, response);
+	}
 }
