@@ -10,27 +10,13 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class RequestSpecification {
 
     // 검색
     public static Specification<Request> search(RequestSearchDto dto) {
-        // System.out.println("===== [RequestSearchDto 검사] =====");
-        // System.out.println("requestNo: " + dto.getRequestNo());
-        // System.out.println("customerName: " + dto.getCustomerName());
-        // System.out.println("productName: " + dto.getProductName());
-        // System.out.println("modelCode: " + dto.getModelCode());
-        // System.out.println("startCreateAt: " + dto.getStartCreateAt());
-        // System.out.println("endCreateAt: " + dto.getEndCreateAt());
-        // System.out.println("status: " + dto.getStatus() == null ? "null" : dto.getStatus().stream().toList());
-        // System.out.println("employName: " + dto.getEmployName());
-        // System.out.println("==================================");
         return (root, query, cb) -> {
 
             Predicate predicate = cb.conjunction();
-//            predicate = cb.and(predicate, cb.isFalse(root.get("isDeleted")));
 
             Join<Request, CustomerProduct> customerProductJoin = root.join("customerProduct", JoinType.INNER);
             Join<CustomerProduct, Product> productJoin = customerProductJoin.join("product", JoinType.INNER);

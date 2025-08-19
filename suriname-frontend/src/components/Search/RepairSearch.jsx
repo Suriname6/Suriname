@@ -3,19 +3,19 @@ import * as XLSX from "xlsx"; // ✨ XLSX 라이브러리 임포트 ✨
 import { saveAs } from "file-saver"; // ✨ file-saver 임포트 ✨
 
 const statusOptions = [
-    { label: "접수 대기", value: "PENDING" },
-    { label: "접수 완료", value: "ACCEPTED" },
-    { label: "만료됨", value: "EXPIRED" },
-    { label: "거절됨", value: "REJECTED" },
-    { label: "취소됨", value: "CANCELLED" },
+    { label: "접수", value: "RECEIVED" },
+    { label: "수리중", value: "REPAIRING" },
+    { label: "입금 대기", value: "WAITING_FOR_PAYMENT" },
+    { label: "배송 대기", value: "WAITING_FOR_DELIVERY" },
+    { label: "배송 완료", value: "COMPLETED" },
 ];
 
-const RequestSearch = ({
-    requests,
-    setRequests,
-    pagination,
-    setPagination
-}) => {
+const RepairSearch = ({
+                           quotes,
+                           setQuotes,
+                           pagination,
+                           setPagination
+                       }) => {
     const [query, setQuery] = useState({
         requestNo: "",
         customerName: "",
@@ -56,7 +56,7 @@ const RequestSearch = ({
                 size: String(pagination.size),
             });
             const token = localStorage.getItem("accessToken");
-            const response = await fetch(`/api/requests/search?${params}`, {
+            const response = await fetch(`/api/quotes/search?${params}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -79,10 +79,7 @@ const RequestSearch = ({
                 const page = result.data || {};
                 const products = page.content || [];
 
-                console.log("result: ", result);
-
-                setRequests(products);
-                console.log("requests: ", requests);
+                setQuotes(products);
                 setPagination(prev => ({
                     ...prev,
                     totalPages: page.totalPages ?? 0,
@@ -95,7 +92,7 @@ const RequestSearch = ({
                 });
             } else {
                 console.error("제품 검색 API 요청 실패:", response.status);
-                setRequests([]);
+                setQuotes([]);
                 setPagination(prev => ({
                     ...prev,
                     totalPages: 0,
@@ -104,14 +101,14 @@ const RequestSearch = ({
             }
         } catch (error) {
             console.error("제품 검색 실패:", error);
-            setRequests([]);
+            setQuotes([]);
             setPagination(prev => ({
                 ...prev,
                 totalPages: 0,
             }))
             setSearchStats({ totalHits: 0, processingTime: 0 });
         }
-    }, [query, setRequests, setPagination]);
+    }, [query, setQuotes, setPagination]);
 
     // 실시간 검색 (디바운스 적용)
     useEffect(() => {
@@ -157,9 +154,9 @@ const RequestSearch = ({
 
     // 엑셀 다운로드
     const handleDownloadExcel = useCallback(() => {
-        console.log("엑셀 다운로드할 데이터:", requests);
+        console.log("엑셀 다운로드할 데이터:", quotes);
 
-        if (!requests || requests.length === 0) {
+        if (!quotes || quotes.length === 0) {
             alert("다운로드할 데이터가 없습니다!");
             return;
         }
@@ -168,13 +165,14 @@ const RequestSearch = ({
             "접수번호",
             "고객명",
             "제품명",
-            "제품모델코드",
+            "제품고유번호",
             "접수일자",
-            "접수상태",
-            "수리 담당자",
+            "진행상태",
+            "접수기사",
+            "입금상태",
         ];
 
-        const excelData = requests.map((item) => [
+        const excelData = quotes.map((item) => [
             item.requestNo || "", // objectID를 제품 ID로 사용
             item.customerName || "",
             item.productName || "",
@@ -182,6 +180,7 @@ const RequestSearch = ({
             item.startCreateAt || "",
             item.status || "",
             item.employName || "",
+            item.paymentStatus || "",
         ]);
 
         // 워크북 생성 (빈 엑셀 파일 생성)
@@ -192,7 +191,7 @@ const RequestSearch = ({
         const worksheet = XLSX.utils.aoa_to_sheet([excelHeaders, ...excelData]);
 
         // 워크시트를 워크북에 추가
-        XLSX.utils.book_append_sheet(workbook, worksheet, "접수 목록"); // 시트 이름은 '제품 목록'
+        XLSX.utils.book_append_sheet(workbook, worksheet, "수리 목록"); // 시트 이름은 '제품 목록'
 
         // 엑셀 파일 저장
         // XLSX.write: 워크북을 바이너리 데이터로 변환
@@ -208,15 +207,15 @@ const RequestSearch = ({
 
         // 파일 다운로드
         // saveAs(데이터, '파일이름.확장자')
-        saveAs(dataBlob, `접수목록_${new Date().toLocaleDateString("ko-KR")}.xlsx`);
+        saveAs(dataBlob, `수리목록_${new Date().toLocaleDateString("ko-KR")}.xlsx`);
 
         alert("엑셀 파일을 생성하고 다운로드를 시작합니다!");
-    }, [requests]);
+    }, [quotes]);
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">접수 목록 검색</h2>
+                <h2 className="text-lg font-semibold text-gray-800">수리 목록 검색</h2>
                 <div className="text-sm text-gray-600">
                     {searchStats.totalHits > 0 && (
                         <span>
@@ -287,7 +286,7 @@ const RequestSearch = ({
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                        수리 담당자
+                        접수기사
                     </label>
                     <input
                         name="employName"
@@ -329,30 +328,30 @@ const RequestSearch = ({
                 <br />
                 <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                    접수상태
+                        진행상태
                     </label>
                     <div className="flex flex-wrap gap-2">
-                    {statusOptions.map(({ label, value }) => {
-                        const isSelected = query.status?.includes(value) || false;
-                        return (
-                        <button
-                            key={value}
-                            type="button"
-                            onClick={() => handleStatusChange(value)}
-                            className={`
+                        {statusOptions.map(({ label, value }) => {
+                            const isSelected = query.status?.includes(value) || false;
+                            return (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => handleStatusChange(value)}
+                                    className={`
                                                 px-4 py-2 rounded-full text-sm font-medium 
                                                 transition-colors duration-200 ease-in-out
                                                 ${
-                                                isSelected
-                                                    ? "bg-blue-600 text-white shadow-md"
-                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
-                                                }
+                                        isSelected
+                                            ? "bg-blue-600 text-white shadow-md"
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                                    }
                                             `}
-                        >
-                            {label}
-                        </button>
-                        );
-                    })}
+                                >
+                                    {label}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -382,4 +381,4 @@ const RequestSearch = ({
     );
 }
 
-export default RequestSearch;
+export default RepairSearch;
