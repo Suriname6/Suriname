@@ -8,8 +8,13 @@ import com.suriname.quote.dto.QuoteCreateDto;
 import com.suriname.quote.dto.QuoteDto;
 import com.suriname.quote.dto.QuotePageResponse;
 import com.suriname.quote.entity.Quote;
+import com.suriname.quote.entity.QuoteSpecification;
 import com.suriname.quote.repository.QuoteRepository;
+import com.suriname.request.dto.RequestDto;
+import com.suriname.request.dto.RequestSearchDto;
 import com.suriname.request.entity.Request;
+import com.suriname.request.entity.RequestAssignmentLog;
+import com.suriname.request.entity.RequestSpecification;
 import com.suriname.request.repository.RequestRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -97,6 +103,13 @@ public class QuoteService {
                     0, 0, page, size, true, true
             );
         }
+    }
+
+    // 검색
+    public Page<QuoteDto> searchProducts(RequestSearchDto dto, Pageable pageable) {
+        Page<Quote> result = quoteRepository.findAll(QuoteSpecification.search(dto), pageable);
+
+        return result.map(QuoteDto::new);
     }
     
     @Transactional

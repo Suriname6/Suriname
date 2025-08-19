@@ -189,7 +189,7 @@ const CustomerSearch = ({
     const worksheet = XLSX.utils.aoa_to_sheet([excelHeaders, ...excelData]);
 
     // 워크시트를 워크북에 추가
-    XLSX.utils.book_append_sheet(workbook, worksheet, "제품 목록"); // 시트 이름은 '제품 목록'
+    XLSX.utils.book_append_sheet(workbook, worksheet, "고객 목록"); // 시트 이름은 '제품 목록'
 
     // 엑셀 파일 저장
     // XLSX.write: 워크북을 바이너리 데이터로 변환

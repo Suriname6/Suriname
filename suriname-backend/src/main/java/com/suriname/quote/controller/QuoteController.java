@@ -1,8 +1,13 @@
 package com.suriname.quote.controller;
 
 import com.suriname.quote.dto.QuoteCreateDto;
+import com.suriname.quote.dto.QuoteDto;
 import com.suriname.quote.dto.QuotePageResponse;
 import com.suriname.quote.service.QuoteService;
+import com.suriname.request.dto.RequestDto;
+import com.suriname.request.dto.RequestSearchDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,6 +50,14 @@ public class QuoteController {
             return ResponseEntity.status(500).body(new QuotePageResponse(
                 java.util.Collections.emptyList(), 0, 0, page, size, true, true));
         }
+    }
+
+    // 검색
+    @PostMapping("/search")
+    public ResponseEntity<?> searchQuotes(@RequestBody RequestSearchDto dto, @RequestParam("page") int page,
+                                            @RequestParam("size") int size) {
+        Page<QuoteDto> result = quoteService.searchProducts(dto, PageRequest.of(page, size));
+        return ResponseEntity.ok(Map.of("status", 200, "data", result));
     }
 
     @DeleteMapping("/{quoteId}")
