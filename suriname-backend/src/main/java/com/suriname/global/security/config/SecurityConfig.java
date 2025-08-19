@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users", "/api/payments/webhook/toss").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/repair-presets/category/*/active", "/api/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/visible").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
