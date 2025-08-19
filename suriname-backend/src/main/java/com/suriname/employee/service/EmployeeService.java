@@ -28,4 +28,6 @@ public interface EmployeeService {
     
     Page<EmployeeResponseDto> getEngineersByRole(Pageable pageable);
 
+    boolean existsByLoginId(String loginId);
+
 }
