@@ -78,7 +78,9 @@ public class JwtTokenProvider {
         Employee employee = employeeRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다: " + loginId));
         UserDetails userDetails = new EmployeeDetails(employee);
-        return new JwtAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+        JwtAuthenticationToken auth = new JwtAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        auth.setAuthenticated(true);
+        return auth;
     }
 
     public String getLoginId(String token) {
