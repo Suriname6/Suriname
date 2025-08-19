@@ -3,6 +3,18 @@ import { useParams } from "react-router-dom";
 import styles from "../../css/Product/ProductDetail.module.css";
 import api from "../../api/api";
 
+const CUSTOM_OPTION = "__CUSTOM__";
+const BRAND_OPTIONS = [
+  "Samsung",
+  "LG",
+  "Apple",
+  "ASUS",
+  "HP",
+  "Dell",
+  "Carrier",
+  "기타",
+];
+
 const ProductDetail = () => {
   const { id } = useParams();
   const [formData, setFormData] = useState(null);
@@ -10,7 +22,11 @@ const ProductDetail = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [categories, setCategories] = useState([]);
 
-  // 데이터 로드
+  const [useCustomBrand, setUseCustomBrand] = useState(false);
+  const [useCustomCategory, setUseCustomCategory] = useState(false);
+  const [customBrand, setCustomBrand] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -48,7 +64,6 @@ const ProductDetail = () => {
       .filter((c) => c.name);
   }, [categories]);
 
-  // 입력 변경 핸들러
   const handleInputChange = useCallback(
     (field, value) => {
       setFormData((prev) => {
@@ -60,31 +75,16 @@ const ProductDetail = () => {
     [originalData]
   );
 
-  // 페이지 이동 방지
-  useEffect(() => {
-    const handler = (e) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [isDirty]);
-
-  // 저장 함수
   const handleSave = async () => {
     try {
-      // 필수 필드 검증
       if (
-        !formData.productName ||
-        !formData.categoryName ||
-        !formData.productBrand
+        !formData.productName?.trim() ||
+        !formData.categoryName?.trim() ||
+        !formData.productBrand?.trim()
       ) {
         alert("제품명, 제품분류, 제조사는 필수 입력 항목입니다.");
         return;
       }
-
       await api.put(`/api/products/${id}`, formData);
       alert("저장되었습니다.");
       setOriginalData(formData);
@@ -95,98 +95,178 @@ const ProductDetail = () => {
     }
   };
 
-  // 취소 함수
   const handleCancel = () => {
     if (window.confirm("변경사항을 취소하시겠습니까?")) {
       setFormData(originalData);
       setIsDirty(false);
+      setUseCustomBrand(false);
+      setUseCustomCategory(false);
+      setCustomBrand("");
+      setCustomCategory("");
     }
   };
 
+  const handleBrandSelect = (e) => {
+    const value = e.target.value;
+    if (value === CUSTOM_OPTION) {
+      setUseCustomBrand(true);
+      setCustomBrand("");
+      handleInputChange("productBrand", "");
+    } else {
+      setUseCustomBrand(false);
+      setCustomBrand("");
+      handleInputChange("productBrand", value);
+    }
+  };
+
+  const handleCategorySelect = (e) => {
+    const value = e.target.value;
+    if (value === CUSTOM_OPTION) {
+      setUseCustomCategory(true);
+      setCustomCategory("");
+      handleInputChange("categoryName", "");
+    } else {
+      setUseCustomCategory(false);
+      setCustomCategory("");
+      handleInputChange("categoryName", value);
+    }
+  };
+
+  const handleCustomBrandChange = (e) => {
+    const v = e.target.value;
+    setCustomBrand(v);
+    handleInputChange("productBrand", v);
+  };
+  const handleCustomCategoryChange = (e) => {
+    const v = e.target.value;
+    setCustomCategory(v);
+    handleInputChange("categoryName", v);
+  };
+
   if (!formData) return <div className={styles.loading}>Loading...</div>;
+  const brandIsListed = BRAND_OPTIONS.includes(formData.productBrand);
+  const categoryIsListed = normalizedCategories.some(
+    (c) => c.name === formData.categoryName
+  );
 
   return (
     <div className={styles.productContainer}>
       <div className={styles.sectionContainer}>
-        {/* 제품 정보 섹션 */}
         <div className={styles.sectionContent}>
           <h2 className={styles.sectionTitle}>제품 정보</h2>
 
           <div className={styles.inputGroup}>
             <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
               <label className={styles.inputLabel}>제조사</label>
-              <select
-                className={styles.inputControl}
-                value={formData.productBrand || ""}
-                onChange={(e) =>
-                  handleInputChange("productBrand", e.target.value)
-                }
-              >
-                <option value="">선택</option>
-                {[
-                  "Samsung",
-                  "LG",
-                  "Apple",
-                  "ASUS",
-                  "HP",
-                  "Dell",
-                  "Carrier",
-                  "기타",
-                ].map((brand) => (
-                  <option key={`brand-${brand}`} value={brand}>
-                    {brand}
-                  </option>
-                ))}
-                {formData.productBrand &&
-                  ![
-                    "Samsung",
-                    "LG",
-                    "Apple",
-                    "ASUS",
-                    "HP",
-                    "Dell",
-                    "Carrier",
-                    "기타",
-                  ].includes(formData.productBrand) && (
-                    <option
-                      key={`custom-brand-${formData.productBrand}`}
-                      value={formData.productBrand}
-                    >
-                      {formData.productBrand}
+
+              {!useCustomBrand ? (
+                <select
+                  className={styles.inputControl}
+                  value={
+                    brandIsListed
+                      ? formData.productBrand
+                      : formData.productBrand || ""
+                  }
+                  onChange={handleBrandSelect}
+                >
+                  <option value="">선택</option>
+                  {BRAND_OPTIONS.map((b) => (
+                    <option key={`brand-${b}`} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                  {/* 현재 값이 목록에 없으면 드롭다운에도 표시되도록 임시 옵션 */}
+                  {!brandIsListed && formData.productBrand && (
+                    <option value={formData.productBrand}>
+                      {formData.productBrand} (현재 값)
                     </option>
                   )}
-              </select>
+                  <option value={CUSTOM_OPTION}>직접 입력</option>
+                </select>
+              ) : (
+                <div className={styles.inlineRow}>
+                  <input
+                    type="text"
+                    className={styles.inputControl}
+                    placeholder="제조사를 입력하세요"
+                    value={customBrand}
+                    onChange={handleCustomBrandChange}
+                  />
+                  <button
+                    type="button"
+                    className={styles.smallButton}
+                    onClick={() => {
+                      setUseCustomBrand(false);
+                      setCustomBrand("");
+                      handleInputChange("productBrand", "");
+                    }}
+                  >
+                    드롭다운
+                  </button>
+                </div>
+              )}
             </div>
 
+            {/* 제품분류 */}
             <div className={`${styles.inputField} ${styles.inputFieldEqual}`}>
               <label className={styles.inputLabel}>제품분류</label>
-              <select
-                className={styles.inputControl}
-                value={formData.categoryName || ""}
-                onChange={(e) =>
-                  handleInputChange("categoryName", e.target.value)
-                }
-              >
-                <option value="">선택</option>
 
-                {normalizedCategories.map((cat) => (
-                  <option key={`cat-${cat.id ?? cat.name}`} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-
-                {formData.categoryName &&
-                  !normalizedCategories.some(
-                    (c) => c.name === formData.categoryName
-                  ) && (
-                    <option
-                      key={`custom-category-${formData.categoryName}`}
-                      value={formData.categoryName}
-                    >
-                      {formData.categoryName}
+              {!useCustomCategory ? (
+                <select
+                  className={styles.inputControl}
+                  value={
+                    categoryIsListed
+                      ? formData.categoryName
+                      : formData.categoryName || ""
+                  }
+                  onChange={handleCategorySelect}
+                >
+                  <option value="">선택</option>
+                  {normalizedCategories.map((cat) => (
+                    <option key={`cat-${cat.id ?? cat.name}`} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                  {!categoryIsListed && formData.categoryName && (
+                    <option value={formData.categoryName}>
+                      {formData.categoryName} (현재 값)
                     </option>
                   )}
-              </select>
+                  <option value={CUSTOM_OPTION}>직접 입력</option>
+                </select>
+              ) : (
+                <div className={styles.inlineRow}>
+                  <input
+                    type="text"
+                    className={styles.inputControl}
+                    placeholder="제품분류를 입력하세요"
+                    value={customCategory}
+                    onChange={handleCustomCategoryChange}
+                    list="category-suggestions"
+                  />
+                  <button
+                    type="button"
+                    className={styles.smallButton}
+                    onClick={() => {
+                      setUseCustomCategory(false);
+                      setCustomCategory("");
+                      handleInputChange("categoryName", "");
+                    }}
+                  >
+                    드롭다운
+                  </button>
+
+                  {/* 자동완성 힌트 */}
+                  <datalist id="category-suggestions">
+                    {normalizedCategories.map((cat) => (
+                      <option
+                        value={cat.name}
+                        key={`dl-${cat.id ?? cat.name}`}
+                      />
+                    ))}
+                  </datalist>
+                </div>
+              )}
             </div>
           </div>
 

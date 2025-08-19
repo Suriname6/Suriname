@@ -6,7 +6,6 @@ import com.suriname.repairpreset.service.RepairPresetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,14 +17,12 @@ public class RepairPresetController {
 
     private final RepairPresetService repairPresetService;
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<Void> createPreset(@RequestBody PresetRequestDto requestDto) {
         repairPresetService.createPreset(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<List<PresetResponseDto>> getAllPresets(
             @RequestParam(value = "categoryId", required = false) Long categoryId
@@ -38,7 +35,6 @@ public class RepairPresetController {
         return ResponseEntity.ok(responseDtos);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deactivatePreset(@PathVariable Long id) {
         repairPresetService.deactivatePreset(id);

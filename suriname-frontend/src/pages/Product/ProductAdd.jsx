@@ -3,6 +3,8 @@ import styles from "../../css/Product/ProductAdd.module.css";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 
+const CUSTOM_OPTION = "__CUSTOM__";
+
 const ProductAdd = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("individual");
@@ -17,11 +19,9 @@ const ProductAdd = () => {
         console.error("카테고리 불러오기 실패:", error);
       }
     };
-
     fetchCategories();
   }, []);
 
-  // 일반 등록 폼 상태
   const [individualForm, setIndividualForm] = useState({
     productName: "",
     categoryName: "",
@@ -30,28 +30,67 @@ const ProductAdd = () => {
     memo: "",
   });
 
+  const [useCustomBrand, setUseCustomBrand] = useState(false);
+  const [useCustomCategory, setUseCustomCategory] = useState(false);
+  const [customBrand, setCustomBrand] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
+
   const handleIndividualChange = (field, value) => {
-    setIndividualForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setIndividualForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleBrandSelect = (e) => {
+    const value = e.target.value;
+    if (value === CUSTOM_OPTION) {
+      setUseCustomBrand(true);
+      setCustomBrand("");
+      handleIndividualChange("productBrand", "");
+    } else {
+      setUseCustomBrand(false);
+      setCustomBrand("");
+      handleIndividualChange("productBrand", value);
+    }
+  };
+
+  const handleCategorySelect = (e) => {
+    const value = e.target.value;
+    if (value === CUSTOM_OPTION) {
+      setUseCustomCategory(true);
+      setCustomCategory("");
+      handleIndividualChange("categoryName", "");
+    } else {
+      setUseCustomCategory(false);
+      setCustomCategory("");
+      handleIndividualChange("categoryName", value);
+    }
+  };
+
+  const handleCustomBrandChange = (e) => {
+    const v = e.target.value;
+    setCustomBrand(v);
+    handleIndividualChange("productBrand", v);
+  };
+  const handleCustomCategoryChange = (e) => {
+    const v = e.target.value;
+    setCustomCategory(v);
+    handleIndividualChange("categoryName", v);
   };
 
   const handleIndividualSubmit = async () => {
     try {
-      // 필수 필드 검증
       if (
-        !individualForm.productName ||
-        !individualForm.categoryName ||
-        !individualForm.productBrand
+        !individualForm.productName?.trim() ||
+        !individualForm.categoryName?.trim() ||
+        !individualForm.productBrand?.trim()
       ) {
         alert("제품명, 제품분류, 제조사는 필수 입력 항목입니다.");
         return;
       }
+      console.log("[DBG] payload:", individualForm);
 
       const response = await api.post("/api/products", individualForm);
 
-      if (response.data.status === 200) {
+      if (response.data?.status === 200) {
         alert("제품이 성공적으로 등록되었습니다.");
         navigate("/product/list");
       } else {
@@ -103,41 +142,96 @@ const ProductAdd = () => {
             <h2 className={styles.sectionTitle}>제품 정보</h2>
 
             <div className={styles.inputGroup}>
+              {/* 제조사 */}
               <div className={styles.inputField}>
                 <label className={styles.inputLabel}>제조사</label>
-                <select
-                  className={styles.inputControl}
-                  value={individualForm.productBrand}
-                  onChange={(e) =>
-                    handleIndividualChange("productBrand", e.target.value)
-                  }
-                >
-                  <option value="">선택</option>
-                  <option value="삼성">삼성</option>
-                  <option value="LG">LG</option>
-                  <option value="Apple">Apple</option>
-                  <option value="ASUS">ASUS</option>
-                  <option value="HP">HP</option>
-                  <option value="Dell">Dell</option>
-                  <option value="기타">기타</option>
-                </select>
+
+                {!useCustomBrand ? (
+                  <select
+                    className={styles.inputControl}
+                    value={individualForm.productBrand}
+                    onChange={handleBrandSelect}
+                  >
+                    <option value="">선택</option>
+                    <option value="삼성">삼성</option>
+                    <option value="LG">LG</option>
+                    <option value="Apple">Apple</option>
+                    <option value="ASUS">ASUS</option>
+                    <option value="HP">HP</option>
+                    <option value="Dell">Dell</option>
+                    <option value="기타">기타</option>
+                    <option value={CUSTOM_OPTION}>직접 입력</option>
+                  </select>
+                ) : (
+                  <div className={styles.inlineRow}>
+                    <input
+                      type="text"
+                      className={styles.inputControl}
+                      placeholder="제조사를 입력하세요"
+                      value={customBrand}
+                      onChange={handleCustomBrandChange}
+                    />
+                    <button
+                      type="button"
+                      className={styles.smallButton}
+                      onClick={() => {
+                        setUseCustomBrand(false);
+                        setCustomBrand("");
+                        handleIndividualChange("productBrand", "");
+                      }}
+                    >
+                      드롭다운
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {/* 제품분류 */}
               <div className={styles.inputField}>
                 <label className={styles.inputLabel}>제품분류</label>
-                <select
-                  className={styles.inputControl}
-                  value={individualForm.categoryName}
-                  onChange={(e) =>
-                    handleIndividualChange("categoryName", e.target.value)
-                  }
-                >
-                  <option value="">선택</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+
+                {!useCustomCategory ? (
+                  <select
+                    className={styles.inputControl}
+                    value={individualForm.categoryName}
+                    onChange={handleCategorySelect}
+                  >
+                    <option value="">선택</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                    <option value={CUSTOM_OPTION}>직접 입력</option>
+                  </select>
+                ) : (
+                  <div className={styles.inlineRow}>
+                    <input
+                      type="text"
+                      className={styles.inputControl}
+                      placeholder="제품분류를 입력하세요"
+                      value={customCategory}
+                      onChange={handleCustomCategoryChange}
+                      list="category-suggestions"
+                    />
+                    <button
+                      type="button"
+                      className={styles.smallButton}
+                      onClick={() => {
+                        setUseCustomCategory(false);
+                        setCustomCategory("");
+                        handleIndividualChange("categoryName", "");
+                      }}
+                    >
+                      드롭다운
+                    </button>
+                    <datalist id="category-suggestions">
+                      {categories.map((cat) => (
+                        <option value={cat} key={`dl-${cat}`} />
+                      ))}
+                    </datalist>
+                  </div>
+                )}
               </div>
             </div>
 

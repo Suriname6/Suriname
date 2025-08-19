@@ -86,9 +86,7 @@ const CustomerAdd = () => {
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    console.log("FormData 업데이트:", formData);
-  }, [formData]);
+  useEffect(() => {}, [formData]);
 
   const loadDaumPostcode = () =>
     new Promise((resolve) => {
@@ -134,8 +132,6 @@ const CustomerAdd = () => {
         serialNumber: formData.serialNumber,
       },
     };
-
-    console.log("serial:", formData.serialNumber);
 
     try {
       const response = await api.post("/api/customers", formDataToSend);
@@ -355,11 +351,9 @@ const CustomerAdd = () => {
                 value={formData.productName}
                 className={styles.inputControl}
                 onChange={(val) => {
-                  console.log("입력값 변경:", val);
                   handleInputChange("productName", val);
                 }}
                 onSelect={(product) => {
-                  console.log("제품 선택됨:", product);
                   setFormData((prev) => ({
                     ...prev,
                     productName: product.productName,
