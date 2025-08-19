@@ -100,4 +100,10 @@ public class EmployeeController {
         Page<EmployeeResponseDto> engineers = employeeService.getEngineersByRole(PageRequest.of(page, size));
         return ResponseEntity.ok(engineers);
     }
+
+    @GetMapping("/validate/loginId/{loginId}")
+    public ResponseEntity<Boolean> validateEmployeeLoginId(@PathVariable String loginId) {
+        boolean exists = employeeService.existsByLoginId(loginId);
+        return ResponseEntity.ok(exists);
+    }
 }
