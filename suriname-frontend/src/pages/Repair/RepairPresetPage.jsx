@@ -56,7 +56,8 @@ const RepairPresetPage = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await getCategories();
+      const res = await getCategories();
+      const data = Array.isArray(res?.data) ? res.data : [];
       const sorted = [...data].sort((a, b) => {
         if (!a.parentId && !b.parentId) return 0;
         if (!a.parentId) return -1;
