@@ -1,6 +1,6 @@
-import api from './api';
+import instance from './axiosInstance';
 
 export const getCategories = async () => {
-  const response = await api.get('/api/categories');
+  const response = await instance.get('/api/categories');
   return response.data;
 };
