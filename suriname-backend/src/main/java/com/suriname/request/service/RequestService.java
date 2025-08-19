@@ -27,7 +27,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 @Service
@@ -243,19 +242,8 @@ public class RequestService {
 				request.getCustomerProduct().getProduct().getModelCode(),
 				request.getCreatedAt(),
 				assignmentStatus,
-//				request.getStatus().name(),
 				engineerName
 			);
-			System.out.println("===== [RequestDto 검사] =====");
-			System.out.println("requestId: " + dtoResult.getRequestId());
-			System.out.println("requestNo: " + dtoResult.getRequestNo());
-			System.out.println("customerName: " + dtoResult.getCustomerName());
-			System.out.println("productName: " + dtoResult.getProductName());
-			System.out.println("modelCode: " + dtoResult.getModelCode());
-			System.out.println("createdAt: " + dtoResult.getCreatedAt());
-			System.out.println("status: " + dtoResult.getStatus());
-			System.out.println("engineerName: " + dtoResult.getEngineerName());
-			System.out.println("===========================");
 			return dtoResult;
 		});
 	}

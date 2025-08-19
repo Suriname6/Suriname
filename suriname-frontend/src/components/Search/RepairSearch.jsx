@@ -79,10 +79,7 @@ const RepairSearch = ({
                 const page = result.data || {};
                 const products = page.content || [];
 
-                console.log("result: ", result);
-
                 setQuotes(products);
-                console.log("quotes: ", quotes);
                 setPagination(prev => ({
                     ...prev,
                     totalPages: page.totalPages ?? 0,
