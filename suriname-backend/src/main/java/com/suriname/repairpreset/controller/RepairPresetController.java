@@ -18,6 +18,7 @@ public class RepairPresetController {
     private final RepairPresetService repairPresetService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> createPreset(@RequestBody PresetRequestDto requestDto) {
         repairPresetService.createPreset(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -36,6 +37,7 @@ public class RepairPresetController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deactivatePreset(@PathVariable Long id) {
         repairPresetService.deactivatePreset(id);
         return ResponseEntity.noContent().build();
