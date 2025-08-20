@@ -226,7 +226,6 @@ export default function RequestForm() {
     <div className={styles.customerContainer}>
       <div className={styles.tabNavigation}>
         <div className={styles.tabContainer}>
-          {/* CSS 모듈용 활성 클래스 분리: styles.tabButtonActive 사용 */}
           <button className={`${styles.tabButton} ${styles.tabButtonActive}`}>
             A/S 요청 등록
           </button>

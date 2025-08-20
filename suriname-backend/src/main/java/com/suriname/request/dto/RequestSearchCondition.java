@@ -1,5 +1,6 @@
 package com.suriname.request.dto;
 
+import com.suriname.request.entity.Request;
 import com.suriname.request.entity.RequestAssignmentLog;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +18,8 @@ public class RequestSearchCondition {
     private String modelCode;
     private String serialNumber;
     private String employeeName;
-    private RequestAssignmentLog.AssignmentStatus status;
+    private Request.Status status;
+    private RequestAssignmentLog.AssignmentStatus AssignmentStatus;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate startDate;

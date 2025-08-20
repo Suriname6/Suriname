@@ -44,6 +44,7 @@ import StaffDetailPage from "./pages/staff/StaffDetailPage";
 import DeliveryList from "./pages/Delivery/DeliveryList";
 import DeliveryRegister from "./pages/Delivery/DeliveryRegister";
 import DeliveryAnalytics from "./pages/Delivery/DeliveryAnalytics";
+import DeliveryDetail from "./pages/Delivery/DeliveryDetail";
 
 import CompletionList from "./pages/Completion/CompletionList";
 import CompletionRegister from "./pages/Completion/CompletionRegister";
@@ -53,8 +54,10 @@ import SatisfactionSurvey from "./pages/Public/SatisfactionSurvey";
 import RepairListPage from "./pages/Repair/RepairListPage";
 import RepairWritePage from "./pages/Repair/RepairWritePage";
 import RepairPresetPage from "./pages/Repair/RepairPresetPage";
+import QuoteListPage from "./pages/Repair/QuoteListPage";
 
 import RequestList from "./pages/Request/RequestList.jsx";
+import RequestAssignmentList from "./pages/Request/RequestAssignmentList.jsx";
 import RequestDetail from "./pages/Request/RequestDetail.jsx";
 import RequestForm from "./pages/Request/RequestForm.jsx";
 import RequestEdit from "./pages/Request/RequestEdit.jsx";
@@ -162,15 +165,18 @@ function App() {
           <Route path="/repair/list" element={<RepairListPage />} />
           <Route path="/repair/preset" element={<RepairPresetPage />} />
           <Route path="/repair/write" element={<RepairWritePage />} />
+          <Route path="/quote/list" element={<QuoteListPage />} />
 
           <Route path="/delivery/list" element={<DeliveryList />} />
           <Route path="/delivery/register" element={<DeliveryRegister />} />
           <Route path="/delivery/analytics" element={<DeliveryAnalytics />} />
+          <Route path="/delivery/detail/:deliveryId" element={<DeliveryDetail />} />
 
           <Route path="/completion/list" element={<CompletionList />} />
           <Route path="/completion/register" element={<CompletionRegister />} />
 
           <Route path="/request/list" element={<RequestList />} />
+          <Route path="/request-assignment/list" element={<RequestAssignmentList />} />
           <Route path="/request/register" element={<RequestForm />} />
           <Route path="/request/:id" element={<RequestDetail />} />
           <Route path="/request/edit/:id" element={<RequestEdit />} />

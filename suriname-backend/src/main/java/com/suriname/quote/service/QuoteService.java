@@ -1,21 +1,19 @@
 package com.suriname.quote.service;
 
-import com.suriname.customer.entity.Customer;
 import com.suriname.customer.repository.CustomerRepository;
 import com.suriname.employee.entity.Employee;
 import com.suriname.employee.repository.EmployeeRepository;
+import com.suriname.product.repository.ProductRepository;
 import com.suriname.quote.dto.QuoteCreateDto;
 import com.suriname.quote.dto.QuoteDto;
 import com.suriname.quote.dto.QuotePageResponse;
 import com.suriname.quote.entity.Quote;
 import com.suriname.quote.entity.QuoteSpecification;
 import com.suriname.quote.repository.QuoteRepository;
-import com.suriname.request.dto.RequestDto;
 import com.suriname.request.dto.RequestSearchDto;
 import com.suriname.request.entity.Request;
-import com.suriname.request.entity.RequestAssignmentLog;
-import com.suriname.request.entity.RequestSpecification;
 import com.suriname.request.repository.RequestRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,23 +24,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class QuoteService {
     private final QuoteRepository quoteRepository;
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
     private final RequestRepository requestRepository;
-    
-    public QuoteService(QuoteRepository quoteRepository, CustomerRepository customerRepository, 
-                        EmployeeRepository employeeRepository, RequestRepository requestRepository) {
-        this.quoteRepository = quoteRepository;
-        this.customerRepository = customerRepository;
-        this.employeeRepository = employeeRepository;
-        this.requestRepository = requestRepository;
-    }
+    private final ProductRepository productRepository;
 
     @Transactional(readOnly = true)
     public QuotePageResponse getQuotesWithSearch(int page, int size, String customerName, 
@@ -128,121 +119,79 @@ public class QuoteService {
     // 견적서 생성
     @Transactional
     public Long createQuote(QuoteCreateDto dto) {
-        
-        // 고객 검증
-        Customer customer = customerRepository.findByName(dto.getCustomerName())
-            .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 고객입니다: " + dto.getCustomerName()));
-            
+
         // 접수번호 검증
-        Request request = requestRepository.findByRequestNo(dto.getRequestNo())
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 접수번호입니다: " + dto.getRequestNo()));
-            
-        // 수리기사 처리 (고객 동의 시)
-        Employee engineer = null;
-        if (Boolean.TRUE.equals(dto.getCustomerConsent())) {
-            if (dto.getEngineerId() != null) {
-                engineer = employeeRepository.findById(dto.getEngineerId())
-                        .orElseThrow(() -> new IllegalArgumentException("수리기사를 찾을 수 없습니다. id=" + dto.getEngineerId()));
-                System.out.println("지정된 수리기사(id): " + engineer.getEmployeeId());
-            } else {
-                Pageable engineerPageable = PageRequest.of(0, 100);
-                List<Employee> engineers = employeeRepository
-                        .findByRole(Employee.Role.ENGINEER, engineerPageable)
-                        .getContent();
-                if (engineers.isEmpty()) throw new IllegalArgumentException("배정 가능한 수리기사가 없습니다.");
-                engineer = engineers.get((int) (Math.random() * engineers.size()));
-                System.out.println("랜덤 배정된 수리기사(id): " + engineer.getEmployeeId());
-            }
-        }
+        Request request = requestRepository.findById(dto.getRequestId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 접수번호입니다: " + dto.getRequestId()));
+
+        Employee engineer = employeeRepository
+                .findById(request.getEmployee().getEmployeeId())
+                .orElse(null);
+
+        String productName = request.getCustomerProduct().getProduct().getProductName();
 
         // 수리 항목들을 JSON 형태로 field에 저장하기 위한 문자열 생성
         StringBuilder fieldContent = new StringBuilder();
-        fieldContent.append("제품명: ").append(dto.getProductName()).append("\n");
-        fieldContent.append("고객동의: ").append(dto.getCustomerConsent() ? "동의" : "미동의").append("\n");
+        fieldContent.append("제품명: ").append(productName).append("\n");
+        fieldContent.append("고객동의: ").append("동의").append("\n");
         fieldContent.append("예상견적: ").append(dto.getEstimatedCost()).append("원\n");
         fieldContent.append("실제비용: ").append(dto.getActualCost()).append("원\n");
-        fieldContent.append("상태변경: ").append(dto.getStatusChange()).append("\n");
+        fieldContent.append("상태변경: ").append("WAITING_FOR_PAYMENT").append("\n"); // 고정 기록
         fieldContent.append("수리항목:\n");
-        
+
         if (dto.getRepairItems() != null) {
             for (QuoteCreateDto.RepairItemDto item : dto.getRepairItems()) {
                 fieldContent.append("- ").append(item.getItemName())
-                    .append(": ").append(item.getDescription())
-                    .append(" (").append(item.getCost()).append("원)\n");
+                        .append(": ").append(item.getDescription())
+                        .append(" (").append(item.getCost()).append("원)\n");
             }
         }
-        
-        // Quote 엔티티 생성 (기존 구조에 맞춰서)
+
+        // Quote 엔티티 생성
         Quote quote = Quote.builder()
-            .request(request)
-            .cost(dto.getActualCost()) // 실제 수리비용을 cost 필드에 저장
-            .field(fieldContent.toString()) // 모든 추가 정보를 field에 저장
-            .build();
-            
+                .request(request)
+                .employee(engineer)
+                .cost(dto.getActualCost())            // 실제 수리비용
+                .field(fieldContent.toString())       // 기타 정보
+                .build();
+
         Quote savedQuote = quoteRepository.save(quote);
-        
-        // 고객 동의 시 수리기사 승인 처리
-        if (Boolean.TRUE.equals(dto.getCustomerConsent()) && engineer != null) {
-            savedQuote.approveByEmployee(engineer);
-            quoteRepository.save(savedQuote);
-        }
-        
-        // Request 상태 업데이트
-        updateRequestStatus(request, dto.getStatusChange());
-        
-        // 직접 입력한 수리항목 자동 저장 기능 제거됨
-        
+
+        request.changeStatus(
+                Request.Status.WAITING_FOR_PAYMENT,
+                request.getEmployee().getEmployeeId().toString(),
+                "수리 완료 -> 입금대기"
+        );
+        requestRepository.saveAndFlush(request);
+
         return savedQuote.getQuoteId();
     }
-    
+
+
     // 견적서 수정
     @Transactional
     public Long updateQuote(Long quoteId, QuoteCreateDto dto) {
-        System.out.println("=== 견적서 수정 시작 ===");
-        System.out.println("견적서 ID: " + quoteId);
-        System.out.println("고객명: " + dto.getCustomerName());
-        System.out.println("접수번호: " + dto.getRequestNo());
-        System.out.println("고객동의: " + dto.getCustomerConsent());
-        System.out.println("수리기사: " + dto.getEngineerName());
-        System.out.println("수리기사ID: " + dto.getEngineerId());
-        
+
         // 기존 견적서 조회
         Quote existingQuote = quoteRepository.findById(quoteId)
             .orElseThrow(() -> new IllegalArgumentException("견적서를 찾을 수 없습니다: " + quoteId));
-        System.out.println("기존 견적서 검증 완료: " + existingQuote.getQuoteId());
-        
-        // 고객 검증
-        Customer customer = customerRepository.findByName(dto.getCustomerName())
-            .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 고객입니다: " + dto.getCustomerName()));
-            
-        // 접수번호 검증
-        Request request = requestRepository.findByRequestNo(dto.getRequestNo())
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 접수번호입니다: " + dto.getRequestNo()));
-            
-        // 수리기사 처리 (고객 동의 시)
-        Employee engineer = null;
-        if (Boolean.TRUE.equals(dto.getCustomerConsent())) {
-            if (dto.getEngineerId() != null) {
-                engineer = employeeRepository.findById(dto.getEngineerId())
-                        .orElseThrow(() -> new IllegalArgumentException("수리기사를 찾을 수 없습니다. id=" + dto.getEngineerId()));
-                System.out.println("지정된 수리기사(id): " + engineer.getEmployeeId());
-            } else {
-                Pageable engineerPageable = PageRequest.of(0, 100);
-                List<Employee> engineers = employeeRepository.findByRole(Employee.Role.ENGINEER, engineerPageable).getContent();
-                if (engineers.isEmpty()) throw new IllegalArgumentException("배정 가능한 수리기사가 없습니다.");
-                engineer = engineers.get((int) (Math.random() * engineers.size()));
-                System.out.println("랜덤 배정된 수리기사(id): " + engineer.getEmployeeId());
-            }
-        }
 
+        // 접수번호 검증
+        Request request = requestRepository.findById(dto.getRequestId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 접수번호입니다: " + dto.getRequestId()));
+
+        Employee engineer = employeeRepository
+                .findById(existingQuote.getEmployee().getEmployeeId())
+                .orElse(null);
+
+        String productName = request.getCustomerProduct().getProduct().getProductName();
 
         // 수리 항목들을 JSON 형태로 field에 저장하기 위한 문자열 생성
         StringBuilder fieldContent = new StringBuilder();
-        fieldContent.append("제품명: ").append(dto.getProductName()).append("\n");
-        fieldContent.append("고객동의: ").append(dto.getCustomerConsent() ? "동의" : "미동의").append("\n");
+        fieldContent.append("제품명: ").append(productName).append("\n");
+        fieldContent.append("고객동의: ").append("동의").append("\n");
         fieldContent.append("예상견적: ").append(dto.getEstimatedCost()).append("원\n");
         fieldContent.append("실제비용: ").append(dto.getActualCost()).append("원\n");
-        fieldContent.append("상태변경: ").append(dto.getStatusChange()).append("\n");
         fieldContent.append("수리항목:\n");
         
         if (dto.getRepairItems() != null) {
@@ -255,19 +204,15 @@ public class QuoteService {
         
         // Quote 엔티티 수정
         existingQuote.updateQuote(dto.getActualCost(), fieldContent.toString(), engineer);
-        
         Quote savedQuote = quoteRepository.save(existingQuote);
-        
-        // Request 상태 업데이트
-        updateRequestStatus(request, dto.getStatusChange());
-        
+
         return savedQuote.getQuoteId();
     }
-    
+
     // Request 상태 업데이트 메서드
     private void updateRequestStatus(Request request, String statusChange) {
         if (statusChange == null) return;
-        
+
         Request.Status newStatus;
         switch (statusChange) {
             case "IN_PROGRESS":
@@ -290,7 +235,7 @@ public class QuoteService {
         requestRepository.save(request);
         System.out.println("Request 상태 업데이트: " + request.getRequestNo() + " -> " + newStatus);
     }
-    
+
     // 진행상태 필터링
     private Page<Quote> filterByProgressStatus(Page<Quote> quotePage, String progressStatus, Pageable pageable) {
         // 콤마로 구분된 여러 상태 처리 (예: "READY_FOR_DELIVERY,COMPLETED")
@@ -426,5 +371,13 @@ public class QuoteService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public QuoteDto getQuote(Long quoteId) {
+        Quote quote = quoteRepository.findById(quoteId)
+                .orElseThrow(() -> new IllegalArgumentException("견적서를 찾을 수 없습니다. id=" + quoteId));
+
+        return new QuoteDto(quote);
     }
 }

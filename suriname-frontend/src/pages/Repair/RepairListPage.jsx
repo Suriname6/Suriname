@@ -1,371 +1,202 @@
-import React, { useState, useEffect } from "react";
+import React, {useCallback, useMemo, useEffect, useState} from "react";
+import axios from "../../api/axiosInstance";
+import styles from '../../css/Request/RequestList.module.css';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-import SidebarNavigation from "../../components/SidebarNavigation";
-import { getQuotes, deleteQuotes } from "../../api/quote";
-import styles from "../../css/Repair/RepairList.module.css";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import RepairSearch from "../../components/Search/RepairSearch.jsx";
 
-const RepairListPage = () => {
-  const navigate = useNavigate();
-  const [searchData, setSearchData] = useState({
-    customerName: "",
-    requestNo: "",
-    productName: "",
-    serialNumber: "",
-    paymentStatus: "",
-    progressStatus: "",
-    employeeName: "",
-    startDate: "",
-    endDate: "",
-  });
+import StatusBadge from "../../components/Request/StatusBadge";
+import RequestSearch from "../../components/Search/RequestSearch";
 
-  const [quotes, setQuotes] = useState([]);
+export default function RequestList() {
+  const [requests, setRequests] = useState([]);
+
   const [pagination, setPagination] = useState({
     currentPage: 0,
     totalPages: 0,
     totalElements: 0,
     size: 10,
     first: true,
-    last: true,
+    last: true
   });
-  const [selectedQuotes, setSelectedQuotes] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
-  const [searchVisible, setSearchVisible] = useState(true);
-  const [loading, setLoading] = useState(false);
 
-  // 컴포넌트 마운트 시 데이터 로드
-  useEffect(() => {
-    fetchQuotes();
+  const [selectedRequests, setSelectedRequests] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const navigate = useNavigate();
+  const [role] = useState(localStorage.getItem("role") || "ADMIN");
+  const lockedFilters = useMemo(() => ({ status: "REPAIRING" }), []);
+
+  const toggleSearchVisible = useCallback(() => {
+    setSearchVisible(v => !v);
   }, []);
 
-  // API 호출 함수들
-  const fetchQuotes = async (searchParams = null) => {
-    setLoading(true);
-    try {
-      const params = {
-        page: pagination.currentPage,
-        size: pagination.size,
-        ...(searchParams || searchData),
-      };
-
-      // 빈 값 제거
-      Object.keys(params).forEach((key) => {
-        if (
-          params[key] === "" ||
-          params[key] === null ||
-          params[key] === undefined
-        ) {
-          delete params[key];
-        }
-      });
-
-      const data = await getQuotes(params);
-
-      if (!data) {
-        throw new Error("서버에서 데이터를 받지 못했습니다");
-      }
-
-      setQuotes(data.content || []);
-      setPagination({
-        currentPage: data.currentPage || 0,
-        totalPages: data.totalPages || 0,
-        totalElements: data.totalElements || 0,
-        size: data.size || 10,
-        first: data.first !== false,
-        last: data.last !== false,
-      });
-    } catch (error) {
-      alert(
-        `데이터 로드 실패: ${
-          error.message || "알 수 없는 오류가 발생했습니다."
-        }`
-      );
-    }
-    setLoading(false);
-  };
-
-  const deleteSelectedQuotes = async () => {
-    if (selectedQuotes.length === 0) {
-      alert("삭제할 항목을 선택해주세요.");
+  const deleteSelectedRequests = async () => {
+    if (selectedRequests.length === 0) {
+      alert('선택된 항목이 없습니다.');
       return;
     }
-
-    if (
-      !confirm(`선택된 ${selectedQuotes.length}개의 항목을 삭제하시겠습니까?`)
-    ) {
-      return;
-    }
-
+    if (!window.confirm(`선택된 ${selectedRequests.length}개 항목을 삭제하시겠습니까?`)) return;
     try {
-      await deleteQuotes(selectedQuotes);
-      alert("선택된 항목이 삭제되었습니다.");
-      setSelectedQuotes([]);
+      setLoading(true);
+      await axios.delete("/api/requests", { data: { ids: selectedRequests } });
+      alert('선택된 항목이 삭제되었습니다.');
+      setSelectedRequests([]);
       setSelectAll(false);
-      fetchQuotes();
+      setReloadKey(k => k + 1);
     } catch (error) {
-      alert(
-        `삭제 중 오류가 발생했습니다: ${error.message || "알 수 없는 오류"}`
-      );
+      console.error('Error deleting Requests:', error);
+      alert(`삭제 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  // 검색 입력 처리
-  const handleInputChange = (field, value) => {
-    setSearchData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSearch = () => {
-    setPagination((prev) => ({ ...prev, currentPage: 0 }));
-    fetchQuotes(searchData);
   };
 
   const handlePageChange = (page) => {
-    setPagination((prev) => ({ ...prev, currentPage: page }));
+    setPagination(prev => ({ ...prev, currentPage: page }));
   };
 
   const handleSelectAll = () => {
     if (selectAll) {
-      setSelectedQuotes([]);
+      setSelectedRequests([]);
     } else {
-      setSelectedQuotes(quotes.map((quote) => quote.quoteId));
+      setSelectedRequests(requests.map(r => r.requestId));
     }
     setSelectAll(!selectAll);
   };
 
-  const handleSelectQuote = (quoteId) => {
-    setSelectedQuotes((prev) => {
-      if (prev.includes(quoteId)) {
-        const newSelected = prev.filter((id) => id !== quoteId);
+  const handleSelectRequest = (requestId) => {
+    setSelectedRequests(prev => {
+      if (prev.includes(requestId)) {
+        const next = prev.filter(id => id !== requestId);
         setSelectAll(false);
-        return newSelected;
+        return next;
       } else {
-        const newSelected = [...prev, quoteId];
-        setSelectAll(newSelected.length === quotes.length);
-        return newSelected;
+        const next = [...prev, requestId];
+        setSelectAll(next.length === requests.length);
+        return next;
       }
     });
   };
 
-  const toggleSearchVisible = () => {
-    setSearchVisible(!searchVisible);
-  };
-
-  const formatDateTime = (dateTime) => {
-    if (!dateTime) return "-";
-    const date = new Date(dateTime);
-    return date
-      .toLocaleString("ko-KR", {
-        year: "2-digit",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-      .replace(/\./g, "-")
-      .replace(/, /g, " ");
-  };
-
-  const formatCurrency = (amount) => {
-    if (!amount) return "-";
-    return amount.toLocaleString("ko-KR");
-  };
-
-  const formatStatus = (status) => {
-    if (!status) return "수리중";
-
-    const statusMap = {
-      RECEIVED: "접수",
-      IN_PROGRESS: "수리중",
-      AWAITING_PAYMENT: "입금 대기",
-      // READY_FOR_DELIVERY: "수리완료",
-      // COMPLETED: "수리완료",
-      READY_FOR_DELIVERY: "배송 대기",
-      COMPLETED: "배송 완료",
-    };
-
-    return statusMap[status] || status;
-  };
-
-  const getPaymentStatus = (quote) => {
-    // statusChange를 기반으로 입금상태 결정
-    if (quote.statusChange === "AWAITING_PAYMENT") {
-      // 입금대기 상태에서 가상계좌가 발급된 경우 구분
-      if (quote.paymentStatus === "입금대기") {
-        return "VIRTUAL_ACCOUNT_ISSUED"; // 가상계좌 발급 완료
-      } else {
-        return "AWAITING_PAYMENT"; // 가상계좌 발급 필요
-      }
-    } else if (quote.statusChange === "IN_PROGRESS" || !quote.statusChange) {
-      return "AWAITING_PAYMENT";
-    } else if (
-      quote.statusChange === "READY_FOR_DELIVERY" ||
-      quote.statusChange === "COMPLETED"
-    ) {
-      return "COMPLETED";
-    }
-    return "AWAITING_PAYMENT"; // 기본적으로 입금하기 버튼 표시
-  };
-
-  const handlePaymentClick = (e, quote) => {
-    e.stopPropagation(); // 행 클릭 이벤트 방지
-
-    // 가상계좌 발급 페이지로 이동하면서 수리내역 정보 전달
-    navigate("/payment/virtualaccount", {
-      state: {
-        customerName: quote.customerName,
-        requestNo: quote.requestNo,
-        paymentAmount: quote.cost,
-      },
+  function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     });
-  };
-
-  const renderPaymentButton = (quote) => {
-    const paymentStatus = getPaymentStatus(quote);
-
-    if (paymentStatus === "AWAITING_PAYMENT") {
-      return (
-        <button
-          className={styles.paymentButton}
-          onClick={(e) => handlePaymentClick(e, quote)}
-          style={{
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            padding: "4px 12px",
-            cursor: "pointer",
-            fontSize: "12px",
-          }}
-        >
-          가상계좌발급
-        </button>
-      );
-    } else if (paymentStatus === "VIRTUAL_ACCOUNT_ISSUED") {
-      return (
-        <span
-          style={{
-            color: "#FFA500",
-            fontWeight: "bold",
-            fontSize: "12px",
-          }}
-        >
-          계좌발급완료
-        </span>
-      );
-    } else if (paymentStatus === "COMPLETED") {
-      return (
-        <span
-          style={{
-            color: "#28a745",
-            fontWeight: "bold",
-            fontSize: "12px",
-          }}
-        >
-          계좌입금완료
-        </span>
-      );
-    } else {
-      return <span style={{ fontSize: "12px", color: "#6c757d" }}>-</span>;
-    }
-  };
-
-  const handleRowClick = (quote) => {
-    // 수리 내역 작성 페이지로 이동하면서 데이터 전달
-    navigate("/repair/write", {
-      state: {
-        quote: quote,
-        mode: "edit", // 상세보기/편집 모드임을 나타냄
-      },
-    });
-  };
+  }
 
   return (
     <div className={styles.container}>
-      <SidebarNavigation />
-
-      <RepairSearch
-        quotes={quotes}
-        setQuotes={setQuotes}
-        pagination={pagination}
-        setPagination={setPagination}
-      />
-
-      <div className={styles.tableHeader}>
-        <div>
-          <input
-            type="checkbox"
-            checked={selectAll}
-            onChange={handleSelectAll}
-          />
-          <span>전체 선택</span>
-        </div>
-        <div className={styles.deleteButtonWrapper}>
-          <button
-            onClick={deleteSelectedQuotes}
-            className={styles.deleteButton}
-          >
-            삭제 ({selectedQuotes.length})
+      {!searchVisible ? (
+        <div className={styles.searchToggle}>
+          <button className={styles.searchToggleBtn} onClick={toggleSearchVisible}>
+            검색 조건
           </button>
         </div>
-      </div>
+      ) : (
+        <div className={styles.searchWrap}>
+          <div className={styles.searchCloseBtn}>
+            <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
+          </div>
+
+           <RequestSearch
+                requests={requests}
+                setRequests={setRequests}
+                pagination={pagination}
+                setPagination={setPagination}
+                lockedFilters={lockedFilters}
+              />
+        </div>
+      )}
+
+      {(role === "ADMIN" || role === "STAFF") && (
+        <div className={styles.tableHeader}>
+          <div>
+            <input
+              type="checkbox"
+              checked={selectAll}
+              onChange={handleSelectAll}
+            />
+            <span>전체 선택</span>
+          </div>
+          <div className={styles.deleteButtonWrapper}>
+            <button onClick={deleteSelectedRequests} className={styles.deleteButton}>
+              삭제
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className={styles.tableWrapper}>
         {loading ? (
-          <div style={{ padding: "20px", textAlign: "center" }}>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
             데이터를 불러오는 중...
           </div>
         ) : (
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>
-                  <input type="checkbox" />
-                </th>
+                {(role === "ADMIN" || role === "STAFF") && <th className={styles.narrowTh}></th>}
                 <th>접수번호</th>
                 <th>고객명</th>
                 <th>제품명</th>
-                <th>제품고유번호</th>
+                <th>제품모델코드</th>
                 <th>접수일자</th>
-                <th>진행상태</th>
-                <th>접수기사</th>
-                <th>입금상태</th>
+                <th>상태</th>
+                <th>수리 담당자</th>
+                <th>상세 페이지</th>
               </tr>
             </thead>
             <tbody>
-              {quotes.length === 0 ? (
+              {requests.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className={styles.emptyState}>
+                  <td colSpan={role === 'ENGINEER' ? 10 : 9} className={styles.emptyState}>
                     <h3>데이터가 없습니다</h3>
-                    <p>검색 조건에 맞는 견적 데이터가 없습니다.</p>
+                    <p>검색 조건에 맞는 수리 내역이 접수되지 않았습니다.</p>
                   </td>
                 </tr>
               ) : (
-                quotes.map((quote) => (
-                  <tr
-                    key={quote.quoteId}
-                    onClick={() => handleRowClick(quote)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedQuotes.includes(quote.quoteId)}
-                        onChange={() => handleSelectQuote(quote.quoteId)}
-                      />
+                requests.map((request) => (
+                  <tr key={request.requestId}>
+                    {(role === "ADMIN" || role === "STAFF") && (
+                      <td className={styles.narrowTd}>
+                        <input
+                          type="checkbox"
+                          checked={selectedRequests.includes(request.requestId)}
+                          onChange={() => handleSelectRequest(request.requestId)}
+                        />
+                      </td>
+                    )}
+                    <td>{request.requestNo}</td>
+                    <td>{request.customerName}</td>
+                    <td>{request.productName}</td>
+                    <td>{request.modelCode}</td>
+                    <td>{formatDate(request.createdAt)}</td>
+                    <td>
+                      <StatusBadge role={role} status={request.status} />
                     </td>
-                    <td>{quote.requestNo}</td>
-                    <td>{quote.customerName}</td>
-                    <td>{quote.productName}</td>
-                    <td>{quote.serialNumber}</td>
-                    <td>{formatDateTime(quote.createdAt)}</td>
-                    <td>{formatStatus(quote.statusChange)}</td>
-                    <td>{quote.employeeName}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      {renderPaymentButton(quote)}
+                    <td>{request.engineerName}</td>
+                    <td>
+                      <button
+                        onClick={() => navigate(`/request/${request.requestId}`)}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: 6,
+                          border: "1px solid #e5e7eb",
+                          background: "white",
+                          cursor: "pointer"
+                        }}
+                      >
+                        상세
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -377,9 +208,7 @@ const RepairListPage = () => {
 
       <div className={styles.pagination}>
         <button
-          onClick={() =>
-            handlePageChange(Math.max(0, pagination.currentPage - 1))
-          }
+          onClick={() => handlePageChange(Math.max(0, pagination.currentPage - 1))}
           disabled={pagination.currentPage === 0}
         >
           <ChevronLeft />
@@ -394,11 +223,7 @@ const RepairListPage = () => {
           </button>
         ))}
         <button
-          onClick={() =>
-            handlePageChange(
-              Math.min(pagination.totalPages - 1, pagination.currentPage + 1)
-            )
-          }
+          onClick={() => handlePageChange(Math.min(pagination.totalPages - 1, pagination.currentPage + 1))}
           disabled={pagination.currentPage === pagination.totalPages - 1}
         >
           <ChevronRight />
@@ -406,6 +231,4 @@ const RepairListPage = () => {
       </div>
     </div>
   );
-};
-
-export default RepairListPage;
+}

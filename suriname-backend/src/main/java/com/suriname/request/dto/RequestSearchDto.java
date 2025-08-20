@@ -20,5 +20,6 @@ public class RequestSearchDto {
     private LocalDate startCreateAt;
     private LocalDate endCreateAt;
     private List<String> status;
+    private List<String> assignmentStatus;
     private String employName;
 }

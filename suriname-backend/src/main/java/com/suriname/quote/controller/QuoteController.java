@@ -4,7 +4,6 @@ import com.suriname.quote.dto.QuoteCreateDto;
 import com.suriname.quote.dto.QuoteDto;
 import com.suriname.quote.dto.QuotePageResponse;
 import com.suriname.quote.service.QuoteService;
-import com.suriname.request.dto.RequestDto;
 import com.suriname.request.dto.RequestSearchDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -76,7 +75,6 @@ public class QuoteController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> createQuote(@RequestBody QuoteCreateDto dto) {
         try {
-            
             Long quoteId = quoteService.createQuote(dto);
             return ResponseEntity.ok(Map.of("status", 201, "data", Map.of("quoteId", quoteId)));
         } catch (IllegalArgumentException e) {
@@ -98,6 +96,13 @@ public class QuoteController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("status", 500, "message", "견적서 수정 중 오류가 발생했습니다: " + e.getMessage()));
         }
+    }
+
+    // 견적서 단건 조회
+    @GetMapping("{quoteId}")
+    public ResponseEntity<?> getQuote(@PathVariable Long quoteId){
+            QuoteDto response = quoteService.getQuote(quoteId);
+            return ResponseEntity.ok(response);
     }
 
 }

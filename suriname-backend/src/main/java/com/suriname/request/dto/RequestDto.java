@@ -19,5 +19,6 @@ public class RequestDto {
     private String modelCode;
     private LocalDateTime createdAt;
     private String status;
+    private String assignmentStatus;
     private String engineerName;
 }

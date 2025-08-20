@@ -2,8 +2,6 @@ package com.suriname.request.controller;
 
 import com.suriname.employee.repository.EmployeeRepository;
 import com.suriname.global.security.principal.EmployeeDetails;
-import com.suriname.product.dto.ProductDto;
-import com.suriname.product.dto.ProductSearchDto;
 import com.suriname.request.dto.*;
 import com.suriname.request.entity.Request;
 import com.suriname.request.repository.RequestRepository;
@@ -104,6 +102,7 @@ public class RequestController {
 	public ResponseEntity<?> searchProducts(@RequestBody RequestSearchDto dto, @RequestParam("page") int page,
 											@RequestParam("size") int size) {
 		Page<RequestDto> result = requestService.searchProducts(dto, PageRequest.of(page, size));
+		System.out.println(dto.getStatus()+"................");
 		return ResponseEntity.ok(Map.of("status", 200, "data", result));
 	}
 

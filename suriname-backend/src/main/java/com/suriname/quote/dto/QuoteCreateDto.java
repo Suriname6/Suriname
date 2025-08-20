@@ -10,15 +10,9 @@ import java.util.List;
 @Setter
 @ToString
 public class QuoteCreateDto {
-    private String customerName;
-    private String requestNo;
-    private Long engineerId;
-    private String engineerName;
-    private String productName;
-    private Boolean customerConsent; // 고객 동의 여부
+    private Long requestId;
     private Long estimatedCost; // 예상 총 견적금액
     private Long actualCost; // 실제 수리비용
-    private String statusChange; // 상태 변경
     private List<RepairItemDto> repairItems; // 수리 항목들
 
     @Getter
