@@ -10,7 +10,12 @@ export default function PerformanceDashboardPage() {
     // 데이터 가져오기
     const fetchData = async () => {
         try {
-            const res = await axios.get("/api/analytics/employees");
+            const token = localStorage.getItem("accessToken");
+            const res = await axios.get("/api/analytics/employees", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             setData(res.data);
         } catch (err) {
             console.error("Error fetching data", err);

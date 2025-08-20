@@ -144,7 +144,12 @@ export default function ReportPage() {
     const fetchCardData = useCallback(async () => {
         try {
             const axios = (await import('axios')).default;
-            const response = await axios.get('/api/analytics/statistics');
+            const token = localStorage.getItem("accessToken");
+            const response = await axios.get('/api/analytics/statistics', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             setAdminStats(response.data);
         } catch (error) {
             console.error("통계 데이터 로드 에러:", error);
@@ -164,7 +169,12 @@ export default function ReportPage() {
     const fetchEmployeeStats = useCallback(async () => {
         try {
             const axios = (await import('axios')).default;
-            const response = await axios.get('/api/analytics/employees');
+            const token = localStorage.getItem("accessToken");
+            const response = await axios.get('/api/analytics/employees', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             setEmployeeStats(response.data);
         } catch (error) {
             console.error("통계 데이터 로드 에러:", error);

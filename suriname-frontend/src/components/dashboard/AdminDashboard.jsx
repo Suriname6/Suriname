@@ -163,7 +163,12 @@ export default function AdminDashboard() {
 
   const fetchCardData = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/analytics/statistics`);
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`/api/analytics/statistics`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const backendData = response.data; // 백엔드에서 온 DTO 데이터
 
       // DTO 데이터를 받아서 기존 StatisticsData의 value만 업데이트!
@@ -206,7 +211,12 @@ export default function AdminDashboard() {
 
   const fetchStatusData = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/analytics/status-count`);
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`/api/analytics/status-count`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const backendData = response.data; // 백엔드에서 온 DTO 데이터
 
       // DTO 데이터를 받아서 기존 StatusData의 value만 업데이트!
@@ -245,7 +255,12 @@ export default function AdminDashboard() {
 
   const fetchCategoryAsCount = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/analytics/category-as-count`);
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`/api/analytics/category-as-count`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const backendData = response.data;
 
       const updatedCategoryAsCountData = backendData.map(stat => ({
@@ -260,7 +275,12 @@ export default function AdminDashboard() {
 
   const fetchSalesTrendData = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/analytics/revenue-trend?period=${period}`);
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`/api/analytics/revenue-trend?period=${period}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const backendData = response.data;
       console.log("DTO data: ", response.data);
 
