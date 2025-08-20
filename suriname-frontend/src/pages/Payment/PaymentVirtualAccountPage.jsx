@@ -88,19 +88,9 @@ const PaymentVirtualAccountPage = () => {
       setMessage(`가상계좌가 발급되었습니다.\n은행: ${response.bankName || '가상계좌은행'}\n계좌번호: ${response.accountNumber || '가상계좌번호'}\n마감일: ${response.dueDate || '7일 후'}`);
       setMessageType('success');
 
-      // 가상계좌 발급 성공 시 Request 상태를 입금대기로 업데이트
-      try {
-        const statusUpdateResponse = await axios.put(`/api/requests/${formData.receptionNumber}/status`, {
-          status: 'AWAITING_PAYMENT'
-        });
-        
-      } catch (statusError) {
-        // 상태 업데이트 실패해도 전체 프로세스는 계속 진행
-      }
-
       // 2초 후 입금상태 목록으로 이동
-      setTimeout(() => {
-        navigate('/payment/list');
+      setTimeout(() => { 
+        navigate('/payment/list', { replace: true }); 
       }, 2000);
 
     } catch (error) {
