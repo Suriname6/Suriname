@@ -114,6 +114,8 @@ public class RequestQueryRepositoryImpl implements RequestQueryRepository {
                                 request.requestNo,
                                 customer.name,
                                 product.productName,
+                                customer.phone,
+                                customer.address,
                                 product.modelCode,
                                 product.category.name,
                                 request.createdAt,
