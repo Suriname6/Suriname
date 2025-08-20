@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import illustration from "../../assets/illustration.png";
 import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { format, startOfWeek, endOfWeek } from "date-fns";
+import { ko } from "date-fns/locale";
 
 export default function AdminMainPage() {
   // 오늘 현황
@@ -20,7 +23,7 @@ export default function AdminMainPage() {
   // 이번 주 요약 / 기사 TOP5
   const [weeklySummary, setWeeklySummary] = useState({
     total: 0,
-    byDay: [], // [{day:'Mon', count: 12}, ...]
+    byDay: [],
   });
   const [topEngineers, setTopEngineers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +68,6 @@ export default function AdminMainPage() {
     };
   }, []);
 
-  // 상태 뱃지
   const badge = (status) => {
     const map = {
       RECEIVED: "bg-gray-100 text-gray-700",
@@ -79,7 +81,6 @@ export default function AdminMainPage() {
     }`;
   };
 
-  // 상태 코드 → 한글 라벨
   const statusLabel = (status) => {
     const map = {
       RECEIVED: "접수",
@@ -90,6 +91,17 @@ export default function AdminMainPage() {
     };
     return map[status] || status;
   };
+
+  const weekRange = useMemo(() => {
+    const today = new Date();
+    const start = startOfWeek(today, { weekStartsOn: 1 });
+    const end = endOfWeek(today, { weekStartsOn: 1 });
+    return `${format(start, "yyyy-MM-dd", { locale: ko })} ~ ${format(
+      end,
+      "yyyy-MM-dd",
+      { locale: ko }
+    )}`;
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,7 +123,8 @@ export default function AdminMainPage() {
                 관리자님 환영합니다
               </h1>
               <div className="text-gray-600 bg-blue-50 px-6 py-4 rounded-lg inline-block text-lg">
-                오늘의 운영현황을 확인하고 관리 작업을 시작해보세요
+                이번주 운영현황 ({weekRange})을 확인하고 관리 작업을
+                시작해보세요
               </div>
             </div>
 
@@ -234,7 +247,9 @@ export default function AdminMainPage() {
           {/* 이번 주 요약 */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800">이번 주 요약</h3>
+              <h3 className="text-lg font-bold text-gray-800">
+                이번 주 처리량
+              </h3>
               <span className="text-sm text-gray-500">
                 총 {weeklySummary.total}건
               </span>

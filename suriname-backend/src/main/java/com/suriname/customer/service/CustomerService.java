@@ -128,27 +128,43 @@ public class CustomerService {
                 dto.getAddress(),
                 dto.getBirth()
         );
-
+        
         CustomerProductDto productDto = dto.getProduct();
         if (productDto != null) {
-            boolean isValidProduct = productDto.getProductId() != null &&
-                    productDto.getSerialNumber() != null && !productDto.getSerialNumber().isBlank();
+            boolean hasValidSelection =
+                    productDto.getProductId() != null &&
+                    productDto.getSerialNumber() != null &&
+                    !productDto.getSerialNumber().isBlank();
 
-            if (isValidProduct) {
-                CustomerProduct customerProduct = customerProductRepository
-                        .findTopByCustomerOrderByCreatedAtDesc(customer)
-                        .orElseThrow(() -> new RuntimeException("고객의 제품 정보가 없습니다."));
-
+            if (hasValidSelection) {
                 Product product = productRepository.findById(productDto.getProductId())
                         .orElseThrow(() -> new RuntimeException("제품을 찾을 수 없습니다."));
 
-                customerProduct.updateCustomerAndProduct(customer, product, productDto.getSerialNumber());
-                customerProductRepository.save(customerProduct);
+                CustomerProduct customerProduct = customerProductRepository
+                        .findTopByCustomerOrderByCreatedAtDesc(customer)
+                        .orElse(null);
+
+                if (customerProduct == null) {
+                    customerProduct = new CustomerProduct(
+                            customer,
+                            product,
+                            productDto.getSerialNumber()
+                    );
+                    customerProductRepository.save(customerProduct);
+                } else {
+                    customerProduct.updateCustomerAndProduct(
+                            customer,
+                            product,
+                            productDto.getSerialNumber()
+                    );
+                    customerProductRepository.save(customerProduct);
+                }
             }
         }
 
         customerRepository.save(customer);
     }
+
 
     @Transactional
     public void softDelete(Long customerId) {

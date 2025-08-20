@@ -593,30 +593,61 @@ const RepairWritePage = () => {
       navigate(-1);
   };
 
-  const fetchFromListFirst = async ({ customerName }) => {
+  const fetchFromListFirst = async ({
+    customerId,
+    productId,
+    customerName,
+  }) => {
     try {
-      const params = {
-        page: 0,
-        size: 1,
-        sort: "requestId,desc",
-        customerName,
+      const baseParams = { page: 0, size: 1, sort: "requestId,desc" };
+
+      const tryFetch = async (params) => {
+        const res = await axios.get("/api/requests", { params });
+        const payload = res?.data;
+        const content =
+          (payload &&
+            payload.data &&
+            Array.isArray(payload.data.content) &&
+            payload.data.content) ||
+          (payload && Array.isArray(payload.content) && payload.content) ||
+          [];
+        return content[0] || null;
       };
 
-      const { data } = await axios.get("/api/requests", { params });
-      const row = Array.isArray(data?.content) ? data.content[0] : null;
+      let row = null;
+      if (customerId && productId) {
+        row = await tryFetch({ ...baseParams, customerId, productId });
+      }
+
+      if (!row && customerId) {
+        row = await tryFetch({ ...baseParams, customerId });
+      }
+
+      if (!row && customerName) {
+        row = await tryFetch({ ...baseParams, customerName });
+      }
 
       if (!row) {
         setFormData((prev) => ({ ...prev, productName: "", requestNo: "" }));
         return;
       }
 
+      const requestNo =
+        row.requestNo || row.request_no || row.requestNO || row.requestno || "";
+
+      const productName =
+        row.productName ||
+        (row.product && (row.product.productName || row.product.name)) ||
+        row.product_name ||
+        "";
+
       setFormData((prev) => ({
         ...prev,
-        requestNo: row.requestNo,
-        productName: row.productName ?? prev.productName, // 목록 DTO에 있으면 사용
+        requestNo,
+        productName,
       }));
     } catch (e) {
-      console.warn("목록 1건 조회 실패:", e);
+      console.warn("최신 요청 조회 실패:", e);
       setFormData((prev) => ({ ...prev, productName: "", requestNo: "" }));
     }
   };
@@ -672,13 +703,16 @@ const RepairWritePage = () => {
                 }}
                 onSelect={(customer) => {
                   const id = customer.customerId ?? customer.id;
+                  const p = customer.product || {};
                   setFormData((prev) => ({
                     ...prev,
                     customerName: customer.name,
                     customerId: id,
+                    productName: p.productName ?? prev.productName ?? "",
                   }));
                   fetchFromListFirst({
                     customerId: id,
+                    productId: p.productId,
                     customerName: customer.name,
                   });
                 }}
