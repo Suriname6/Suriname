@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from "../../api/axiosInstance";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, Package, Truck, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import styles from '../../css/Delivery/DeliveryAnalytics.module.css';
@@ -15,7 +15,7 @@ const DeliveryAnalytics = () => {
         const fetchDashboardData = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get('/api/delivery/analytics/dashboard', {
+                const response = await api.get('/api/delivery/analytics/dashboard', {
                     params: { timeframe: selectedTimeframe }
                 });
                 

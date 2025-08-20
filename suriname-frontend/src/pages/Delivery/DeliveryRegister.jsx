@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
 import { Search, Package } from "lucide-react";
 import styles from "../../css/Delivery/DeliveryRegister.module.css";
@@ -54,7 +54,7 @@ const DeliveryRegister = () => {
   
   const fetchRequestDetail = async (requestId, customerName, receptionNumber) => {
     try {
-      const response = await axios.get(`/api/requests/${requestId}`);
+      const response = await api.get(`/api/requests/${requestId}`);
       
       if (response.data.status === 200) {
         const requestData = response.data.data;
@@ -81,7 +81,7 @@ const DeliveryRegister = () => {
 
   const fetchRequestList = async () => {
     try {
-      const response = await axios.get("/api/requests", {
+      const response = await api.get("/api/requests", {
         params: {
           status: "WAITING_FOR_DELIVERY",
           page: 0,
@@ -129,7 +129,7 @@ const DeliveryRegister = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post("/api/delivery", formData);
+      const response = await api.post("/api/delivery", formData);
       
       if (response.data.status === 201) {
         alert("배송 정보가 등록되었습니다.");

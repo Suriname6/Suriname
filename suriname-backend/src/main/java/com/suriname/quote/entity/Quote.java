@@ -69,8 +69,9 @@ public class Quote {
     }
 
     @Builder
-    public Quote(Request request, Long cost, String field) {
+    public Quote(Request request, Employee employee, Long cost, String field) {
         this.request = request;
+        this.employee = employee;
         this.cost = cost;
         this.field = field;
     }

@@ -65,7 +65,10 @@ public class RequestQueryRepositoryImpl implements RequestQueryRepository {
             builder.and(employee.name.containsIgnoreCase(condition.getEmployeeName()));
         }
         if (condition.getStatus() != null) {
-            builder.and(log.status.eq(condition.getStatus()));
+            builder.and(request.status.eq(condition.getStatus()));
+        }
+        if (condition.getAssignmentStatus() != null) {
+            builder.and(log.status.eq(condition.getAssignmentStatus()));
         }
         if (condition.getStartDate() != null) {
             builder.and(request.createdAt.goe(condition.getStartDate().atStartOfDay()));

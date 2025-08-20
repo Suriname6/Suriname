@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../api/axiosInstance";
 import { ChevronLeft, ChevronRight, Package, Truck, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../css/Delivery/DeliveryList.module.css";
@@ -30,7 +30,7 @@ const DeliveryList = () => {
         params.status = statusFilter;
       }
 
-      const response = await axios.get("/api/delivery", { params });
+      const response = await api.get("/api/delivery", { params });
       
       if (response.data.status === 200) {
         setDeliveries(response.data.data.content || []);

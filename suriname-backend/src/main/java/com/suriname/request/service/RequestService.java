@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -126,10 +127,18 @@ public class RequestService {
 		// 접수 이미지
 		List<String> requestImages = request.getRequestImages().stream().map(Image::getFileUrl).toList();
 
+		Long receiverId = request.getReceiver() != null ? request.getReceiver().getEmployeeId() : null;
+		Long engineerId = request.getEmployee() != null ? request.getEmployee().getEmployeeId() : null;
+		boolean myAssignment =
+				("STAFF".equals(role) && Objects.equals(receiverId, viewerId)) ||
+						("ENGINEER".equals(role) && Objects.equals(engineerId, viewerId));
+
 		return RequestDetailResponseDto.builder().requestId(request.getRequestId()).requestNo(request.getRequestNo())
 				.createdAt(request.getCreatedAt()).status(request.getStatus().name())
+				.receiverId(request.getReceiver().getEmployeeId())
 				.receiverName(request.getReceiver().getName())
 				.receiverPhone(request.getReceiver().getPhone())
+				.engineerId(request.getEmployee().getEmployeeId())
 				.engineerName(request.getEmployee().getName())
 				.engineerPhone(request.getEmployee().getPhone())
 				.content(request.getContent())
@@ -144,7 +153,9 @@ public class RequestService {
 				.categoryName(product.getCategory().getName()).productName(product.getProductName())
 				.modelCode(product.getModelCode()).productBrand(product.getProductBrand())
 				.serialNumber(customerProduct.getSerialNumber())
-				.requestImages(requestImages).build();
+				.requestImages(requestImages)
+				.myAssignment(myAssignment)
+				.build();
 	}
 
 	// AS 요청 수정
@@ -204,47 +215,45 @@ public class RequestService {
 	}
 
 	// 검색
+	@Transactional(readOnly = true)
 	public Page<RequestDto> searchProducts(RequestSearchDto dto, Pageable pageable) {
 		Page<Request> result = requestRepository.findAll(RequestSpecification.search(dto), pageable);
 
-		// request ID 리스트 수집
-    List<Long> requestIds = result.getContent().stream()
-        .map(Request::getRequestId)
-        .collect(Collectors.toList());
-    
-    // 최신 assignment log들을 한 번에 조회
-    Map<Long, RequestAssignmentLog.AssignmentStatus> assignmentStatusMap =
-        requestAssignmentLogRepository.findLatestByRequestIds(requestIds)
-            .stream()
-            .collect(Collectors.toMap(
-                log -> log.getRequest().getRequestId(),
-                RequestAssignmentLog::getStatus
-            ));
+		List<Long> requestIds = result.getContent().stream()
+				.map(Request::getRequestId)
+				.toList();
+
+		Map<Long, RequestAssignmentLog.AssignmentStatus> assignmentStatusMap = Collections.emptyMap();
+
+		if (!requestIds.isEmpty()) {
+			assignmentStatusMap = requestAssignmentLogRepository.findLatestByRequestIds(requestIds)
+					.stream()
+					.collect(Collectors.toMap(
+							log -> log.getRequest().getRequestId(),
+							RequestAssignmentLog::getStatus
+					));
+		}
+
+		final Map<Long, RequestAssignmentLog.AssignmentStatus> finalMap = assignmentStatusMap;
 
 		return result.map(request -> {
-			String engineerName = null;
-			if (request.getEmployee() != null) {
-				engineerName = request.getEmployee().getName();
-			}
+			String engineerName = (request.getEmployee() != null) ? request.getEmployee().getName() : null;
 
-			// assignment status 가져오기
 			String assignmentStatus = null;
-			RequestAssignmentLog.AssignmentStatus status = assignmentStatusMap.get(request.getRequestId());
-			if (status != null) {
-				assignmentStatus = status.name();
-			}
+			RequestAssignmentLog.AssignmentStatus st = finalMap.get(request.getRequestId());
+			if (st != null) assignmentStatus = st.name();
 
-			RequestDto dtoResult = new RequestDto(
-				request.getRequestId(),
-				request.getRequestNo(),
-				request.getCustomer().getName(),
-				request.getCustomerProduct().getProduct().getProductName(),
-				request.getCustomerProduct().getProduct().getModelCode(),
-				request.getCreatedAt(),
-				assignmentStatus,
-				engineerName
+			return new RequestDto(
+					request.getRequestId(),
+					request.getRequestNo(),
+					request.getCustomer().getName(),
+					request.getCustomerProduct().getProduct().getProductName(),
+					request.getCustomerProduct().getProduct().getModelCode(),
+					request.getCreatedAt(),
+					request.getStatus().toString(),
+					assignmentStatus,
+					engineerName
 			);
-			return dtoResult;
 		});
 	}
 

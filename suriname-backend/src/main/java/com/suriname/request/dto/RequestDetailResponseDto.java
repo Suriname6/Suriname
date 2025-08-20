@@ -16,8 +16,10 @@ public class RequestDetailResponseDto {
     private LocalDateTime createdAt; // 접수 일자
     private String status;           // AS 요청 상태
 
+    private Long receiverId;
     private String receiverName;     // 접수 담당자명
     private String receiverPhone;
+    private Long engineerId;
     private String engineerName;     // 수리 담당자명
     private String engineerPhone;
 
@@ -40,5 +42,5 @@ public class RequestDetailResponseDto {
     private LocalDateTime assignmentStatusChangedAt;
     private String rejectionReason; // 거절 사유
 
-
+    private boolean myAssignment;
 }

@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useMemo, useEffect, useState} from "react";
 import axios from "../../api/axiosInstance";
 import styles from '../../css/Request/RequestList.module.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -35,6 +35,8 @@ export default function RequestList() {
     const navigate = useNavigate();
 
     const [role] = useState(localStorage.getItem("role") || "ADMIN");
+      const lockedFilters = useMemo(() => ({ status: "RECEIVED" }), []);
+
 
     const fetchRequests = useCallback( async () => {
         setLoading(true);
@@ -165,6 +167,7 @@ export default function RequestList() {
                 setRequests={setRequests}
                 pagination={pagination}
                 setPagination={setPagination}
+                lockedFilters={lockedFilters}
             />
 
             {(role === "ADMIN" || role === "STAFF") && (
@@ -201,7 +204,7 @@ export default function RequestList() {
                             <th>제품명</th>
                             <th>제품모델코드</th>
                             <th>접수일자</th>
-                            <th>상태</th>
+                            <th>접수상태</th>
                             <th>수리 담당자</th>
                             <th>상세 페이지</th>
                         </tr>
@@ -249,7 +252,7 @@ export default function RequestList() {
                                     <td>{request.modelCode}</td>
                                     <td>{formatDate(request.createdAt)}</td>
                                     <td>
-                                        <StatusBadge role={role} status={request.status} />
+                                        <StatusBadge role={role} status={request.assignmentStatus} />
                                     </td>
                                     <td>{request.engineerName}</td>
                                     <td>

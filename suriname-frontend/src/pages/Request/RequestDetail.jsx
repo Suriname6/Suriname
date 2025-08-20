@@ -4,7 +4,6 @@ import axios from "../../api/axiosInstance";
 import StatusBadge from "../../components/Request/StatusBadge";
 import styles from "../../css/Request/RequestDetail.module.css";
 
-// 요청 상태 한글 매핑 (enum Status)
 const REQUEST_STATUS_LABELS = {
   RECEIVED: "접수",
   REPAIRING: "수리중",
@@ -53,7 +52,7 @@ export default function RequestDetail() {
   const [busy, setBusy] = useState(false);
   const [role] = useState(localStorage.getItem("role") || "ADMIN");
 
-  const { assignmentStatus, rejectionReason } = detail || {};
+  const { assignmentStatus, rejectionReason, myAssignment } = detail || {};
 
   // 상세 조회
   useEffect(() => {
@@ -294,7 +293,7 @@ export default function RequestDetail() {
             </div>
           </div>
 
-        {/* 고객 제품 정보 — 전체 폭 */}
+        {/* 고객 제품 정보 */}
         <div className={`${styles.section} ${styles.gridFull}`}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionIcon}>📦</span>
@@ -306,7 +305,6 @@ export default function RequestDetail() {
               {detail.productBrand && <span className={styles.badge}>{detail.productBrand}</span>}
             </div>
 
-            {/* ✅ 2열 그리드로 필드 배치 */}
             <div className={styles.kvGrid}>
               <div className={styles.kv}>
                 <div className={styles.rowKey}>제품명</div>
@@ -373,7 +371,7 @@ export default function RequestDetail() {
       {/* Actions */}
       <div className={styles.stickyActions}>
         <div className={styles.buttonGroup}>
-          {assignmentStatus === "PENDING" && role === "ENGINEER" && (
+          {assignmentStatus === "PENDING" && myAssignment && role === "ENGINEER" && (
             <>
               <button
                 className={`${styles.btn} ${styles.btnSuccess}`}
@@ -393,7 +391,7 @@ export default function RequestDetail() {
           )}
 
           {["REJECTED", "CANCELLED", "EXPIRED"].includes(assignmentStatus) &&
-            (role === "ADMIN" || role === "STAFF") && (
+            (role === "ADMIN" || role === "STAFF" && myAssignment) && (
               <button
                 className={`${styles.btn} ${styles.btnPrimary}`}
                 onClick={openReassign}
@@ -402,11 +400,25 @@ export default function RequestDetail() {
                 담당자 재배정
               </button>
             )}
+
+        {role === "ENGINEER" && detail?.status === "REPAIRING" && myAssignment && (
+          <button
+            className={`${styles.btn} ${styles.btnPrimary}`}
+            onClick={() => {
+                  navigate("/repair/write", {
+                    state: { requestId: detail.requestId, mode: "new" },
+                  });
+                }}
+            disabled={busy}
+          >
+            견적서 작성
+          </button>
+        )}
         </div>
 
         <div className={styles.buttonGroup}>
           {(assignmentStatus === "PENDING" || assignmentStatus === "REJECTED") &&
-            (role === "ADMIN" || role === "STAFF") && (
+            (role === "ADMIN" || role === "STAFF" && myAssignment) && (
               <>
                 <button
                   className={`${styles.btn} ${styles.btnWarning}`}

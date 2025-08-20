@@ -78,7 +78,6 @@ export default function RequestEdit() {
   const handleSubmit = async () => {
     try {
       setSaving(true);
-      // 내용만 PATCH
       await axios.patch(`/api/requests/${id}`, { content });
       alert("요청이 수정되었습니다.");
       navigate(`/request/${id}`);
@@ -104,7 +103,6 @@ export default function RequestEdit() {
     <div className={styles.customerContainer}>
       <div className={styles.tabNavigation}>
         <div className={styles.tabContainer}>
-          {/* CSS 모듈 활성 클래스 분리 */}
           <button className={`${styles.tabButton} ${styles.tabButtonActive}`}>
             A/S 요청 수정
           </button>
