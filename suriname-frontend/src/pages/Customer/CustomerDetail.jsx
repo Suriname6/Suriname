@@ -26,30 +26,24 @@ const CustomerDetail = () => {
     fetchCustomer();
   }, [id]);
 
-  // 입력 변경 핸들러
   const handleInputChange = useCallback(
     (field, value) => {
       setFormData((prev) => {
         const updated = { ...prev, [field]: value };
-        setIsDirty(
-          JSON.stringify({ ...formData, product: updated }) !==
-            JSON.stringify(originalData)
-        );
-
+        const snapshot = { ...updated, product };
+        setIsDirty(JSON.stringify(snapshot) !== JSON.stringify(originalData));
         return updated;
       });
     },
-    [originalData]
+    [originalData, product]
   );
 
   const handleProductChange = useCallback(
     (field, value) => {
       setProduct((prev) => {
         const updated = { ...prev, [field]: value };
-        setIsDirty(
-          JSON.stringify({ ...formData, product: [updated] }) !==
-            JSON.stringify(originalData)
-        );
+        const snapshot = { ...(formData || {}), product: updated };
+        setIsDirty(JSON.stringify(snapshot) !== JSON.stringify(originalData));
         return updated;
       });
     },
@@ -88,7 +82,7 @@ const CustomerDetail = () => {
   // 저장 함수
   const handleSave = async () => {
     try {
-      const saveData = { ...formData, product: product };
+      const saveData = { ...(formData || {}), product: product || null };
       await api.put(`/api/customers/${id}`, saveData);
       alert("저장되었습니다.");
       setOriginalData(saveData);
@@ -201,7 +195,7 @@ const CustomerDetail = () => {
                 placeholder="제품명"
                 value={product?.productName || ""}
                 onChange={(e) =>
-                  handleInputChange("productName", e.target.value)
+                  handleProductChange("productName", e.target.value)
                 }
               />
             </div>
@@ -214,7 +208,7 @@ const CustomerDetail = () => {
                 className={styles.inputControl}
                 value={product?.productBrand || ""}
                 onChange={(e) =>
-                  handleInputChange("productBrand", e.target.value)
+                  handleProductChange("productBrand", e.target.value)
                 }
               >
                 <option value="">선택</option>
@@ -233,7 +227,9 @@ const CustomerDetail = () => {
                 className={styles.inputControl}
                 placeholder="모델코드"
                 value={product?.modelCode || ""}
-                onChange={(e) => handleInputChange("modelCode", e.target.value)}
+                onChange={(e) =>
+                  handleProductChange("modelCode", e.target.value)
+                }
               />
             </div>
           </div>
