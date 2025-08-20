@@ -112,7 +112,24 @@ const CustomerAdd = () => {
     }).open();
   };
 
+  const validate = () => {
+    if (!formData.name.trim()) return "고객명을 입력하세요.";
+    if (!formData.phone.trim()) return "연락처를 입력하세요.";
+
+    if (!formData.categoryName?.trim()) return "제품분류를 입력하세요.";
+    if (!formData.productName?.trim()) return "제품명을 입력하세요.";
+    if (!formData.productBrand?.trim()) return "제조사를 입력하세요";
+    if (!formData.modelCode?.trim()) return "모델코드를 입력하세요.";
+    if (!formData.serialNumber?.trim()) return "제품고유번호를 입력하세요.";
+    return null;
+  };
+
   const handleSubmit = async () => {
+    const err = validate();
+    if (err) {
+      alert(err);
+      return;
+    }
     const addressFull = [formData.address, formData.addressDetail]
       .filter(Boolean)
       .join(" ");
@@ -124,12 +141,12 @@ const CustomerAdd = () => {
       birth: formData.birth,
       address: addressFull,
       product: {
-        productId: null,
+        productId: formData.productId || null,
         productName: formData.productName,
         categoryName: formData.categoryName,
         productBrand: formData.productBrand,
-        modelCode: formData.modelCode,
-        serialNumber: formData.serialNumber,
+        modelCode: formData.modelCode || null,
+        serialNumber: formData.serialNumber || null,
       },
     };
 
