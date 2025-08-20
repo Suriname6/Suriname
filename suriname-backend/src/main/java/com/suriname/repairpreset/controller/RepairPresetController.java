@@ -18,14 +18,13 @@ public class RepairPresetController {
 
     private final RepairPresetService repairPresetService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> createPreset(@RequestBody PresetRequestDto requestDto) {
         repairPresetService.createPreset(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<PresetResponseDto>> getAllPresets(
             @RequestParam(value = "categoryId", required = false) Long categoryId
@@ -38,8 +37,8 @@ public class RepairPresetController {
         return ResponseEntity.ok(responseDtos);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deactivatePreset(@PathVariable Long id) {
         repairPresetService.deactivatePreset(id);
         return ResponseEntity.noContent().build();

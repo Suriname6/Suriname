@@ -37,6 +37,8 @@ public class JwtTokenProvider {
 
     @PostConstruct
     protected void init() {
+        System.out.println("=== INIT JWT PROVIDER ===");
+        System.out.println("secretKey(raw): " + secretKey);
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
@@ -76,7 +78,9 @@ public class JwtTokenProvider {
         Employee employee = employeeRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다: " + loginId));
         UserDetails userDetails = new EmployeeDetails(employee);
-        return new JwtAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+        JwtAuthenticationToken auth = new JwtAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        auth.setAuthenticated(true);
+        return auth;
     }
 
     public String getLoginId(String token) {
@@ -93,6 +97,7 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("JWT validation error: " + e.getMessage());
             return false;
         }
     }

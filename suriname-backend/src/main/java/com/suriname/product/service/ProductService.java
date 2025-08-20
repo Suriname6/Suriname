@@ -3,6 +3,7 @@ package com.suriname.product.service;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -52,11 +53,39 @@ public class ProductService {
 
 
     // 수정
-    public void updateProduct(Long id, ProductDto dto, Category category) {
+    @Transactional
+    public void updateProduct(Long id, ProductDto dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("수정할 데이터가 비어 있습니다.");
+        }
+
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 제품이 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException("해당 제품이 존재하지 않습니다."));
+
+        String catName = dto.getCategoryName() == null ? "" : dto.getCategoryName().trim();
+        if (catName.isEmpty()) {
+            throw new IllegalArgumentException("카테고리명은 비어 있을 수 없습니다.");
+        }
+
+        Category category = categoryRepository.findByName(catName)
+            .orElseGet(() -> createCategorySafely(catName));
+
         product.updateFromDto(dto, category);
+
         productRepository.save(product);
+    }
+
+    private Category createCategorySafely(String name) {
+        try {
+            Category newCat = Category.builder()
+                .name(name)
+                .isVisible(true)
+                .parent(null)
+                .build();
+            return categoryRepository.save(newCat);
+        } catch (DataIntegrityViolationException e) {
+            return categoryRepository.findByName(name).orElseThrow(() -> e);
+        }
     }
 
 
@@ -96,12 +125,5 @@ public class ProductService {
                     .collect(Collectors.toList());
     }
 
-
-    // 엑셀
-    public void importFromExcel(MultipartFile file) {
-        productExcelService.importFromExcel(file);
-        
-        
-    }
 }
 

@@ -5,13 +5,14 @@ import { createRepairPreset } from '../../api/repairPreset';
 import styles from '../../css/Repair/RepairPreset.module.css';
 
 const FALLBACK_CATEGORIES = [
-  { categoryId: 100, name: '모바일', parentId: null },
-  { categoryId: 101, name: '스마트폰', parentId: 100 },
-  { categoryId: 102, name: '태블릿', parentId: 100 },
-  { categoryId: 200, name: '가전제품', parentId: null },
-  { categoryId: 201, name: '냉장고', parentId: 200 },
-  { categoryId: 202, name: '세탁기', parentId: 200 },
-  { categoryId: 203, name: '에어컨', parentId: 200 },
+  { categoryId: 1, name: '노트북', parentId: null },
+  { categoryId: 2, name: '모니터', parentId: null },
+  { categoryId: 3, name: '데스크톱', parentId: null },
+  { categoryId: 4, name: '전자레인지', parentId: null },
+  { categoryId: 5, name: '에어컨', parentId: null },
+  { categoryId: 6, name: '프린터', parentId: null },
+  { categoryId: 7, name: 'TV', parentId: null },
+  { categoryId: 8, name: '세탁기', parentId: null }
 ];
 
 const LS_KEY = 'repairPresetDupSet';

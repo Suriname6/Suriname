@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -43,17 +44,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		String token = jwtTokenProvider.resolveToken(request);
+        String authHeader = request.getHeader("Authorization");
+        String token = jwtTokenProvider.resolveToken(request);
+
+        System.out.println("=== JWT FILTER doFilterInternal ===");
+        System.out.println("Request URI: " + request.getRequestURI());
+        System.out.println("Authorization Header: " + authHeader);
+        System.out.println("Extracted Token: " + token);
 
 		if (token != null && jwtTokenProvider.validateToken(token)) {
 			Authentication authentication = jwtTokenProvider.getAuthentication(token);
+            System.out.println("Authenticated User: " + authentication.getName());
+            System.out.println("Authorities: " + authentication.getAuthorities());
 
 			if (authentication instanceof AbstractAuthenticationToken tokenAuth) {
 				tokenAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 			}
 
-			SecurityContextHolder.getContext().setAuthentication(authentication);
-		}
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+		} else {
+            System.out.println("Token invalid or missing");
+        }
 
 		filterChain.doFilter(request, response);
 	}

@@ -24,9 +24,6 @@ export default function RequestForm() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedEngineer, setSelectedEngineer] = useState(null);
 
-  // 파일 업로드 상태
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-
   // 고객 제품/엔지니어 목록
   const [customerProducts, setCustomerProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
@@ -34,6 +31,9 @@ export default function RequestForm() {
   const [engineerOptions, setEngineerOptions] = useState([]);
   const [engLoading, setEngLoading] = useState(false);
   const [engError, setEngError] = useState(null);
+
+  // 중복 저장 방지
+  const [submitting, setSubmitting] = useState(false);
 
   // 권한 체크
   useEffect(() => {
@@ -44,6 +44,7 @@ export default function RequestForm() {
 
   // 엔지니어 목록
   useEffect(() => {
+    let alive = true;
     const fetchEngineers = async () => {
       try {
         setEngLoading(true);
@@ -51,6 +52,8 @@ export default function RequestForm() {
         const res = await axios.get("/api/users/engineers", {
           params: { page: 0, size: 100 },
         });
+        if (!alive) return;
+
         const payload = res?.data?.data ?? res?.data;
         const rawList = Array.isArray(payload?.content)
           ? payload.content
@@ -70,13 +73,17 @@ export default function RequestForm() {
           .filter((e) => e.id != null);
         setEngineerOptions(mapped);
       } catch (err) {
+        if (!alive) return;
         console.error("엔지니어 목록 조회 실패:", err);
         setEngError("목록을 불러오지 못했습니다.");
       } finally {
-        setEngLoading(false);
+        if (alive) setEngLoading(false);
       }
     };
     fetchEngineers();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   // 고객 선택 시 처리 (자동완성 컴포넌트의 onSelect에서 호출)
@@ -94,11 +101,14 @@ export default function RequestForm() {
     }));
 
     // 고객 소유 제품 조회
+    let alive = true;
     setProductsLoading(true);
     try {
       const res = await axios.get(
         `/api/customers/${customer.customerId ?? customer.id}/products`
       );
+      if (!alive) return;
+
       const payload = res?.data?.data ?? res?.data;
       const array = Array.isArray(payload)
         ? payload
@@ -140,8 +150,12 @@ export default function RequestForm() {
         modelCode: "",
       }));
     } finally {
-      setProductsLoading(false);
+      if (alive) setProductsLoading(false);
     }
+
+    return () => {
+      alive = false;
+    };
   };
 
   // 제품 선택
@@ -169,55 +183,10 @@ export default function RequestForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 파일 선택
-  const handleFileUpload = (event) => {
-    const files = Array.from(event.target.files ?? []);
-    const next = [];
-    files.forEach((file) => {
-      if (file.size <= 25 * 1024 * 1024) {
-        next.push({
-          id: `${Date.now()}_${Math.random()}`,
-          name: file.name,
-          file,
-        });
-      } else {
-        alert("파일 크기가 25MB를 초과합니다.");
-      }
-    });
-    if (next.length) {
-      setUploadedFiles((prev) => [...prev, ...next]);
-    }
-  };
-
-  const removeFile = (id) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
-  };
-
-  // 파일 업로드 (예시)
-  const handleFileSubmit = async () => {
-    if (uploadedFiles.length === 0) {
-      alert("업로드할 파일이 없습니다.");
-      return;
-    }
-    const form = new FormData();
-    uploadedFiles.forEach((f) => {
-      form.append("files", f.file);
-    });
-    try {
-      const res = await axios.post("/api/files/upload", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      console.log("파일 업로드 성공:", res.data);
-      alert("파일 업로드 성공");
-    } catch (err) {
-      console.error("파일 업로드 실패:", err);
-      alert("파일 업로드 실패");
-    }
-  };
-
   // 저장
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault?.();
+    if (submitting) return;
     if (!formData.customerId) {
       alert("고객을 선택해 주세요.");
       return;
@@ -235,6 +204,7 @@ export default function RequestForm() {
       modelCode: formData.modelCode?.trim() || null,
     };
 
+    setSubmitting(true);
     try {
       const res = await axios.post("/api/requests", requestData);
       console.log("요청 등록 성공:", res.data);
@@ -243,6 +213,8 @@ export default function RequestForm() {
     } catch (err) {
       console.error("요청 등록 실패:", err);
       alert("저장 중 오류가 발생했습니다.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -254,7 +226,8 @@ export default function RequestForm() {
     <div className={styles.customerContainer}>
       <div className={styles.tabNavigation}>
         <div className={styles.tabContainer}>
-          <button className={`${styles.tabButton} ${styles.active}`}>
+          {/* CSS 모듈용 활성 클래스 분리: styles.tabButtonActive 사용 */}
+          <button className={`${styles.tabButton} ${styles.tabButtonActive}`}>
             A/S 요청 등록
           </button>
         </div>
@@ -384,8 +357,7 @@ export default function RequestForm() {
                     </option>
                     {customerProducts.map((product) => (
                       <option key={product.id} value={String(product.id)}>
-                        {product.name}{" "}
-                        {product.model ? `(${product.model})` : ""}
+                        {product.name} {product.model ? `(${product.model})` : ""}
                       </option>
                     ))}
                   </select>
@@ -465,58 +437,6 @@ export default function RequestForm() {
           </div>
         </div>
 
-        {/* 사진 첨부 */}
-        <div className={styles.sectionContent}>
-          <h2 className={styles.sectionTitle}>사진 첨부</h2>
-          <div className={styles.fileUpload}>
-            <p className={styles.fileInfo}>
-              Please upload files in png, jpg, pdf format and make sure the file
-              size is under 25 MB.
-            </p>
-
-            <div className={styles.dropZone}>
-              <input
-                type="file"
-                multiple
-                accept=".png,.jpg,.jpeg,.pdf"
-                onChange={handleFileUpload}
-                className={styles.fileInput}
-              />
-              <div className={styles.dropText}>Drop file or Browse</div>
-              <div className={styles.formatText}>
-                Format: png, jpg, pdf | Max file size: 25 MB
-              </div>
-            </div>
-
-            {uploadedFiles.length > 0 && (
-              <div className={styles.uploadedFiles}>
-                {uploadedFiles.map((file) => (
-                  <div key={file.id} className={styles.fileItem}>
-                    <span className={styles.fileName}>📎 {file.name}</span>
-                    <button
-                      type="button"
-                      className={styles.removeFileBtn}
-                      onClick={() => removeFile(file.id)}
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className={styles.uploadActions}>
-              <button
-                type="button"
-                className={styles.uploadBtn}
-                onClick={handleFileSubmit}
-              >
-                업로드
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* 버튼 */}
         <div className={styles.buttonGroup}>
           <button
@@ -530,8 +450,9 @@ export default function RequestForm() {
             type="button"
             className={styles.submitButton}
             onClick={handleSubmit}
+            disabled={submitting || productsLoading || engLoading}
           >
-            저장
+            {submitting ? "저장 중..." : "저장"}
           </button>
         </div>
       </div>

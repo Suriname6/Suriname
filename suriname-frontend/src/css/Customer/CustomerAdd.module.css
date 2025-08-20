@@ -9,6 +9,8 @@
 
 /* 탭 네비게이션 */
 .tabNavigation {
+    display: flex;
+    justify-content: center;
     margin-bottom: 32px;
 }
 
@@ -144,4 +146,21 @@
 
 .submitButton:hover {
     background-color: #1d4ed8;
+}
+
+
+.addressRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.addressRow .submitButton {
+    height: 44px;
+    flex: 0 0 100px;
+    line-height: 44px;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }

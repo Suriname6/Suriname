@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../css/Customer/CustomerAdd.module.css";
 import AutoComplete from "../../components/AutoComplete/ProductAutoComplete";
@@ -9,6 +9,7 @@ const CustomerAdd = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const BRAND_OPTIONS = ["Samsung", "LG", "Apple", "기타"];
+  const detailAddrRef = useRef(null);
 
   const INITIAL_FORM = {
     name: "",
@@ -16,6 +17,7 @@ const CustomerAdd = () => {
     email: "",
     birth: "",
     address: "",
+    addressDetail: "",
     productName: "",
     categoryName: "",
     productBrand: "",
@@ -39,13 +41,88 @@ const CustomerAdd = () => {
     }));
   };
 
+  const formatPhone010 = (value) => {
+    let d = value.replace(/\D/g, "").slice(0, 11);
+    if (d && !d.startsWith("010")) d = "010" + d.replace(/^010?/, "");
+    if (d.length <= 3) return d;
+    if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
+    return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  };
+
+  const handlePhoneChange = (value) => {
+    setFormData((prev) => ({ ...prev, phone: formatPhone010(value) }));
+  };
+
+  const EMAIL_DOMAINS = [
+    "직접 입력",
+    "naver.com",
+    "gmail.com",
+    "daum.net",
+    "kakao.com",
+  ];
+  const [emailLocal, setEmailLocal] = useState("");
+  const [emailDomainSelect, setEmailDomainSelect] = useState("직접 입력");
+  const [emailDomainCustom, setEmailDomainCustom] = useState("");
+
+  useEffect(() => {
+    const domain =
+      emailDomainSelect === "직접 입력"
+        ? emailDomainCustom.trim()
+        : emailDomainSelect;
+    const local = emailLocal.trim();
+    const email = local && domain ? `${local}@${domain}` : "";
+    setFormData((prev) => ({ ...prev, email }));
+  }, [emailLocal, emailDomainSelect, emailDomainCustom]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/api/categories");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("카테고리 불러오기 실패:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {}, [formData]);
+
+  const loadDaumPostcode = () =>
+    new Promise((resolve) => {
+      if (window.daum?.Postcode) return resolve();
+      const s = document.createElement("script");
+      s.src =
+        "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+      s.onload = resolve;
+      document.head.appendChild(s);
+    });
+
+  const openAddressSearch = async () => {
+    await loadDaumPostcode();
+    new window.daum.Postcode({
+      oncomplete: (data) => {
+        const road = data.roadAddress;
+        const jibun = data.jibunAddress;
+        const addr = road || jibun || "";
+        handleInputChange("address", addr);
+        handleInputChange("addressDetail", "");
+        setTimeout(() => detailAddrRef.current?.focus(), 0);
+      },
+    }).open();
+  };
+
   const handleSubmit = async () => {
+    const addressFull = [formData.address, formData.addressDetail]
+      .filter(Boolean)
+      .join(" ");
+
     const formDataToSend = {
       name: formData.name,
       phone: formData.phone,
       email: formData.email,
       birth: formData.birth,
-      address: formData.address,
+      address: addressFull,
       product: {
         productId: null,
         productName: formData.productName,
@@ -55,7 +132,6 @@ const CustomerAdd = () => {
         serialNumber: formData.serialNumber,
       },
     };
-    console.log("serial:", formData.serialNumber);
 
     try {
       const response = await api.post("/api/customers", formDataToSend);
@@ -72,23 +148,6 @@ const CustomerAdd = () => {
       setFormData(INITIAL_FORM);
     }
   };
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await api.get("/api/categories");
-        setCategories(res.data);
-      } catch (err) {
-        console.error("카테고리 불러오기 실패:", err);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    console.log("FormData 업데이트:", formData);
-  }, [formData]);
 
   return (
     <div className={styles.customerContainer}>
@@ -147,9 +206,12 @@ const CustomerAdd = () => {
               <input
                 type="text"
                 className={styles.inputControl}
-                placeholder="연락처"
+                placeholder="010-0000-0000"
                 value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                inputMode="numeric"
+                autoComplete="tel"
+                maxLength={13}
               />
             </div>
           </div>
@@ -168,31 +230,93 @@ const CustomerAdd = () => {
                 onChange={(e) => handleInputChange("birth", e.target.value)}
               />
             </div>
+
             <div className={styles.inputField} style={{ flex: 1.3 }}>
               <label
                 className={`${styles.inputLabel} ${styles.inputLabelLong}`}
               >
                 이메일
               </label>
-              <input
-                type="email"
-                className={styles.inputControl}
-                placeholder="이메일"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-              />
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="text"
+                  className={styles.inputControl}
+                  placeholder="아이디"
+                  value={emailLocal}
+                  onChange={(e) =>
+                    setEmailLocal(e.target.value.replace(/\s/g, ""))
+                  }
+                  autoComplete="username"
+                  style={{ flex: 1 }}
+                />
+                <span>@</span>
+                <select
+                  className={styles.inputControl}
+                  value={emailDomainSelect}
+                  onChange={(e) => setEmailDomainSelect(e.target.value)}
+                  style={{ flex: 1.1 }}
+                >
+                  {EMAIL_DOMAINS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                {emailDomainSelect === "직접 입력" && (
+                  <input
+                    type="text"
+                    className={styles.inputControl}
+                    placeholder="domain.com"
+                    value={emailDomainCustom}
+                    onChange={(e) =>
+                      setEmailDomainCustom(
+                        e.target.value.replace(/\s/g, "").toLowerCase()
+                      )
+                    }
+                    autoComplete="email"
+                    style={{ flex: 1 }}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
           <div className={styles.inputGroup}>
-            <div className={styles.inputField} style={{ width: "100%" }}>
+            <div className={styles.inputField} style={{ flex: 1 }}>
               <label className={styles.inputLabel}>주소</label>
+              <div className={styles.addressRow}>
+                <input
+                  type="text"
+                  className={styles.inputControl}
+                  placeholder="주소 검색 버튼으로 선택"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  readOnly
+                />
+                <button
+                  type="button"
+                  className={styles.submitButton}
+                  onClick={openAddressSearch}
+                >
+                  주소 검색
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <div className={styles.inputField} style={{ flex: 1 }}>
+              <label className={styles.inputLabel}>상세 주소</label>
               <input
+                ref={detailAddrRef}
                 type="text"
                 className={styles.inputControl}
-                placeholder="주소"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
+                placeholder="상세 주소 (동/호수 등)"
+                value={formData.addressDetail}
+                onChange={(e) =>
+                  handleInputChange("addressDetail", e.target.value)
+                }
               />
             </div>
           </div>
@@ -227,11 +351,9 @@ const CustomerAdd = () => {
                 value={formData.productName}
                 className={styles.inputControl}
                 onChange={(val) => {
-                  console.log("입력값 변경:", val);
                   handleInputChange("productName", val);
                 }}
                 onSelect={(product) => {
-                  console.log("제품 선택됨:", product);
                   setFormData((prev) => ({
                     ...prev,
                     productName: product.productName,
@@ -262,7 +384,6 @@ const CustomerAdd = () => {
                     {b}
                   </option>
                 ))}
-                {/* 서버/자동완성 값이 목록에 없으면 추가로 표시 */}
                 {formData.productBrand &&
                   !BRAND_OPTIONS.includes(formData.productBrand) && (
                     <option value={formData.productBrand}>

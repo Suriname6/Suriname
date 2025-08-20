@@ -1,51 +1,21 @@
-import axiosInstance from './axiosInstance';
+import instance from './axiosInstance';
 
-// 수리 프리셋 목록 조회
 export const getRepairPresets = async () => {
-  try {
-    const response = await axiosInstance.get('/api/repair-presets');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await instance.get('/api/repair-presets');
+  return response.data;
 };
 
-// 카테고리별 수리 프리셋 조회
 export const getRepairPresetsByCategory = async (categoryId) => {
-  try {
-    const response = await axiosInstance.get(`/api/repair-presets/category/${categoryId}`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await instance.get(`/api/repair-presets/category/${categoryId}`);
+  return response.data;
 };
 
-// 수리 프리셋 생성
 export const createRepairPreset = async (presetData) => {
-  try {
-    const response = await axiosInstance.post('/api/repair-presets', presetData);
-    return response.data;
-  } catch (error) {
-    
-    // 더 자세한 에러 정보를 포함한 에러 객체 생성
-    const enhancedError = new Error(
-      error.response?.data?.message || 
-      `HTTP ${error.response?.status}: ${error.message}` ||
-      '알 수 없는 오류가 발생했습니다'
-    );
-    enhancedError.status = error.response?.status;
-    enhancedError.data = error.response?.data;
-    
-    throw enhancedError;
-  }
+  const response = await instance.post('/api/repair-presets', presetData);
+  return response.data;
 };
 
-// 수리 프리셋 삭제
 export const deleteRepairPreset = async (presetId) => {
-  try {
-    const response = await axiosInstance.delete(`/api/repair-presets/${presetId}`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await instance.delete(`/api/repair-presets/${presetId}`);
+  return response.data;
 };

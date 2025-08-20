@@ -30,15 +30,49 @@ export default function SidebarNavigation() {
     통계: "/dashboard/statistics",
     "담당자별 성과": "/dashboard/performance",
     리포트: "/dashboard/report",
+    "리스크/추천": "/dashboard/recommendation",
   };
 
-  const [hoveredSection, setHoveredSection] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
   const [selectedSubItem, setSelectedSubItem] = useState(null);
   const [hoveredSubItem, setHoveredSubItem] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const role = getUserRole();
+
+  let filteredMenu = {
+    "A/S 접수": ["접수 목록", "접수 등록"],
+    "수리 관리": role === "ADMIN"
+    ? ["수리 목록", "수리 등록", "프리셋 등록"]
+    : ["수리 목록", "수리 등록"],
+    "완료 처리": ["완료 처리 목록", "완료 처리 등록"],
+    "고객 관리": ["고객 목록", "고객 등록"],
+    "제품 관리": ["제품 목록", "제품 등록"],
+    "배송 관리": ["배송 목록", "배송 등록", "배송 분석"],
+    "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
+  };
+
+  if (role === "ADMIN") {
+    filteredMenu["직원 관리"] = ["직원 목록", "직원 가입 요청 목록"];
+    filteredMenu["대시 보드"] = [
+      "통계",
+      "담당자별 성과",
+      "리포트",
+      "리스크/추천",
+    ];
+  }
+
+  const urlToMenuMapping = {};
+  Object.entries(routeMap).forEach(([label, path]) => {
+    for (const [parent, subItems] of Object.entries(filteredMenu)) {
+      if (subItems.includes(label)) {
+        urlToMenuMapping[path] = {
+          parentMenu: parent,
+          subItem: label,
+        };
+      }
+    }
+  });
 
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
@@ -56,33 +90,6 @@ export default function SidebarNavigation() {
     }
   }, [location.pathname]);
 
-  let filteredMenu = {
-    "고객 관리": ["고객 목록", "고객 등록"],
-    "제품 관리": ["제품 목록", "제품 등록"],
-    "A/S 접수": ["접수 목록", "접수 등록"],
-    "수리 관리": ["수리 목록", "수리 등록", "프리셋 등록"],
-    "결제 관리": ["입금 상태 목록", "가상 계좌 발급 요청"],
-    "배송 관리": ["배송 목록", "배송 등록", "배송 분석"],
-    "완료 처리": ["완료 처리 목록", "완료 처리 등록"],
-  };
-
-  if (role === "ADMIN") {
-    filteredMenu["직원 관리"] = ["직원 목록", "직원 가입 요청 목록"];
-    filteredMenu["대시 보드"] = ["통계", "담당자별 성과", "리포트"];
-  }
-
-  const urlToMenuMapping = {};
-  Object.entries(routeMap).forEach(([label, path]) => {
-    for (const [parent, subItems] of Object.entries(filteredMenu)) {
-      if (subItems.includes(label)) {
-        urlToMenuMapping[path] = {
-          parentMenu: parent,
-          subItem: label,
-        };
-      }
-    }
-  });
-
   const handleSubItemClick = (subItem, parentMenu) => {
     setSelectedSubItem(subItem);
     setActiveSection(parentMenu);
@@ -91,15 +98,6 @@ export default function SidebarNavigation() {
     if (path) {
       navigate(path);
     }
-  };
-
-  const handleMenuGroupEnter = (mainMenu) => {
-    setHoveredSection(mainMenu);
-  };
-
-  const handleMenuGroupLeave = () => {
-    setHoveredSection(null);
-    setHoveredSubItem(null);
   };
 
   const handleLogout = async () => {
@@ -125,24 +123,22 @@ export default function SidebarNavigation() {
 
       <div className="sidebar-main">
         {Object.keys(filteredMenu).map((mainMenu) => (
-          <div
-            key={mainMenu}
-            onMouseEnter={() => handleMenuGroupEnter(mainMenu)}
-            onMouseLeave={handleMenuGroupLeave}
-          >
+          <div key={mainMenu}>
             <div
               className={`main-menu-item ${
-                hoveredSection === mainMenu || activeSection === mainMenu
-                  ? "main-menu-active"
-                  : ""
+                activeSection === mainMenu ? "main-menu-active" : ""
               }`}
-              onClick={() => setActiveSection(mainMenu)}
+              onClick={() =>
+                setActiveSection(activeSection === mainMenu ? null : mainMenu)
+              }
             >
               <span>{mainMenu}</span>
-              <span className="menu-arrow">▼</span>
+              <span className="menu-arrow">
+                {activeSection === mainMenu ? "▲" : "▼"}
+              </span>
             </div>
 
-            {(hoveredSection === mainMenu || activeSection === mainMenu) &&
+            {activeSection === mainMenu &&
               filteredMenu[mainMenu].map((subMenu) => (
                 <div
                   key={subMenu}

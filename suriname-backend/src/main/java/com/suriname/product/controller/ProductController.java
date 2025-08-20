@@ -1,25 +1,29 @@
 package com.suriname.product.controller;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.suriname.category.entity.Category;
-import com.suriname.category.repository.CategoryRepository;
 import com.suriname.product.dto.ProductDto;
 import com.suriname.product.dto.ProductSearchDto;
 import com.suriname.product.entity.Product;
 import com.suriname.product.entity.ProductSpecification;
 import com.suriname.product.repository.ProductRepository;
+import com.suriname.product.service.ProductExcelService;
 import com.suriname.product.service.ProductService;
+import com.suriname.product.service.ProductTemplateService;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -27,8 +31,9 @@ import java.util.stream.Collectors;
 public class ProductController {
 
 	private final ProductService productService;
-	private final CategoryRepository categoryRepository;
 	private final ProductRepository productRepository;
+	private final ProductExcelService productExcelService;
+	private final ProductTemplateService productTemplateService;
 
 	// 전체 조회
 	@GetMapping
@@ -40,8 +45,6 @@ public class ProductController {
 	// 등록
 	@PostMapping
 	public ResponseEntity<?> registerProduct(@RequestBody ProductDto dto) {
-		Category category = categoryRepository.findByName(dto.getCategoryName())
-				.orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
 		productService.registerProduct(dto);
 		return ResponseEntity.ok(Map.of("status", 200, "message", "제품이 등록되었습니다."));
 	}
@@ -49,9 +52,7 @@ public class ProductController {
 	// 수정
 	@PutMapping("/{id}")
 	public ResponseEntity<?> updateProduct(@PathVariable("id") Long id, @RequestBody ProductDto dto) {
-		Category category = categoryRepository.findByName(dto.getCategoryName())
-				.orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
-		productService.updateProduct(id, dto, category);
+		productService.updateProduct(id, dto);
 		return ResponseEntity.ok(Map.of("status", 200, "message", "제품이 수정되었습니다."));
 	}
 
@@ -96,10 +97,22 @@ public class ProductController {
 	}
 
 	// 엑셀
-	@PostMapping("register/excel")
-	public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
-		productService.importFromExcel(file);
-		return ResponseEntity.ok(Map.of("status", 200, "message", "엑셀 등록이 완료되었습니다."));
+	@PostMapping(value = "/register/excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) throws IOException {
+		return productExcelService.importFromExcel(file);
+	}
+
+	// 엑셀 템플릿
+	@GetMapping(value = "/template", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	public ResponseEntity<byte[]> downloadProductTemplate() throws IOException {
+		byte[] file = productTemplateService.buildProductTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentDisposition(ContentDisposition.attachment()
+				.filename("ProductListTemplate.xlsx", java.nio.charset.StandardCharsets.UTF_8).build());
+		headers.setContentType(
+				MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+		return new ResponseEntity<>(file, headers, HttpStatus.OK);
 	}
 
 }
