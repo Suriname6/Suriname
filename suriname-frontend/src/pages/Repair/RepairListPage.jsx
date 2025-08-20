@@ -4,7 +4,7 @@ import SidebarNavigation from "../../components/SidebarNavigation";
 import { getQuotes, deleteQuotes } from "../../api/quote";
 import styles from "../../css/Repair/RepairList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import RepairSearch from "../../components/Search/RepairSearch.jsx"
+import RepairSearch from "../../components/Search/RepairSearch.jsx";
 
 const RepairListPage = () => {
   const navigate = useNavigate();
@@ -287,133 +287,6 @@ const RepairListPage = () => {
     <div className={styles.container}>
       <SidebarNavigation />
 
-      {/*{!searchVisible ? (*/}
-      {/*  <div className={styles.searchToggle}>*/}
-      {/*    <button*/}
-      {/*      className={styles.searchToggleBtn}*/}
-      {/*      onClick={toggleSearchVisible}*/}
-      {/*    >*/}
-      {/*      검색 조건*/}
-      {/*    </button>*/}
-      {/*  </div>*/}
-      {/*) : (*/}
-      {/*  <div className={styles.searchWrap}>*/}
-      {/*    <div className={styles.searchCloseBtn}>*/}
-      {/*      <button onClick={toggleSearchVisible}>검색 조건 닫기</button>*/}
-      {/*    </div>*/}
-
-      {/*    <div className={styles.searchFields}>*/}
-      {/*      <div className={styles.searchRow}>*/}
-      {/*        <div className={styles.searchField}>*/}
-      {/*          <label>고객명</label>*/}
-      {/*          <input*/}
-      {/*            type="text"*/}
-      {/*            placeholder="입력"*/}
-      {/*            value={searchData.customerName}*/}
-      {/*            onChange={(e) =>*/}
-      {/*              handleInputChange("customerName", e.target.value)*/}
-      {/*            }*/}
-      {/*          />*/}
-      {/*        </div>*/}
-
-      {/*        <div className={styles.searchField}>*/}
-      {/*          <label>제품명</label>*/}
-      {/*          <input*/}
-      {/*            type="text"*/}
-      {/*            value={searchData.productName}*/}
-      {/*            onChange={(e) =>*/}
-      {/*              handleInputChange("productName", e.target.value)*/}
-      {/*            }*/}
-      {/*          />*/}
-      {/*        </div>*/}
-
-      {/*        <div className={styles.searchField}>*/}
-      {/*          <label>제품고유번호</label>*/}
-      {/*          <input*/}
-      {/*            type="text"*/}
-      {/*            placeholder="입력"*/}
-      {/*            value={searchData.serialNumber}*/}
-      {/*            onChange={(e) =>*/}
-      {/*              handleInputChange("serialNumber", e.target.value)*/}
-      {/*            }*/}
-      {/*          />*/}
-      {/*        </div>*/}
-      {/*        <div className={styles.searchField}>*/}
-      {/*          <label>접수기사</label>*/}
-      {/*          <input*/}
-      {/*            type="text"*/}
-      {/*            placeholder="입력"*/}
-      {/*            value={searchData.employeeName}*/}
-      {/*            onChange={(e) =>*/}
-      {/*              handleInputChange("employeeName", e.target.value)*/}
-      {/*            }*/}
-      {/*          />*/}
-      {/*        </div>*/}
-      {/*      </div>*/}
-
-      {/*      <div className={styles.searchRow}>*/}
-      {/*        <div className={styles.searchField}>*/}
-      {/*          <label>진행상태</label>*/}
-      {/*          <select*/}
-      {/*            value={searchData.progressStatus}*/}
-      {/*            onChange={(e) =>*/}
-      {/*              handleInputChange("progressStatus", e.target.value)*/}
-      {/*            }*/}
-      {/*          >*/}
-      {/*            <option value="">전체</option>*/}
-      {/*            <option value="RECEIVED">접수</option>*/}
-      {/*            <option value="IN_PROGRESS">수리중</option>*/}
-      {/*            <option value="AWAITING_PAYMENT">입금대기</option>*/}
-      {/*            <option value="READY_FOR_DELIVERY,COMPLETED">수리완료</option>*/}
-      {/*          </select>*/}
-      {/*        </div>*/}
-
-      {/*        <div className={styles.searchField}>*/}
-      {/*          <label>입금상태</label>*/}
-      {/*          <select*/}
-      {/*            value={searchData.paymentStatus}*/}
-      {/*            onChange={(e) =>*/}
-      {/*              handleInputChange("paymentStatus", e.target.value)*/}
-      {/*            }*/}
-      {/*          >*/}
-      {/*            <option value="">전체</option>*/}
-      {/*            <option value="AWAITING_PAYMENT">가상계좌발급</option>*/}
-      {/*            <option value="VIRTUAL_ACCOUNT_ISSUED">계좌발급완료</option>*/}
-      {/*            <option value="COMPLETED">계좌입금완료</option>*/}
-      {/*          </select>*/}
-      {/*        </div>*/}
-
-      {/*        <div className={styles.searchField}>*/}
-      {/*          <label>접수일자</label>*/}
-      {/*          <input*/}
-      {/*            type="date"*/}
-      {/*            value={searchData.startDate}*/}
-      {/*            onChange={(e) =>*/}
-      {/*              handleInputChange("startDate", e.target.value)*/}
-      {/*            }*/}
-      {/*          />*/}
-      {/*        </div>*/}
-
-      {/*        <div className={styles.searchField}>*/}
-      {/*          <label>　</label>*/}
-      {/*          <input*/}
-      {/*            type="date"*/}
-      {/*            value={searchData.endDate}*/}
-      {/*            onChange={(e) => handleInputChange("endDate", e.target.value)}*/}
-      {/*          />*/}
-      {/*        </div>*/}
-
-      {/*        <button*/}
-      {/*          className={styles.searchButton}*/}
-      {/*          onClick={handleSearch}*/}
-      {/*          disabled={loading}*/}
-      {/*        >*/}
-      {/*          {loading ? "검색 중..." : "검색"}*/}
-      {/*        </button>*/}
-      {/*      </div>*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*)}*/}
       <RepairSearch
         quotes={quotes}
         setQuotes={setQuotes}

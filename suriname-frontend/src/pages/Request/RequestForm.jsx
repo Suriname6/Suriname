@@ -246,7 +246,6 @@ export default function RequestForm() {
               >
                 <span className={styles.infoLabel}>고객명</span>
                 <div className={styles.inputWrapper}>
-                  {/* 🔽 자동완성 컴포넌트만 사용 */}
                   <CustomerAutoCompleteProduct
                     value={searchCustomer}
                     onChange={(val) => setSearchCustomer(val)}
@@ -357,7 +356,8 @@ export default function RequestForm() {
                     </option>
                     {customerProducts.map((product) => (
                       <option key={product.id} value={String(product.id)}>
-                        {product.name} {product.model ? `(${product.model})` : ""}
+                        {product.name}{" "}
+                        {product.model ? `(${product.model})` : ""}
                       </option>
                     ))}
                   </select>
