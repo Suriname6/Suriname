@@ -153,7 +153,12 @@ public class DeliveryService {
                 .orElseThrow(() -> new RuntimeException("배송 정보를 찾을 수 없습니다."));
 
         delivery.updateTrackingInfo(trackingNo, carrierName);
+        delivery.updateStatus(Delivery.Status.DELIVERED);
         deliveryRepository.save(delivery);
+
+        Request request = delivery.getRequest();
+        request.changeStatus(Request.Status.COMPLETED, "SYSTEM:DELIVERY", "운송장 입력 → 요청 완료");
+        requestRepository.save(request);
     }
 
     // 고객 배송 조회 (공개 API용)

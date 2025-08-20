@@ -30,26 +30,26 @@ public class PaymentService {
     private final RequestRepository requestRepository;
     private final TossPaymentsClient tossPaymentsClient;
     private final SmsService smsService;
-    
+
     @Value("${toss.secret-key}")
     private String tossSecretKey;
 
     // 검색 및 페이징이 적용된 결제 목록 조회
-    public PaymentPageResponse getPaymentsWithSearch(int page, int size, String customerName, 
+    public PaymentPageResponse getPaymentsWithSearch(int page, int size, String customerName,
             String receptionNumber, String bankName, String paymentAmount, String status, String startDate, String endDate) {
-        
+
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by("paymentId").descending());
             Page<Payment> paymentPage;
-            
+
             // 검색 조건이 있으면 필터링, 없으면 전체 조회
             if (hasSearchCriteria(customerName, receptionNumber, bankName, paymentAmount, status, startDate, endDate)) {
-                paymentPage = paymentRepository.findWithFilters(customerName, receptionNumber, bankName, 
+                paymentPage = paymentRepository.findWithFilters(customerName, receptionNumber, bankName,
                         parsePaymentAmount(paymentAmount), status, parseDate(startDate), parseDate(endDate), pageable);
             } else {
                 paymentPage = paymentRepository.findAll(pageable);
             }
-            
+
             List<PaymentDto> paymentDtos = paymentPage.getContent().stream()
                     .map(payment -> {
                         try {
@@ -60,7 +60,7 @@ public class PaymentService {
                     })
                     .filter(dto -> dto != null) // null 제거
                     .collect(Collectors.toList());
-            
+
             return new PaymentPageResponse(
                     paymentDtos,
                     paymentPage.getTotalPages(),
@@ -71,7 +71,7 @@ public class PaymentService {
                     paymentPage.isLast()
             );
         } catch (Exception e) {
-            
+
             // 에러 발생 시 빈 응답 반환
             return new PaymentPageResponse(
                     java.util.Collections.emptyList(),
@@ -79,21 +79,21 @@ public class PaymentService {
             );
         }
     }
-    
+
     @Transactional
     public void deletePayment(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 결제가 존재하지 않습니다."));
         paymentRepository.delete(payment);
     }
-    
+
     @Transactional
     public void deletePayments(List<Long> paymentIds) {
         List<Payment> payments = paymentRepository.findAllById(paymentIds);
         paymentRepository.deleteAll(payments);
     }
-    
-    private boolean hasSearchCriteria(String customerName, String receptionNumber, String bankName, 
+
+    private boolean hasSearchCriteria(String customerName, String receptionNumber, String bankName,
             String paymentAmount, String status, String startDate, String endDate) {
         return (customerName != null && !customerName.trim().isEmpty()) ||
                (receptionNumber != null && !receptionNumber.trim().isEmpty()) ||
@@ -103,7 +103,7 @@ public class PaymentService {
                (startDate != null && !startDate.trim().isEmpty()) ||
                (endDate != null && !endDate.trim().isEmpty());
     }
-    
+
     private LocalDateTime parseDate(String dateStr) {
         if (dateStr == null || dateStr.trim().isEmpty()) {
             return null;
@@ -114,7 +114,7 @@ public class PaymentService {
             return null;
         }
     }
-    
+
     private Integer parsePaymentAmount(String amountStr) {
         if (amountStr == null || amountStr.trim().isEmpty()) {
             return null;
@@ -131,7 +131,7 @@ public class PaymentService {
     @Transactional
     public VirtualAccountResponseDto issueVirtualAccount(VirtualAccountRequestDto dto) {
         Request request;
-        
+
         // requestId로 조회, 없으면 requestNo로 조회
         if (dto.getRequestId() != null) {
             request = requestRepository.findById(dto.getRequestId())
@@ -142,7 +142,7 @@ public class PaymentService {
         } else {
             throw new IllegalArgumentException("요청 ID 또는 접수번호가 필요합니다.");
         }
-        
+
         // 가상계좌를 위한 완전히 새로운 Payment 생성 및 저장
         Payment payment = createAndSaveUniquePayment(request, dto.getAmount());
         String uniqueMerchantUid = payment.getMerchantUid();
@@ -151,27 +151,27 @@ public class PaymentService {
         String customerPhone = request.getCustomer().getPhone();
         //String customerPhone = "";
         dto.setCustomerPhone(customerPhone);
-        
+
         try {
             JsonNode response = tossPaymentsClient.issueVirtualAccount(uniqueMerchantUid, dto);
 
             // 토스페이먼츠 API 응답에서 가상계좌 정보 추출
             String bankCode = null;
             String account = null;
-            
+
             // virtualAccount 객체에서 정보 추출
             if (response.has("virtualAccount") && response.get("virtualAccount") != null) {
                 JsonNode virtualAccount = response.get("virtualAccount");
-                bankCode = virtualAccount.has("bankCode") && virtualAccount.get("bankCode") != null ? 
+                bankCode = virtualAccount.has("bankCode") && virtualAccount.get("bankCode") != null ?
                           virtualAccount.get("bankCode").asText() : null;
-                account = virtualAccount.has("accountNumber") && virtualAccount.get("accountNumber") != null ? 
+                account = virtualAccount.has("accountNumber") && virtualAccount.get("accountNumber") != null ?
                          virtualAccount.get("accountNumber").asText() : null;
             }
-            
+
             // 은행코드를 은행명으로 변환
             String bankName = convertBankCodeToBankName(bankCode);
-            
-            String dueDate = (response.has("dueDate") && response.get("dueDate") != null) ? 
+
+            String dueDate = (response.has("dueDate") && response.get("dueDate") != null) ?
                             response.get("dueDate").asText() : dto.getVbankDue();
 
             payment.setAccountAndBank(account, bankName);
@@ -193,18 +193,18 @@ public class PaymentService {
             return new VirtualAccountResponseDto(bankName, account, dueDate);
         } catch (Exception e) {
             // API 에러가 발생해도 기본값으로 가상계좌 정보 설정
-            
+
             // 기본값으로 가상계좌 정보 설정
             String defaultBank = "가상계좌은행";
             String defaultAccount = uniqueMerchantUid; // merchant_uid 형태로 설정
             String defaultDueDate = dto.getVbankDue();
-            
+
             payment.setAccountAndBank(defaultAccount, defaultBank);
             payment.setStatus(Payment.Status.PENDING); // PENDING 상태 유지
             payment.setMemo("가상계좌 발급");
             payment = paymentRepository.save(payment);
-            
-            
+
+
             // 기본값으로도 SMS 발송 시도
             try {
                 smsService.sendVirtualAccountSms(
@@ -216,7 +216,7 @@ public class PaymentService {
                 );
             } catch (Exception smsException) {
             }
-            
+
             // 기본값으로 응답 반환
             return new VirtualAccountResponseDto(defaultBank, defaultAccount, defaultDueDate);
         }
@@ -224,7 +224,7 @@ public class PaymentService {
 
     @Transactional
     public void handleTossWebhook(JsonNode webhookData) {
-        
+
         // 토스페이먼츠 테스트 환경에서는 직접 데이터가 전송됨 (DEPOSIT_CALLBACK)
         if (webhookData.has("orderId") && webhookData.has("status")) {
             String orderId = webhookData.get("orderId") != null ? webhookData.get("orderId").asText() : null;
@@ -233,7 +233,7 @@ public class PaymentService {
             if (orderId == null || status == null) {
                 return;
             }
-            
+
             Payment payment = paymentRepository.findByMerchantUid(orderId).orElse(null);
             if (payment == null) {
                 return;
@@ -242,7 +242,7 @@ public class PaymentService {
             if ("DONE".equals(status)) {
                 payment.markCompleted();
                 paymentRepository.save(payment);
-                
+
                 // 입금 완료 시 Request 상태를 배송대기로 변경
                 try {
                     Request request = payment.getRequest();
@@ -267,28 +267,28 @@ public class PaymentService {
         if (!webhookData.has("eventType")) {
             return;
         }
-        
+
         String eventType = webhookData.get("eventType") != null ? webhookData.get("eventType").asText() : null;
         if (eventType == null) {
             return;
         }
-        
+
         if (!webhookData.has("data")) {
             return;
         }
-        
+
         JsonNode data = webhookData.get("data");
         if (data == null) {
             return;
         }
-        
-        String orderId = data.has("orderId") && data.get("orderId") != null ? 
+
+        String orderId = data.has("orderId") && data.get("orderId") != null ?
                         data.get("orderId").asText() : null;
-        
+
         if (orderId == null) {
             return;
         }
-        
+
         Payment payment = paymentRepository.findByMerchantUid(orderId).orElse(null);
         if (payment == null) {
             return;
@@ -298,16 +298,16 @@ public class PaymentService {
             case "VIRTUAL_ACCOUNT_ISSUED" -> {
                 if (data.has("virtualAccount") && data.get("virtualAccount") != null) {
                     JsonNode virtualAccount = data.get("virtualAccount");
-                    String account = virtualAccount.has("accountNumber") && virtualAccount.get("accountNumber") != null ? 
+                    String account = virtualAccount.has("accountNumber") && virtualAccount.get("accountNumber") != null ?
                                    virtualAccount.get("accountNumber").asText() : "";
-                    String bank = virtualAccount.has("bank") && virtualAccount.get("bank") != null ? 
+                    String bank = virtualAccount.has("bank") && virtualAccount.get("bank") != null ?
                                 virtualAccount.get("bank").asText() : "";
                     payment.setAccountAndBank(account, bank);
                 }
             }
             case "PAYMENT_CONFIRMED" -> {
                 payment.markCompleted();
-                
+
                 // 입금 완료 시 Request 상태를 배송대기로 변경
                 try {
                     Request request = payment.getRequest();
@@ -340,7 +340,7 @@ public class PaymentService {
             Mac mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec secretKeySpec = new SecretKeySpec(tossSecretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
             mac.init(secretKeySpec);
-            
+
             byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
@@ -350,7 +350,7 @@ public class PaymentService {
                 }
                 hexString.append(hex);
             }
-            
+
             return hexString.toString().equals(signature);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException("토스페이먼츠 웹훅 서명 검증 실패", e);
@@ -362,7 +362,7 @@ public class PaymentService {
         if (bankCode == null) {
             return "은행 정보 없음";
         }
-        
+
         return switch (bankCode) {
             case "88" -> "신한";
             case "04" -> "KB국민";
@@ -385,23 +385,23 @@ public class PaymentService {
     public void completePayment(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 결제가 존재하지 않습니다."));
-        
+
         if (payment.getStatus() != Payment.Status.PENDING) {
             throw new IllegalArgumentException("입금대기 상태인 결제만 완료 처리할 수 있습니다.");
         }
-        
+
         // 1. 먼저 토스페이먼츠에서 결제를 취소 처리
         try {
             tossPaymentsClient.cancelPaymentByOrderId(payment.getMerchantUid(), "관리자 입금완료 처리");
         } catch (Exception e) {
             throw new RuntimeException("토스페이먼츠 취소 처리 실패: " + e.getMessage());
         }
-        
+
         // 2. 토스페이먼츠 취소가 성공하면 로컬 DB를 입금완료로 변경
         payment.markCompleted();
         payment.setMemo("수동 입금완료");
         paymentRepository.save(payment);
-        
+
         // 3. Request 상태를 배송대기로 변경
         try {
             Request request = payment.getRequest();
@@ -422,9 +422,9 @@ public class PaymentService {
     @Transactional
     private Payment createAndSaveUniquePayment(Request request, Integer amount) {
         // 현재 시간과 UUID를 조합한 merchant_uid 생성
-        String uniqueMerchantUid = "VIR_" + System.currentTimeMillis() + "_" + 
+        String uniqueMerchantUid = "VIR_" + System.currentTimeMillis() + "_" +
                                   java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
-        
+
         Payment payment = Payment.builder()
                 .request(request)
                 .merchantUid(uniqueMerchantUid)
@@ -433,7 +433,7 @@ public class PaymentService {
                 .cost(amount)
                 .status(Payment.Status.PENDING)
                 .build();
-        
+
         try {
             Payment savedPayment = paymentRepository.save(payment);
             return savedPayment;

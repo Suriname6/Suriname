@@ -9,20 +9,18 @@ const DeliveryRegister = () => {
     requestId: "",
     name: "",
     phone: "",
-    zipcode: "",
     address: "",
     trackingNo: "",
-    carrierName: ""
+    carrierName: "",
   });
   const [requestSearch, setRequestSearch] = useState("");
   const [requestList, setRequestList] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
-  
+
   const navigate = useNavigate();
 
-  // 택배사 목록
   const carriers = [
     "CJ대한통운",
     "롯데택배",
@@ -30,54 +28,50 @@ const DeliveryRegister = () => {
     "로젠택배",
     "우체국택배",
     "GSPostbox",
-    "대신택배"
+    "대신택배",
   ];
 
-  // URL 파라미터로 전달된 데이터 처리
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const requestId = urlParams.get('requestId');
-    const customerName = urlParams.get('customerName');
-    const receptionNumber = urlParams.get('receptionNumber');
-    
+    const requestId = urlParams.get("requestId");
+    const customerName = urlParams.get("customerName");
+    const receptionNumber = urlParams.get("receptionNumber");
+
     if (requestId && customerName && receptionNumber) {
-      // 전달된 데이터로 자동 채우기
       fetchRequestDetail(requestId, customerName, receptionNumber);
     }
   }, []);
-  
+
   useEffect(() => {
     if (showRequestModal) {
       fetchRequestList();
     }
   }, [showRequestModal]);
-  
+
   const fetchRequestDetail = async (requestId, customerName, receptionNumber) => {
     try {
       const response = await api.get(`/api/requests/${requestId}`);
-      
       if (response.data.status === 200) {
         const requestData = response.data.data;
         setSelectedRequest(requestData);
         setFormData({
           ...formData,
           requestId: requestData.requestId,
-          name: requestData.customer?.name || customerName,
-          phone: requestData.customer?.phone || ""
+          name: requestData.customerName || customerName,
+          phone: requestData.phone || "",
+          address: requestData.address || "",
         });
       }
     } catch (error) {
-      console.error('접수 상세 정보 조회 실패:', error);
-      // URL 파라미터 데이터로 기본 설정
+      console.error("접수 상세 정보 조회 실패:", error);
       setFormData({
         ...formData,
         requestId: requestId,
         name: decodeURIComponent(customerName),
-        phone: ""
+        phone: "",
       });
     }
   };
-
 
   const fetchRequestList = async () => {
     try {
@@ -85,10 +79,10 @@ const DeliveryRegister = () => {
         params: {
           status: "WAITING_FOR_DELIVERY",
           page: 0,
-          size: 20
-        }
+          size: 20,
+        },
       });
-      setRequestList(response.data.data.content || []);
+      setRequestList(response.data.content || []);
     } catch (error) {
       console.error("A/S 접수 목록 조회 실패:", error);
       setRequestList([]);
@@ -100,8 +94,9 @@ const DeliveryRegister = () => {
     setFormData({
       ...formData,
       requestId: request.requestId,
-      name: request.customer?.name || "",
-      phone: request.customer?.phone || ""
+      name: request.customerName || "",
+      phone: request.phone || "",
+      address: request.address || "",
     });
     setShowRequestModal(false);
   };
@@ -110,28 +105,47 @@ const DeliveryRegister = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.requestId) {
       alert("A/S 접수를 선택해주세요.");
       return;
     }
 
-    if (!formData.name || !formData.phone || !formData.zipcode || !formData.address) {
+    if (!formData.name || !formData.phone || !formData.address) {
       alert("필수 항목을 모두 입력해주세요.");
       return;
     }
 
     setLoading(true);
     try {
-      const response = await api.post("/api/delivery", formData);
-      
-      if (response.data.status === 201) {
+      let response;
+
+      // zipcode 기본값 추가
+      const payload = {
+        ...formData,
+        zipcode: "00000",
+      };
+
+      if (!selectedRequest?.deliveryId) {
+        response = await api.post("/api/delivery", payload);
+      } else {
+        response = await api.put(
+          `/api/delivery/${selectedRequest.deliveryId}/tracking`,
+          {
+            trackingNo: formData.trackingNo,
+            carrierName: formData.carrierName,
+            zipcode: "00000",
+          }
+        );
+      }
+
+      if (response.data.status === 200 || response.data.status === 201) {
         alert("배송 정보가 등록되었습니다.");
         navigate("/delivery/list");
       } else {
@@ -139,23 +153,25 @@ const DeliveryRegister = () => {
       }
     } catch (error) {
       console.error("배송 등록 실패:", error);
-      const errorMessage = error.response?.data?.message || "배송 등록에 실패했습니다.";
+      const errorMessage =
+        error.response?.data?.message || "배송 등록에 실패했습니다.";
       alert(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredRequests = requestList.filter(request =>
-    request.requestNo?.toLowerCase().includes(requestSearch.toLowerCase()) ||
-    request.customer?.name?.toLowerCase().includes(requestSearch.toLowerCase())
+  const filteredRequests = requestList.filter(
+    (request) =>
+      request.requestNo?.toLowerCase().includes(requestSearch.toLowerCase()) ||
+      request.customerName?.toLowerCase().includes(requestSearch.toLowerCase())
   );
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>배송 등록</h1>
-        <button 
+        <button
           className={styles.backButton}
           onClick={() => navigate("/delivery/list")}
         >
@@ -164,7 +180,6 @@ const DeliveryRegister = () => {
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        {/* A/S 접수 선택 */}
         <div className={styles.section}>
           <h2>A/S 접수 정보</h2>
           <div className={styles.requestSelect}>
@@ -174,23 +189,27 @@ const DeliveryRegister = () => {
               onClick={() => setShowRequestModal(true)}
             >
               <Search size={16} />
-              {selectedRequest ? 
-                `${selectedRequest.requestNo} - ${selectedRequest.customer?.name}` : 
-                "A/S 접수 선택"
-              }
+              {selectedRequest
+                ? `${selectedRequest.requestNo} - ${selectedRequest.customerName}`
+                : "A/S 접수 선택"}
             </button>
             {selectedRequest && (
               <div className={styles.selectedRequest}>
-                <div><strong>접수번호:</strong> {selectedRequest.requestNo}</div>
-                <div><strong>고객명:</strong> {selectedRequest.customer?.name}</div>
-                <div><strong>제품:</strong> {selectedRequest.inputProductName}</div>
-                <div><strong>접수내용:</strong> {selectedRequest.content}</div>
+                <div>
+                  <strong>접수번호:</strong> {selectedRequest.requestNo}
+                </div>
+                <div>
+                  <strong>고객명:</strong> {selectedRequest.customerName}
+                </div>
+                <div>
+                  <strong>제품:</strong> {selectedRequest.productName} (
+                  {selectedRequest.modelCode})
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* 배송 정보 */}
         <div className={styles.section}>
           <h2>배송 정보</h2>
           <div className={styles.formGrid}>
@@ -205,7 +224,7 @@ const DeliveryRegister = () => {
                 required
               />
             </div>
-            
+
             <div className={styles.formGroup}>
               <label>연락처 *</label>
               <input
@@ -217,19 +236,7 @@ const DeliveryRegister = () => {
                 required
               />
             </div>
-            
-            <div className={styles.formGroup}>
-              <label>우편번호 *</label>
-              <input
-                type="text"
-                name="zipcode"
-                value={formData.zipcode}
-                onChange={handleInputChange}
-                placeholder="우편번호"
-                required
-              />
-            </div>
-            
+
             <div className={styles.formGroup}>
               <label>주소 *</label>
               <input
@@ -244,7 +251,6 @@ const DeliveryRegister = () => {
           </div>
         </div>
 
-        {/* 택배 정보 */}
         <div className={styles.section}>
           <h2>택배 정보 (선택사항)</h2>
           <div className={styles.formGrid}>
@@ -256,12 +262,14 @@ const DeliveryRegister = () => {
                 onChange={handleInputChange}
               >
                 <option value="">택배사 선택</option>
-                {carriers.map(carrier => (
-                  <option key={carrier} value={carrier}>{carrier}</option>
+                {carriers.map((carrier) => (
+                  <option key={carrier} value={carrier}>
+                    {carrier}
+                  </option>
                 ))}
               </select>
             </div>
-            
+
             <div className={styles.formGroup}>
               <label>송장번호</label>
               <input
@@ -277,13 +285,6 @@ const DeliveryRegister = () => {
 
         <div className={styles.buttonGroup}>
           <button
-            type="button"
-            className={styles.cancelButton}
-            onClick={() => navigate("/delivery/list")}
-          >
-            취소
-          </button>
-          <button
             type="submit"
             className={styles.submitButton}
             disabled={loading}
@@ -293,7 +294,6 @@ const DeliveryRegister = () => {
         </div>
       </form>
 
-      {/* A/S 접수 선택 모달 */}
       {showRequestModal && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
@@ -306,7 +306,7 @@ const DeliveryRegister = () => {
                 ×
               </button>
             </div>
-            
+
             <div className={styles.searchBox}>
               <Search size={16} />
               <input
@@ -316,22 +316,29 @@ const DeliveryRegister = () => {
                 onChange={(e) => setRequestSearch(e.target.value)}
               />
             </div>
-            
+
             <div className={styles.requestList}>
               {filteredRequests.length > 0 ? (
-                filteredRequests.map(request => (
+                filteredRequests.map((request) => (
                   <div
                     key={request.requestId}
                     className={styles.requestItem}
                     onClick={() => handleRequestSelect(request)}
                   >
                     <div className={styles.requestHeader}>
-                      <span className={styles.requestNo}>{request.requestNo}</span>
-                      <span className={styles.customerName}>{request.customer?.name}</span>
+                      <span className={styles.requestNo}>
+                        {request.requestNo}
+                      </span>
+                      <span className={styles.customerName}>
+                        {request.customerName}
+                      </span>
                     </div>
                     <div className={styles.requestInfo}>
-                      <div><Package size={14} /> {request.inputProductName}</div>
-                      <div>{request.content}</div>
+                      <div>
+                        <Package size={14} /> {request.productName} (
+                        {request.modelCode})
+                      </div>
+                      <div>{request.status}</div>
                     </div>
                   </div>
                 ))
