@@ -28,8 +28,13 @@ public class RecommendationService {
 
         Map<String, Double> ratingMap = new HashMap<>();
         //모델명과 만족도
-        ratings.forEach(obj -> ratingMap.put((String) obj[0], ((Number) obj[1]).doubleValue()));
-
+        ratings.forEach(obj -> {
+            String model = (String) obj[0];
+            double rating = Optional.ofNullable((Number) obj[1])
+                    .map(Number::doubleValue)
+                    .orElse(0.0);
+            ratingMap.put(model, rating);
+        });
         Set<String> models = new HashSet<>();
         models.addAll(repairMap.keySet());
         models.addAll(ratingMap.keySet());

@@ -3,6 +3,7 @@ import api from "../../api/axiosInstance";
 import { ChevronLeft, ChevronRight, Package, Truck, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../css/Delivery/DeliveryList.module.css";
+import axios from "axios";
 
 const DeliveryList = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -30,8 +31,14 @@ const DeliveryList = () => {
         params.status = statusFilter;
       }
 
-      const response = await api.get("/api/delivery", { params });
-      
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get("/api/delivery", {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       if (response.data.status === 200) {
         setDeliveries(response.data.data.content || []);
         setTotalPages(response.data.data.totalPages || 0);

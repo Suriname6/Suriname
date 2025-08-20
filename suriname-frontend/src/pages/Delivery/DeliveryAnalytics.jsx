@@ -3,6 +3,7 @@ import api from "../../api/axiosInstance";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, Package, Truck, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import styles from '../../css/Delivery/DeliveryAnalytics.module.css';
+import axios from "axios";
 
 const DeliveryAnalytics = () => {
     const [dashboardData, setDashboardData] = useState(null);
@@ -15,8 +16,12 @@ const DeliveryAnalytics = () => {
         const fetchDashboardData = async () => {
             try {
                 setLoading(true);
-                const response = await api.get('/api/delivery/analytics/dashboard', {
-                    params: { timeframe: selectedTimeframe }
+                const token = localStorage.getItem("accessToken");
+                const response = await axios.get('/api/delivery/analytics/dashboard', {
+                    params: { timeframe: selectedTimeframe },
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 });
                 
                 if (response.data.status === 200) {
@@ -134,7 +139,7 @@ const DeliveryAnalytics = () => {
                     </div>
                     <div className={styles.metricContent}>
                         <h3>완료율</h3>
-                        <p className={styles.metricValue}>{dashboardData.performanceMetrics.completionRate}%</p>
+                        <p className={styles.metricValue}>{dashboardData.performanceMetrics.completionRate?.toFixed(1)}%</p>
                         <span className={styles.metricSubtext}>배송 성공률</span>
                     </div>
                 </div>
@@ -145,7 +150,7 @@ const DeliveryAnalytics = () => {
                     </div>
                     <div className={styles.metricContent}>
                         <h3>평균 배송시간</h3>
-                        <p className={styles.metricValue}>{dashboardData.performanceMetrics.averageDeliveryTime}일</p>
+                        <p className={styles.metricValue}>{dashboardData.performanceMetrics.averageDeliveryTime?.toFixed(1)}일</p>
                         <span className={styles.metricSubtext}>전체 평균</span>
                     </div>
                 </div>
@@ -156,7 +161,7 @@ const DeliveryAnalytics = () => {
                     </div>
                     <div className={styles.metricContent}>
                         <h3>정시 배송률</h3>
-                        <p className={styles.metricValue}>{dashboardData.performanceMetrics.onTimeDeliveryRate}%</p>
+                        <p className={styles.metricValue}>{dashboardData.performanceMetrics.onTimeDeliveryRate?.toFixed(1)}%</p>
                         <span className={styles.metricSubtext}>3일 이내 배송</span>
                     </div>
                 </div>
