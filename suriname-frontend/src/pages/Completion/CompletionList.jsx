@@ -34,8 +34,14 @@ const CompletionList = () => {
       if (statusFilter === "incomplete") {
         endpoint = "/api/completion/incomplete";
       }
-
-      const response = await axios.get(endpoint, { params });
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(endpoint, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("completion response: ", response);
       setCompletions(response.data.data.content);
       setTotalPages(response.data.data.totalPages);
     } catch (error) {
