@@ -21,6 +21,11 @@ function LoginPage() {
 
       const { accessToken, refreshToken, name, role } = response.data;
 
+      if (role === "PENDING") { 
+        alert("회원가입 승인 대기중입니다. 관리자 승인을 기다려주세요."); 
+        return; 
+      }
+
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("name", name);
