@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import styles from "../../css/Customer/CustomerDetail.module.css";
 import api from "../../api/api";
+import AutoComplete from "../../components/AutoComplete/ProductAutoComplete";
 
 const CustomerDetail = () => {
   const { id } = useParams();
@@ -188,15 +189,32 @@ const CustomerDetail = () => {
               </select>
             </div>
             <div className={styles.inputField} style={{ flex: 1.2 }}>
-              <label className={styles.inputLabel}>제품명</label>
-              <input
-                type="text"
-                className={styles.inputControl}
+              <AutoComplete
+                label="제품명"
                 placeholder="제품명"
                 value={product?.productName || ""}
-                onChange={(e) =>
-                  handleProductChange("productName", e.target.value)
-                }
+                className={styles.inputControl}
+                fetchUrl="/api/products/autocomplete"
+                onChange={(val) => {
+                  handleProductChange("productName", val);
+                }}
+                onSelect={(p) => {
+                  setProduct((prev) => {
+                    const updated = {
+                      ...(prev || {}),
+                      productId: p.productId ?? null,
+                      productName: p.productName ?? "",
+                      modelCode: p.modelCode ?? "",
+                      productBrand: p.productBrand ?? "",
+                      categoryName: p.categoryName ?? "",
+                    };
+                    const snapshot = { ...(formData || {}), product: updated };
+                    setIsDirty(
+                      JSON.stringify(snapshot) !== JSON.stringify(originalData)
+                    );
+                    return updated;
+                  });
+                }}
               />
             </div>
           </div>
