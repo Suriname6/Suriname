@@ -1,0 +1,52 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "suriname-backend/**"
+      - ".github/workflows/backend.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_KEY }}
+
+      - name: Deploy on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            cd ~/Suriname/suriname-backend
+
+            echo ">>> Git pull"
+            git pull origin main
+
+            echo ">>> Gradle build"
+            chmod +x gradlew || true
+            ./gradlew clean build -x test
+
+            echo ">>> Kill old process on 8081"
+            (command -v fuser >/dev/null && fuser -k 8081/tcp) || true
+            pkill -f "java .*suriname-backend" || true
+
+            echo ">>> Start new process"
+            LATEST=$(ls -1t build/libs/*-SNAPSHOT.jar | grep -v 'plain' | head -n1)
+            nohup java -jar "$LATEST" \
+              --spring.config.additional-location=file:/home/ubuntu/Suriname/suriname-backend/.env.properties \
+              --server.port=8081 \
+              --server.address=0.0.0.0 \
+              > ~/app.log 2>&1 &
+          EOF

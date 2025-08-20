@@ -1,10 +1,16 @@
 import axios from "axios";
 
+const baseURL = import.meta.env.PROD
+  ? ""
+  : (import.meta.env.VITE_API_URL || "http://localhost:8081");
+
+const normalizedBase = baseURL.replace(/\/$/, "");
+
 const instance = axios.create({
-  baseURL: "http://localhost:8081",
+  baseURL: normalizedBase,
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json; charset=utf-8',
+    "Content-Type": "application/json; charset=utf-8",
   },
 });
 

@@ -54,6 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		if (token != null && jwtTokenProvider.validateToken(token)) {
 			Authentication authentication = jwtTokenProvider.getAuthentication(token);
+            System.out.println("Authenticated User: " + authentication.getName());
+            System.out.println("Authorities: " + authentication.getAuthorities());
 
 			if (authentication instanceof AbstractAuthenticationToken tokenAuth) {
 				tokenAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -62,7 +64,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(authentication);
             SecurityContextHolder.setContext(context);
-		}
+		} else {
+            System.out.println("Token invalid or missing");
+        }
 
 		filterChain.doFilter(request, response);
 	}
