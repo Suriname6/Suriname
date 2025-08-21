@@ -1,6 +1,7 @@
 import { PDFDownloadLink, PDFViewer, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import AdminDashboard from '../../components/dashboard/AdminDashboard';
 import EmployeePerformancePage from './EmployeePerformancePage';
+import SidebarNavigation from "../../components/SidebarNavigation.jsx";
 
 Font.register({
     family: 'NotoSansKR',
@@ -197,6 +198,7 @@ export default function ReportPage() {
 
     return (
         <div className="relative space-y-10 p-8 bg-gray-50 min-h-screen">
+            <main className="dashboard-main">
             {/* PDF 다운로드 버튼 */}
             <div className="absolute top-8 right-8 z-10 flex gap-2">
                 {adminStats && employeeStats.length > 0 && (
@@ -242,6 +244,7 @@ export default function ReportPage() {
                 <AdminDashboard ref={chartRef} />
                 <EmployeePerformancePage />
             </div>
+            </main>
         </div>
     );
 }
