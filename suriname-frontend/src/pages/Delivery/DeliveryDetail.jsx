@@ -75,6 +75,22 @@ export default function DeliveryDetail() {
 
   const title = useMemo(() => `배송 상세 #${deliveryId}`, [deliveryId]);
 
+  const handleComplete = async () => {
+    if (!window.confirm("이 배송을 완료 처리하시겠습니까?")) return;
+    try {
+      const res = await api.put(`/api/delivery/${deliveryId}/status`, { status: "DELIVERED" });
+      if (res.data?.status === 200) {
+        alert("배송이 완료 처리되었습니다.");
+        setDetail({ ...detail, status: "배송완료", completedDate: new Date().toISOString() });
+      } else {
+        alert(res.data?.message || "처리 실패");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("배송 완료 처리 중 오류가 발생했습니다.");
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -101,7 +117,6 @@ export default function DeliveryDetail() {
 
   return (
     <div className={styles.container}>
-      {/* 상단 */}
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={() => navigate(-1)}><ArrowLeft /></button>
         <h1>{title}</h1>
@@ -110,7 +125,6 @@ export default function DeliveryDetail() {
         </div>
       </div>
 
-      {/* 기본 정보 */}
       <section className={styles.card}>
         <h2 className={styles.sectionTitle}>기본 정보</h2>
         <div className={styles.grid2}>
@@ -122,7 +136,6 @@ export default function DeliveryDetail() {
         </div>
       </section>
 
-      {/* 고객/수령인 */}
       <section className={styles.card}>
         <h2 className={styles.sectionTitle}>고객 / 수령인</h2>
         <div className={styles.grid2}>
@@ -135,7 +148,6 @@ export default function DeliveryDetail() {
         </div>
       </section>
 
-      {/* A/S 접수 정보 */}
       <section className={styles.card}>
         <h2 className={styles.sectionTitle}>A/S 접수 정보</h2>
         <div className={styles.grid2}>
@@ -146,7 +158,6 @@ export default function DeliveryDetail() {
         </div>
       </section>
 
-      {/* 배송 정보 */}
       <section className={styles.card}>
         <h2 className={styles.sectionTitle}>배송 정보</h2>
         <div className={styles.grid2}>
@@ -154,6 +165,14 @@ export default function DeliveryDetail() {
           <LabeledRow label="송장번호" mono>{detail.trackingNo || "-"}</LabeledRow>
         </div>
       </section>
+
+      <div className={styles.footer}>
+        {detail.status !== "배송완료" && (
+          <button className={styles.completeBtn} onClick={handleComplete}>
+            배송 완료 처리
+          </button>
+        )}
+      </div>
     </div>
   );
 }
