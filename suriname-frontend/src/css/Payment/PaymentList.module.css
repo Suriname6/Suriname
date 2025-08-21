@@ -11,6 +11,54 @@
 }
 
 /* 검색 섹션 */
+.searchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.searchHeaderLeft {
+  display: flex;
+  align-items: center;
+}
+
+.searchHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.searchTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.searchStats {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.searchCloseBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.searchCloseBtn:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
 .searchSection {
   background-color: white;
   padding: 1rem;

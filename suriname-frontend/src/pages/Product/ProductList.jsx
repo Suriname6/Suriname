@@ -94,8 +94,29 @@ const ProductList = () => {
     navigate(`/product/detail/${productId}`);
   };
 
+  const [searchVisible, setSearchVisible] = useState(true);
+  const toggleSearchVisible = useCallback(() => {
+    setSearchVisible((v) => !v);
+  }, []);
+
   return (
     <div className={styles.container}>
+      {!searchVisible ? (
+        <div className={styles.searchToggle}>
+          <button
+            className={styles.searchToggleBtn}
+            onClick={toggleSearchVisible}
+          >
+            검색 조건
+          </button>
+        </div>
+      ) : (
+        <div className={styles.searchWrap}>
+          <div className={styles.searchCloseBtn}>
+            <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
+          </div>
+        </div>
+      )}
       <ProductSearch
         data={data}
         setData={setData}
@@ -120,7 +141,6 @@ const ProductList = () => {
           </button>
         </div>
       </div>
-
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
@@ -177,7 +197,6 @@ const ProductList = () => {
           </tbody>
         </table>
       </div>
-
       <div className={styles.pagination}>
         <button
           onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
