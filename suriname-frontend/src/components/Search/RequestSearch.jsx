@@ -90,8 +90,9 @@ const RequestSearch = ({
       const assignFromDefault = toArray(
         defaultFilters.assignmentStatus ?? defaultFilters.assignmentStatuses
       );
-      const effectiveAssign =
-        assignFromLocked.length ? assignFromLocked : assignFromDefault;
+      const effectiveAssign = assignFromLocked.length
+        ? assignFromLocked
+        : assignFromDefault;
 
       const body = {
         requestNo: query.requestNo || null,
@@ -108,9 +109,11 @@ const RequestSearch = ({
 
         // 요청 상태가 RECEIVED일 때만 배정 상태 포함 (UI 선택 > 기본/locked)
         assignmentStatus: isReceived
-          ? (query.assignmentStatus?.length
-              ? query.assignmentStatus
-              : (effectiveAssign.length ? effectiveAssign : null))
+          ? query.assignmentStatus?.length
+            ? query.assignmentStatus
+            : effectiveAssign.length
+            ? effectiveAssign
+            : null
           : null,
       };
 
@@ -241,7 +244,10 @@ const RequestSearch = ({
     const worksheet = XLSX.utils.aoa_to_sheet([excelHeaders, ...excelData]);
     XLSX.utils.book_append_sheet(workbook, worksheet, "접수 목록");
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
     const dataBlob = new Blob([excelBuffer], {
       type: "application/octet-stream",
     });
@@ -422,7 +428,8 @@ const RequestSearch = ({
           </label>
           <div className="flex flex-wrap gap-2">
             {assignStatusOptions.map(({ label, value }) => {
-              const isSelected = query.assignmentStatus?.includes(value) || false;
+              const isSelected =
+                query.assignmentStatus?.includes(value) || false;
               return (
                 <button
                   key={value}
@@ -443,24 +450,27 @@ const RequestSearch = ({
         </div>
       )}
 
-      <div className="flex justify-between items-center">
-        <button
-          onClick={handleReset}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          초기화
-        </button>
+      {/* 액션 버튼들 */}
+      <div className="flex justify-between items-end">
+        <div className="flex flex-col">
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 w-fit mb-4"
+          >
+            초기화
+          </button>
+          <div className="text-xs text-gray-500">
+            🔍 입력하신 내용에 따라 실시간으로 검색됩니다
+          </div>
+        </div>
 
+        {/* 엑셀 다운로드 버튼 */}
         <button
           onClick={handleDownloadExcel}
           className="px-4 py-2 text-sm font-medium text-white bg-green-500 border border-green-600 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           엑셀 다운로드
         </button>
-
-        <div className="text-xs text-gray-500">
-          🔍 입력하신 내용에 따라 실시간으로 검색됩니다
-        </div>
       </div>
     </div>
   );

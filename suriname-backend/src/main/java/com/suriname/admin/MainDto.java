@@ -15,7 +15,6 @@ public class MainDto {
 		private long unassigned;
 		private long inProgress;
 		private long completed;
-		private long delayed;
 	}
 
 	@Getter
@@ -31,6 +30,7 @@ public class MainDto {
 		private String status;
 		private String engineer;
 		private String createdAt;
+		private String assignStatus;
 	}
 
 	@Getter
@@ -41,6 +41,18 @@ public class MainDto {
 	public static class TodayResponse {
 		private TodayStatsDto stats;
 		private java.util.List<TodayRequestRowDto> requests;
+	}
+	
+	@Getter 
+	@Setter 
+	@NoArgsConstructor 
+	@AllArgsConstructor 
+	@Builder
+	public static class StatsDto {
+	    private long newRequests;
+	    private long unassigned;
+	    private long inProgress;
+	    private long completed;
 	}
 
 	@Getter
@@ -73,5 +85,6 @@ public class MainDto {
 		private int total;
 		private java.util.List<WeekDayCountDto> byDay;
 		private java.util.List<TopEngineerDto> topEngineers;
+		private StatsDto stats;
 	}
 }
