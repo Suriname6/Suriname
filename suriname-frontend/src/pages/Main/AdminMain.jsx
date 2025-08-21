@@ -1,20 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import illustration from "../../assets/illustration.png";
 import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { ko } from "date-fns/locale";
 
 export default function AdminMainPage() {
-  // 오늘 현황
-  const [today, setToday] = useState({
+  // 이번 주 현황
+  const [weekStats, setWeekStats] = useState({
     newRequests: 0,
     unassigned: 0,
     inProgress: 0,
     completed: 0,
-    delayed: 0,
   });
+
   const navigate = useNavigate();
 
   // 오늘 접수 리스트
@@ -35,20 +34,15 @@ export default function AdminMainPage() {
       setLoading(true);
       setError("");
       try {
-        const [todayRes, weekRes] = await Promise.all([
-          api.get("/api/main/admin/today"),
+        const [weekRes, todayRes] = await Promise.all([
           api.get("/api/main/admin/week"),
+          api.get("/api/main/admin/today"),
         ]);
-
         if (ignore) return;
 
-        // today: { stats, requests }
-        const { stats, requests } = todayRes.data || {};
-        if (stats) setToday(stats);
-        if (Array.isArray(requests)) setTodayRequests(requests);
-
-        // week: { total, byDay, topEngineers }
-        const { total, byDay, topEngineers: tops } = weekRes.data || {};
+        //  주간 데이터
+        const { total, byDay, topEngineers: tops, stats } = weekRes.data || {};
+        if (stats) setWeekStats(stats);
         setWeeklySummary({
           total: total ?? 0,
           byDay: Array.isArray(byDay)
@@ -56,6 +50,10 @@ export default function AdminMainPage() {
             : [],
         });
         setTopEngineers(Array.isArray(tops) ? tops : []);
+
+        //  오늘 접수(표용)
+        const { requests } = todayRes.data || {};
+        if (Array.isArray(requests)) setTodayRequests(requests);
       } catch (e) {
         console.error("Admin dashboard load failed:", e);
         setError("대시보드 데이터를 불러오지 못했습니다.");
@@ -103,6 +101,11 @@ export default function AdminMainPage() {
     )}`;
   }, []);
 
+  const maxCount =
+    weeklySummary.byDay.length > 0
+      ? Math.max(1, ...weeklySummary.byDay.map((d) => d.count || 0))
+      : 1;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="ml-[170px] p-8 space-y-8">
@@ -114,6 +117,7 @@ export default function AdminMainPage() {
         {!!error && (
           <div className="max-w-6xl mx-auto text-sm text-red-600">{error}</div>
         )}
+
         {/* 헤더 */}
         <div className="mb-8">
           <div className="max-w-6xl mx-auto flex items-center justify-center gap-12">
@@ -139,14 +143,13 @@ export default function AdminMainPage() {
           </div>
         </div>
 
-        {/* 상단: 오늘 현황 */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* 상단: 이번 주 현황 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
-            { label: "신규 접수", value: today.newRequests },
-            { label: "미배정", value: today.unassigned },
-            { label: "진행 중", value: today.inProgress },
-            { label: "완료", value: today.completed },
-            { label: "지연", value: today.delayed },
+            { label: "신규 접수", value: weekStats.newRequests },
+            { label: "기사 배정 미확정", value: weekStats.unassigned },
+            { label: "진행 중", value: weekStats.inProgress },
+            { label: "완료", value: weekStats.completed },
           ].map((c, i) => (
             <div
               key={i}
@@ -160,13 +163,11 @@ export default function AdminMainPage() {
           ))}
         </div>
 
-        {/* 중앙: 오늘 접수 / 이슈 패널 */}
+        {/* 오늘 접수 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 오늘 접수 (좌측 2칸) */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="p-5 border-b flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-800">오늘 접수</h2>
-              {/* <button className="text-sm text-blue-600" onClick={()=>{}}>더보기</button> */}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -213,10 +214,23 @@ export default function AdminMainPage() {
                           {r.product}
                         </td>
                         <td className="px-6 py-3 text-sm text-center">
-                          <span className={badge(r.status)}>
-                            {statusLabel(r.status)}
-                          </span>
+                          {["REJECTED", "CANCELLED", "EXPIRED"].includes(
+                            r.assignStatus
+                          ) ? (
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                              {r.assignStatus === "REJECTED"
+                                ? "접수 거절"
+                                : r.assignStatus === "CANCELLED"
+                                ? "접수 취소"
+                                : "접수 만료"}
+                            </span>
+                          ) : (
+                            <span className={badge(r.status)}>
+                              {statusLabel(r.status)}
+                            </span>
+                          )}
                         </td>
+
                         <td className="px-6 py-3 text-sm text-center text-gray-900">
                           {r.engineer}
                         </td>
@@ -226,7 +240,7 @@ export default function AdminMainPage() {
                         <td className="px-6 py-3 text-sm text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              onClick={() => navigate("/requests/:id")}
+                              onClick={() => navigate(`/request/${r.id}`)}
                               className="px-2 py-1 text-xs rounded border hover:bg-gray-50"
                             >
                               상세
@@ -254,7 +268,6 @@ export default function AdminMainPage() {
                 총 {weeklySummary.total}건
               </span>
             </div>
-            {/* 미니 차트 대체 바 */}
             <div className="space-y-2">
               {weeklySummary.byDay.map((d) => (
                 <div key={d.day}>
@@ -265,7 +278,9 @@ export default function AdminMainPage() {
                   <div className="w-full bg-gray-100 h-2 rounded">
                     <div
                       className="h-2 bg-blue-600 rounded"
-                      style={{ width: `${Math.min(100, d.count)}%` }}
+                      style={{
+                        width: `${Math.round((d.count / maxCount) * 100)}%`,
+                      }}
                     />
                   </div>
                 </div>

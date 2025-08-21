@@ -19,7 +19,24 @@ import { saveAs } from "file-saver"; // ✨ file-saver 임포트 ✨
 // // 인덱스 객체 생성
 // const index = searchClient.initIndex('products');
 
-const categories = ['냉장고', '세탁기', '에어컨', '전자레인지', 'TV', '데스크톱', '노트북', '프린터', '모니터', '스마트폰', '태블릿', '네비게이션', '블랙박스', '오디오시스템', '청소기', '공기청정기'];
+const categories = [
+  "냉장고",
+  "세탁기",
+  "에어컨",
+  "전자레인지",
+  "TV",
+  "데스크톱",
+  "노트북",
+  "프린터",
+  "모니터",
+  "스마트폰",
+  "태블릿",
+  "네비게이션",
+  "블랙박스",
+  "오디오시스템",
+  "청소기",
+  "공기청정기",
+];
 const manufacturers = ["Samsung", "LG", "Apple", "ASUS"];
 
 const ProductSearch = ({
@@ -68,7 +85,6 @@ const ProductSearch = ({
           categories: query.categories.length > 0 ? query.categories : null,
         }),
       });
-
 
       if (response.ok) {
         const result = await response.json();
@@ -323,13 +339,18 @@ const ProductSearch = ({
       </div>
 
       {/* 액션 버튼들 */}
-      <div className="flex justify-between items-center">
-        <button
-          onClick={handleReset}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          초기화
-        </button>
+      <div className="flex justify-between items-end">
+        <div className="flex flex-col">
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 w-fit mb-4"
+          >
+            초기화
+          </button>
+          <div className="text-xs text-gray-500">
+            🔍 입력하신 내용에 따라 실시간으로 검색됩니다
+          </div>
+        </div>
 
         {/* 엑셀 다운로드 버튼 */}
         <button
@@ -338,10 +359,6 @@ const ProductSearch = ({
         >
           엑셀 다운로드
         </button>
-
-        <div className="text-xs text-gray-500">
-          🔍 입력하신 내용에 따라 실시간으로 검색됩니다
-        </div>
       </div>
     </div>
   );
