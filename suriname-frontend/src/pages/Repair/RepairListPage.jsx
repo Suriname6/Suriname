@@ -1,11 +1,11 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useEffect, useState } from "react";
 import axios from "../../api/axiosInstance";
 import styles from "../../css/Request/RequestList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import StatusBadge from "../../components/Request/StatusBadge";
-import RequestSearch from "../../components/Search/RepairSearch";
+import RequestSearch from "../../components/Search/RequestSearch";
 
 export default function RequestList() {
   const [requests, setRequests] = useState([]);
@@ -23,7 +23,7 @@ export default function RequestList() {
   const [selectAll, setSelectAll] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchVisible, setSearchVisible] = useState(true);
-  const [setReloadKey] = useState(0);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const navigate = useNavigate();
   const [role] = useState(localStorage.getItem("role") || "ADMIN");
@@ -112,19 +112,13 @@ export default function RequestList() {
           </button>
         </div>
       ) : (
-        <div className={styles.searchWrap}>
-          <div className={styles.searchCloseBtn}>
-            <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
-          </div>
-
-          <RequestSearch
-            requests={requests}
-            setRequests={setRequests}
-            pagination={pagination}
-            setPagination={setPagination}
-            lockedFilters={lockedFilters}
-          />
-        </div>
+        <RequestSearch
+          requests={requests}
+          setRequests={setRequests}
+          pagination={pagination}
+          setPagination={setPagination}
+          lockedFilters={lockedFilters}
+        />
       )}
 
       {(role === "ADMIN" || role === "STAFF") && (

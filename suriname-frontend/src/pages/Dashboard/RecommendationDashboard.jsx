@@ -41,7 +41,7 @@ function RecommendationDashboard() {
         )}
       </div>
 
-      <h1>수리 건 수 / 고객 만족도 현황</h1>
+      <h1>수리 건 수 현황</h1>
       <div className="chart-container">
         <ResponsiveContainer width="100%" height={350}>
           <BarChart
@@ -63,12 +63,6 @@ function RecommendationDashboard() {
               dataKey="repairCount"
               fill="#3b82f6"
               name="수리 건 수"
-              barSize={Math.max(20, 60 - chartData.length)}
-            />
-            <Bar
-              dataKey="avgSatisfaction"
-              fill="#F97316"
-              name="평균 만족도"
               barSize={Math.max(20, 60 - chartData.length)}
             />
           </BarChart>

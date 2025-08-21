@@ -218,7 +218,7 @@ const RepairPresetPage = () => {
                 <option value="">카테고리 선택</option>
                 {categories.map((c) => (
                   <option key={c.categoryId} value={String(c.categoryId)}>
-                    {c.parentId ? c.name : `--- ${c.name} ---`}
+                    {c.name}
                   </option>
                 ))}
               </select>

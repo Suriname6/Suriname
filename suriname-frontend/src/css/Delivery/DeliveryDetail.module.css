@@ -19,3 +19,8 @@
 
 .skeleton { padding:24px; color:#888; }
 .error { padding:16px; color:#d00; }
+
+.footer { margin-top: 24px; display: flex; justify-content: flex-end; }
+.completeBtn { background-color: #28a745; color: #fff; font-size: 15px; font-weight: 600; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); }
+.completeBtn:hover { background-color: #218838; }
+.completeBtn:active { background-color: #1e7e34; transform: scale(0.97); }
