@@ -53,13 +53,16 @@ public class RecommendationService {
     }
 
     private String buildMessage(String model, long count, double avg) {
-        if (count >= 10 && avg <= 2.0) {
-            return model + " : 수리 급증 + 고객 평가 낮음 → 긴급 조치 필요";
-        } else if (count >= 10) {
+        // if (count >= 10 && avg <= 2.0) {
+        //     return model + " : 수리 급증 + 고객 평가 낮음 → 긴급 조치 필요";
+        // } else
+        if (count >= 10) {
             return model + " : 수리 건수 급증 → 작업량 대비";
-        } else if (avg <= 2.0) {
-            return model + " : 고객 평가 저조 → 서비스 강화 필요";
-        } else {
+        }
+        // else if (avg <= 2.0) {
+        //     return model + " : 고객 평가 저조 → 서비스 강화 필요";
+        // }
+        else {
             return model + " : 최근 현황 안정적";
         }
     }
