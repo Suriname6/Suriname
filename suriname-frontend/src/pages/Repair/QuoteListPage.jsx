@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SidebarNavigation from "../../components/SidebarNavigation";
 import { getQuotes, deleteQuotes } from "../../api/quote";
 import styles from "../../css/Repair/RepairList.module.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import RepairSearch from "../../components/Search/RepairSearch.jsx";
+import RepairSearch from "../../components/Search/QuoteSearch.jsx";
 
 const RepairListPage = () => {
   const navigate = useNavigate();
@@ -150,20 +150,20 @@ const RepairListPage = () => {
     });
   };
 
-  const toggleSearchVisible = () => {
-    setSearchVisible(!searchVisible);
-  };
+  const toggleSearchVisible = useCallback(() => {
+    setSearchVisible((v) => !v);
+  }, []);
 
   const formatDateTime = (dateStr) => {
-        if (!dateStr) return '-';
-        const date = new Date(dateStr);
-        return date.toLocaleString("ko-KR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return date.toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const formatCurrency = (amount) => {
@@ -276,7 +276,7 @@ const RepairListPage = () => {
       state: {
         requestId: quote.requestId,
         quoteId: quote.quoteId,
-        mode: "edit", // 상세보기/편집 모드임을 나타냄
+        mode: "edit",
       },
     });
   };
@@ -285,12 +285,29 @@ const RepairListPage = () => {
     <div className={styles.container}>
       <SidebarNavigation />
 
-      <RepairSearch
-        quotes={quotes}
-        setQuotes={setQuotes}
-        pagination={pagination}
-        setPagination={setPagination}
-      />
+      {!searchVisible ? (
+        <div className={styles.searchToggle}>
+          <button
+            className={styles.searchToggleBtn}
+            onClick={toggleSearchVisible}
+          >
+            검색 조건
+          </button>
+        </div>
+      ) : (
+        <div className={styles.searchWrap}>
+          <div className={styles.searchCloseBtn}>
+            <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
+          </div>
+
+          <RepairSearch
+            quotes={quotes}
+            setQuotes={setQuotes}
+            pagination={pagination}
+            setPagination={setPagination}
+          />
+        </div>
+      )}
 
       <div className={styles.tableHeader}>
         <div>

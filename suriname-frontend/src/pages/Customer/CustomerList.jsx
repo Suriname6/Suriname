@@ -109,8 +109,30 @@ const CustomerList = () => {
     window._customers = data;
   }, [data]);
 
+  const [searchVisible, setSearchVisible] = useState(true);
+  const toggleSearchVisible = useCallback(() => {
+    setSearchVisible((v) => !v);
+  }, []);
+
   return (
     <div className={styles.container}>
+      {!searchVisible ? (
+        <div className={styles.searchToggle}>
+          <button
+            className={styles.searchToggleBtn}
+            onClick={toggleSearchVisible}
+          >
+            검색 조건
+          </button>
+        </div>
+      ) : (
+        <div className={styles.searchWrap}>
+          <div className={styles.searchCloseBtn}>
+            <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
+          </div>
+        </div>
+      )}
+
       <CustomerSearch
         data={data}
         setData={setData}
