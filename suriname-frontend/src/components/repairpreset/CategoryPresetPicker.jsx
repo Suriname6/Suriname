@@ -23,27 +23,8 @@ function normalizeCategories(list) {
     .filter((c) => c.categoryId != null && typeof c.name === 'string');
 }
 
-function buildCategoryTree(categories) {
-  const parents = categories
-    .filter((c) => c.parentId == null)
-    .sort((a, b) => a.categoryId - b.categoryId);
-
-  const childrenByParent = new Map();
-  for (const p of parents) childrenByParent.set(p.categoryId, []);
-
-  for (const c of categories.filter((c) => c.parentId != null)) {
-    if (!childrenByParent.has(c.parentId)) childrenByParent.set(c.parentId, []);
-    childrenByParent.get(c.parentId).push(c);
-  }
-
-  for (const [pid, arr] of childrenByParent.entries()) {
-    arr.sort((a, b) => a.categoryId - b.categoryId);
-  }
-  return { parents, childrenByParent };
-}
-
 export default function CategoryPresetPicker({ styles, onAdd }) {
-  const [tree, setTree] = useState({ parents: [], childrenByParent: new Map() });
+  const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [presets, setPresets] = useState([]);
   const [selectedPreset, setSelectedPreset] = useState('');
@@ -56,10 +37,10 @@ export default function CategoryPresetPicker({ styles, onAdd }) {
         const ok = res?.data?.status === 200 && Array.isArray(res?.data?.data) && res.data.data.length > 0;
         const list = ok ? res.data.data : FALLBACK_CATEGORIES;
         const normalized = normalizeCategories(list);
-        if (mounted) setTree(buildCategoryTree(normalized));
+        if (mounted) setCategories(normalized);
       } catch {
         const normalized = normalizeCategories(FALLBACK_CATEGORIES);
-        if (mounted) setTree(buildCategoryTree(normalized));
+        if (mounted) setCategories(normalized);
       }
     })();
     return () => { mounted = false; };
@@ -117,25 +98,11 @@ export default function CategoryPresetPicker({ styles, onAdd }) {
             }}
           >
             <option value="">카테고리 선택</option>
-            {tree.parents.map((parent) => {
-              const children = tree.childrenByParent.get(parent.categoryId) || [];
-              if (children.length === 0) {
-                return (
-                  <optgroup key={parent.categoryId} label={parent.name}>
-                    <option value="" disabled>하위 항목 없음</option>
-                  </optgroup>
-                );
-              }
-              return (
-                <optgroup key={parent.categoryId} label={parent.name}>
-                  {children.map((child) => (
-                    <option key={child.categoryId} value={child.categoryId}>
-                      {child.name}
-                    </option>
-                  ))}
-                </optgroup>
-              );
-            })}
+            {categories.map((c) => (
+              <option key={c.categoryId} value={c.categoryId}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </div>
 
