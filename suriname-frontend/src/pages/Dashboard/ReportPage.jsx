@@ -1,7 +1,6 @@
 import { PDFDownloadLink, PDFViewer, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import AdminDashboard from '../../components/dashboard/AdminDashboard';
 import EmployeePerformancePage from './EmployeePerformancePage';
-import SidebarNavigation from "../../components/SidebarNavigation.jsx";
 
 Font.register({
     family: 'NotoSansKR',
