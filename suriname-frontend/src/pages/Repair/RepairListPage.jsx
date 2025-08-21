@@ -102,10 +102,6 @@ export default function RequestList() {
           </button>
         </div>
       ) : (
-        <div className={styles.searchWrap}>
-          <div className={styles.searchCloseBtn}>
-            <button onClick={toggleSearchVisible}>검색 조건 닫기</button>
-          </div>
 
            <RequestSearch
                 requests={requests}
@@ -114,7 +110,6 @@ export default function RequestList() {
                 setPagination={setPagination}
                 lockedFilters={lockedFilters}
               />
-        </div>
       )}
 
       {(role === "ADMIN" || role === "STAFF") && (
