@@ -52,8 +52,8 @@ public class DeliveryService {
         deliveryRepository.save(delivery);
 
         // Request 상태를 배송대기로 변경
-        if (request.getStatus() != Request.Status.WAITING_FOR_DELIVERY) {
-            request.changeStatus(Request.Status.WAITING_FOR_DELIVERY, "SYSTEM:DELIVERY", "배송 정보 등록 → 배송 대기");
+        if (request.getStatus() != Request.Status.COMPLETED) {
+            request.changeStatus(Request.Status.COMPLETED, "SYSTEM:DELIVERY", "운송장 등록 → 배송 시작");
             requestRepository.save(request);
         }
 

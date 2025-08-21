@@ -35,7 +35,7 @@ export const REQUEST_LABEL = {
   REPAIRING:           '수리중',
   WAITING_FOR_PAYMENT: '입금대기',
   WAITING_FOR_DELIVERY:'배송대기',
-  COMPLETED:           '완료',
+  COMPLETED:           '배송시작',
 };
 
 export const REQUEST_COLOR = {
