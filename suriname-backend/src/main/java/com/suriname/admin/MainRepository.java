@@ -9,94 +9,98 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface MainRepository extends Repository<Request, Long> {
-	   // 오늘 신규 접수 (created_at)
-    @Query(value = """
-        SELECT COUNT(*) 
-        FROM request r
-        WHERE r.created_at >= :start AND r.created_at < :end
-        """, nativeQuery = true)
-    long countNewRequests(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+	   
+	// 이번주 신규 접수
+	@Query(value = """
+		    SELECT COUNT(*) 
+		    FROM request r
+		    WHERE r.created_at >= :start AND r.created_at < :end
+		    """, nativeQuery = true)
+		long countNewRequestsBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // 오늘 미배정: 최신 배정 이력이 ACCEPTED가 아닌 건
-    @Query(value = """
-        WITH last_assign AS (
-            SELECT l.request_id, l.status
-            FROM request_assignment_log l
-            JOIN (
-                SELECT request_id, MAX(assigned_at) AS max_at
-                FROM request_assignment_log
-                GROUP BY request_id
-            ) t ON t.request_id = l.request_id AND t.max_at = l.assigned_at
-        )
-        SELECT COUNT(*)
-        FROM request r
-        LEFT JOIN last_assign la ON la.request_id = r.request_id
-        WHERE r.created_at >= :start AND r.created_at < :end
-          AND (la.status IS NULL OR la.status <> 'ACCEPTED')
-        """, nativeQuery = true)
-    long countUnassigned(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    // 이번주 미배정
+	 @Query(value = """
+		        WITH last_assign AS (
+		            SELECT l.request_id, l.status
+		            FROM request_assignment_log l
+		            JOIN (
+		                SELECT request_id, MAX(assigned_at) AS max_at
+		                FROM request_assignment_log
+		                GROUP BY request_id
+		            ) t ON t.request_id = l.request_id AND t.max_at = l.assigned_at
+		        )
+		        SELECT COUNT(*)
+		        FROM request r
+		        LEFT JOIN last_assign la ON la.request_id = r.request_id
+		        WHERE r.created_at >= :start AND r.created_at < :end
+		          AND (la.status IS NULL OR la.status <> 'ACCEPTED')
+		        """, nativeQuery = true)
+		    long countUnassignedBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // 오늘 진행 중
-    @Query(value = """
-        SELECT COUNT(*)
-        FROM request r
-        WHERE r.created_at >= :start AND r.created_at < :end
-          AND r.status IN ('REPAIRING','WAITING_FOR_PAYMENT','WAITING_FOR_DELIVERY')
-        """, nativeQuery = true)
-    long countInProgress(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // 오늘 완료 (completed_at)
-    @Query(value = """
-        SELECT COUNT(*)
-        FROM request r
-        WHERE r.completed_at IS NOT NULL
-          AND r.completed_at >= :start AND r.completed_at < :end
-        """, nativeQuery = true)
-    long countCompleted(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    // 이번주 진행 중
+	@Query(value = """
+		    SELECT COUNT(*)
+		    FROM request r
+		    WHERE r.created_at >= :start AND r.created_at < :end
+		      AND r.status IN ('REPAIRING','WAITING_FOR_PAYMENT','WAITING_FOR_DELIVERY')
+		    """, nativeQuery = true)
+		long countInProgressBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // 오늘 지연: 상태가 DELAYED
-    @Query(value = """
-        SELECT COUNT(*)
-        FROM request r
-        WHERE r.created_at >= :start AND r.created_at < :end
-          AND r.status = 'RECEIVED' /* 기본값 가정 */
-          AND 1=0
-        """, nativeQuery = true)
-    long stubCountDelayed(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-    // ↑ 스키마엔 DELAYED ENUM이 없어서 기본은 0 처리 예정(서비스에서 0 반환).
-    // SLA 기반 지연 로직을 쓰고 싶다면 여기 WHERE 조건을 바꾸세요(예: due_at < NOW() AND status <> 'COMPLETED')
+
+    // 이번주 완료 (completed_at)
+	@Query(value = """
+		    SELECT COUNT(*)
+		    FROM request r
+		    WHERE r.completed_at IS NOT NULL
+		      AND r.completed_at >= :start AND r.completed_at < :end
+		    """, nativeQuery = true)
+		long countCompletedBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     // 오늘 접수 목록 (최신 ACCEPTED 배정자 이름 포함)
-    @Query(value = """
-        WITH last_acc AS (
-            SELECT l.request_id, l.employee_id
-            FROM request_assignment_log l
-            JOIN (
-                SELECT request_id, MAX(assigned_at) AS max_at
-                FROM request_assignment_log
-                GROUP BY request_id
-            ) t ON t.request_id = l.request_id AND t.max_at = l.assigned_at
-            WHERE l.status = 'ACCEPTED'
-        )
-        SELECT 
-           r.request_id               AS id,
-           r.request_no               AS requestNo,
-           COALESCE(c.name, '-')      AS customer,
-           COALESCE(p.product_name,'-') AS product,
-           r.status                   AS status,
-           COALESCE(e.name, '-')      AS engineer,
-           r.created_at               AS createdAt
-        FROM request r
-        LEFT JOIN customer c ON c.customer_id = r.customer_id
-        LEFT JOIN customer_product cp ON cp.customer_product_id = r.customer_product_id
-        LEFT JOIN product p ON p.product_id = cp.product_id
-        LEFT JOIN last_acc la ON la.request_id = r.request_id
-        LEFT JOIN employee e ON e.employee_id = la.employee_id
-        WHERE r.created_at >= :start AND r.created_at < :end
-        ORDER BY r.created_at ASC
-        """, nativeQuery = true)
-    List<TodayRowProjection> findTodayRows(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-
+	@Query(value = """
+			SELECT
+			    r.request_id      AS id,
+			    r.request_no      AS requestNo,
+			    c.name            AS customer,
+			    p.product_name    AS product,
+			    r.status          AS status,
+			    COALESCE(e_acc.name, e_req.name) AS engineer,
+			    r.created_at      AS createdAt,
+			    last_any.status   AS assignStatus        -- ★ 추가
+			FROM request r
+			JOIN customer c ON c.customer_id = r.customer_id
+			JOIN customer_product cp ON cp.customer_product_id = r.customer_product_id
+			JOIN product p ON p.product_id = cp.product_id
+			LEFT JOIN employee e_req ON e_req.employee_id = r.employee_id
+			LEFT JOIN (
+			    SELECT l.request_id, l.employee_id
+			    FROM request_assignment_log l
+			    JOIN (
+			        SELECT request_id, MAX(assigned_at) AS mx
+			        FROM request_assignment_log
+			        WHERE status = 'ACCEPTED'
+			        GROUP BY request_id
+			    ) last ON last.request_id = l.request_id AND last.mx = l.assigned_at
+			    WHERE l.status = 'ACCEPTED'
+			) acc ON acc.request_id = r.request_id
+			LEFT JOIN employee e_acc ON e_acc.employee_id = acc.employee_id
+			LEFT JOIN (
+			    SELECT l1.request_id, l1.status
+			    FROM request_assignment_log l1
+			    JOIN (
+			        SELECT request_id,
+			               MAX(COALESCE(status_changed_at, assigned_at)) AS mx
+			        FROM request_assignment_log
+			        GROUP BY request_id
+			    ) last2 ON last2.request_id = l1.request_id
+			           AND last2.mx = COALESCE(l1.status_changed_at, l1.assigned_at)
+			) last_any ON last_any.request_id = r.request_id
+			WHERE r.created_at >= :start AND r.created_at < :end
+			ORDER BY r.created_at DESC
+			""", nativeQuery = true)
+			List<TodayRowProjection> findTodayRows(@Param("start") LocalDateTime start,
+			                                       @Param("end") LocalDateTime end);
     // 이번 주 일자별(created_at) 카운트
     @Query(value = """
         SELECT DATE(r.created_at) AS ymd, COUNT(*) AS cnt

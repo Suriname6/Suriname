@@ -16,14 +16,12 @@ public class MainController {
 
 	    // 오늘 현황 + 오늘 접수 목록
 	    @GetMapping("/today")
-	    @PreAuthorize("hasRole('ADMIN')")
 	    public TodayResponse today() {
 	        return service.getToday();
 	    }
 
 	    // 이번 주 요약 + TOP5
 	    @GetMapping("/week")
-	    @PreAuthorize("hasRole('ADMIN')")
 	    public WeekResponse week() {
 	        return service.getWeek();
 	    }

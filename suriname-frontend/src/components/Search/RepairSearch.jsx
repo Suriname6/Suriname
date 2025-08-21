@@ -352,13 +352,18 @@ const RepairSearch = ({ quotes, setQuotes, pagination, setPagination }) => {
       </div>
 
       {/* 액션 버튼들 */}
-      <div className="flex justify-between items-center">
-        <button
-          onClick={handleReset}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          초기화
-        </button>
+      <div className="flex justify-between items-end">
+        <div className="flex flex-col">
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 w-fit mb-4"
+          >
+            초기화
+          </button>
+          <div className="text-xs text-gray-500">
+            🔍 입력하신 내용에 따라 실시간으로 검색됩니다
+          </div>
+        </div>
 
         {/* 엑셀 다운로드 버튼 */}
         <button
@@ -367,10 +372,6 @@ const RepairSearch = ({ quotes, setQuotes, pagination, setPagination }) => {
         >
           엑셀 다운로드
         </button>
-
-        <div className="text-xs text-gray-500">
-          🔍 입력하신 내용에 따라 실시간으로 검색됩니다
-        </div>
       </div>
     </div>
   );

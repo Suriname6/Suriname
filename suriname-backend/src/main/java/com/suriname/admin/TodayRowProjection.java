@@ -10,4 +10,5 @@ public interface TodayRowProjection {
     String getStatus();
     String getEngineer();
     LocalDateTime getCreatedAt();
+    String getAssignStatus();
 }
